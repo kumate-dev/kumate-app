@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+/* Custom base styles */
+:root {
+  color-scheme: light dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+/* App background (Lens-like dark) */
+body {
+  background-color: rgb(18, 18, 20);
+  color: white;
+}
