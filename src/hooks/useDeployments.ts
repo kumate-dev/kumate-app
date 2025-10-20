@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
-import { listCronJobs } from "../services/k8s";
+import { listDeployments } from "../services/k8s";
 import { K8sContext } from "../layouts/Sidebar";
 
-export interface CronJob {
+export interface Deployment {
   name: string;
   namespace: string;
-  schedule: string;
-  suspend: boolean;
-  last_schedule?: string;
+  ready: string;
+  status: string;
   creation_timestamp: string;
 }
 
-export function useCronJobs(context?: K8sContext | null, namespace?: string) {
-  const [items, setItems] = useState<CronJob[]>([]);
+export function useDeployments(context?: K8sContext | null, namespace?: string) {
+  const [items, setItems] = useState<Deployment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -29,13 +28,13 @@ export function useCronJobs(context?: K8sContext | null, namespace?: string) {
          .catch((e) => { clearTimeout(t); reject(e); });
       });
 
-    async function fetchCronJobs() {
+    async function fetchDeployments() {
       setLoading(true);
       setError("");
       try {
         const nsParam = namespace && namespace !== "All Namespaces" ? namespace : "";
-        const res = await withTimeout(listCronJobs({ name, namespace: nsParam }), 15000);
-        if (active) setItems(Array.isArray(res) ? (res as CronJob[]) : []);
+        const res = await withTimeout(listDeployments({ name, namespace: nsParam }), 15000);
+        if (active) setItems(Array.isArray(res) ? (res as Deployment[]) : []);
       } catch (e: any) {
         if (active) setError(e?.message || String(e));
       } finally {
@@ -43,7 +42,7 @@ export function useCronJobs(context?: K8sContext | null, namespace?: string) {
       }
     }
 
-    fetchCronJobs();
+    fetchDeployments();
     return () => { active = false; };
   }, [context?.name, namespace]);
 

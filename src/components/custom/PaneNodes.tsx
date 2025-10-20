@@ -1,47 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from "../ui";
-import { listNodes } from "../../services/k8s";
 import { relativeAge } from "../../utils/time";
 import { conditionVariant } from "../../utils/k8s";
+import { K8sContext } from "../../layouts/Sidebar";
+import { useNodes } from "../../hooks/useNodes";
 
+interface PaneNodesProps {
+  context?: K8sContext | null;
+}
 
-export default function PaneNodes({ context }) {
-  const [nodes, setNodes] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+export default function PaneNodes({ context }: PaneNodesProps) {
+  const { items: nodes, loading, error } = useNodes(context);
   const [q, setQ] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    const withTimeout = (p, ms) => new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms);
-      p.then((v) => { clearTimeout(t); resolve(v); })
-       .catch((e) => { clearTimeout(t); reject(e); });
-    });
-
-    async function fetch() {
-      if (!context?.name) return;
-      setLoading(true);
-      setError("");
-      try {
-        const res = await withTimeout(listNodes({ name: context.name }), 15000);
-        if (active) {
-          setNodes(res || []);
-        }
-      } catch (e) {
-        setError(e?.message || String(e));
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    fetch();
-    return () => { active = false; };
-  }, [context?.name]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return nodes;
-    return (nodes || []).filter((n) => (n.name || "").toLowerCase().includes(term));
+    return nodes.filter((n) => (n.name || "").toLowerCase().includes(term));
   }, [nodes, q]);
 
   return (
@@ -56,7 +31,9 @@ export default function PaneNodes({ context }) {
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 text-red-200 p-2 text-sm">{error}</div>
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 text-red-200 p-2 text-sm">
+          {error}
+        </div>
       )}
 
       <div className="rounded-xl border border-white/10 bg-neutral-900/60 overflow-hidden">
@@ -77,10 +54,14 @@ export default function PaneNodes({ context }) {
           </Thead>
           <Tbody>
             {loading && (
-              <Tr><Td colSpan={10} className="text-white/60">Loading...</Td></Tr>
+              <Tr>
+                <Td colSpan={10} className="text-white/60">Loading...</Td>
+              </Tr>
             )}
             {!loading && filtered.length === 0 && (
-              <Tr><Td colSpan={10} className="text-white/60">No nodes</Td></Tr>
+              <Tr>
+                <Td colSpan={10} className="text-white/60">No nodes</Td>
+              </Tr>
             )}
             {!loading && filtered.map((n) => (
               <Tr key={n.name}>
@@ -92,7 +73,11 @@ export default function PaneNodes({ context }) {
                 <Td className="text-white/80">{n.roles || ""}</Td>
                 <Td className="text-white/80">{n.version || ""}</Td>
                 <Td className="text-white/80">{relativeAge(n.age)}</Td>
-                <Td><Badge variant={conditionVariant(n.condition)}>{n.condition || "Unknown"}</Badge></Td>
+                <Td>
+                  <Badge variant={conditionVariant(n.condition || "Unknown")}>
+                    {n.condition || "Unknown"}
+                  </Badge>
+                </Td>
                 <Td>
                   <button className="text-white/60 hover:text-white/80">⋮</button>
                 </Td>

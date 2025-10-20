@@ -39,7 +39,7 @@ export default function Dashboard() {
       <div className="rounded-xl border border-white/10 bg-neutral-900/60 p-6">
         <div className="text-white/80">{title}</div>
         <div className="text-white/60 text-sm mt-2">
-          Chưa triển khai. Sẽ dựng giống Lens.
+          Coming soon...
         </div>
       </div>
     );
@@ -80,26 +80,6 @@ export default function Dashboard() {
     if (selected?.name) resetNsToAll();
   }, [selected?.name]);
 
-  async function showSecrets(name: string) {
-    setError("");
-    try {
-      const { kubeconfig, token } = await getContextSecrets(name);
-      alert(`Token: ${token}\n\nKubeconfig:\n${kubeconfig}`);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  }
-
-  async function deleteContext(name: string) {
-    setError("");
-    try {
-      await svcDeleteContext(name);
-      await fetchContexts();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  }
-
   return (
     <div className="h-screen bg-neutral-950 text-white flex">
       <Sidebar
@@ -120,7 +100,7 @@ export default function Dashboard() {
 
         <div className="h-full overflow-auto p-4">
           {page === "overview" && (
-            <PaneOverview context={selected} onShowSecrets={showSecrets} onDelete={deleteContext} />
+            <PaneOverview context={selected}/>
           )}
           {page === "nodes" && <PaneNodes context={selected} />}
           {page === "applications" && <Placeholder title="Applications" />}
