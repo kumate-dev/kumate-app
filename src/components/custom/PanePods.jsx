@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from "../ui";
-import { listPods, listNamespaces, watchPods, unwatchPods } from "../../services/k8s";
+import { listPods, listNamespaces } from "../../services/k8s";
 import { relativeAge } from "../../utils/time";
 import { podStatusVariant } from "../../utils/k8s";
 import { useNamespaceStore } from "../../state/namespaceStore";
@@ -64,49 +64,6 @@ export default function WorkloadsPane({ context }) {
     }
     fetchPods();
     return () => { active = false; };
-  }, [context?.name, selectedNs]);
-
-  // Start watch for pods to get real-time updates
-  useEffect(() => {
-    let active = true;
-    let unlisten = null;
-    const keyOf = (x) => `${x?.namespace || ""}/${x?.name || ""}`;
-    async function startWatch() {
-      if (!context?.name) return;
-      const nsParam = selectedNs === ALL ? null : selectedNs;
-      try {
-        const { unlisten: u } = await watchPods({ name: context.name, namespace: nsParam, onEvent: (payload) => {
-          if (!active) return;
-          if (payload?.event === "ERROR") {
-            setError(String(payload?.message || "Watch error"));
-            return;
-          }
-          const { event, item } = payload || {};
-          setPods((prev) => {
-            const map = new Map(prev.map((p) => [keyOf(p), p]));
-            const k = keyOf(item || {});
-            if (event === "DELETED") {
-              if (k) map.delete(k);
-            } else if (k) {
-              map.set(k, item);
-            }
-            return Array.from(map.values());
-          });
-        }});
-        unlisten = u;
-      } catch (e) {
-        // Swallow watch start errors; UI still has polling fallback
-      }
-    }
-    startWatch();
-    return () => {
-      active = false;
-      try {
-        const nsParam = selectedNs === ALL ? null : selectedNs;
-        if (unlisten) unlisten();
-        if (context?.name) unwatchPods({ name: context.name, namespace: nsParam });
-      } catch (_) {}
-    };
   }, [context?.name, selectedNs]);
 
   const filtered = useMemo(() => {
