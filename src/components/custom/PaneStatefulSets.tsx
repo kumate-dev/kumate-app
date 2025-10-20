@@ -4,8 +4,17 @@ import { relativeAge } from "../../utils/time";
 import { readyVariant } from "../../utils/k8s";
 import { useNamespaceStore, ALL } from "../../state/namespaceStore";
 import { useNamespaces } from "../../hooks/useNamespaces";
-import { useStatefulSets, StatefulSet } from "../../hooks/useStatefulSets";
 import { K8sContext } from "../../layouts/Sidebar";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listStatefulSets } from "../../services/k8s";
+
+export interface StatefulSet {
+  name: string;
+  namespace: string;
+  ready: string;
+  creation_timestamp: string;
+}
+
 
 interface PaneStatefulSetsProps {
   context?: K8sContext | null;
@@ -17,7 +26,11 @@ export default function PaneStatefulSets({ context }: PaneStatefulSetsProps) {
 
   const namespaceList = useNamespaces(context);
   const nsParam = selectedNs === ALL ? undefined : selectedNs;
-  const { items, loading, error } = useStatefulSets(context, nsParam);
+  const { items, loading, error } = useK8sResources<StatefulSet>(
+    listStatefulSets as (params: { name: string; namespace?: string }) => Promise<StatefulSet[]>,
+    context,
+    nsParam
+  );
 
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {

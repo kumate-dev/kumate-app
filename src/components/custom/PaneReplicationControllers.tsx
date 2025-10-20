@@ -5,7 +5,16 @@ import { readyVariant } from "../../utils/k8s";
 import { useNamespaceStore, ALL } from "../../state/namespaceStore";
 import { K8sContext } from "../../layouts/Sidebar";
 import { useNamespaces } from "../../hooks/useNamespaces";
-import { useReplicationControllers, ReplicationController } from "../../hooks/useReplicationControllers";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listReplicationControllers } from "../../services/k8s";
+
+
+export interface ReplicationController {
+  name: string;
+  namespace: string;
+  ready: string;
+  creation_timestamp: string;
+}
 
 interface PaneReplicationControllersProps {
   context?: K8sContext | null;
@@ -17,7 +26,11 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
 
   const namespaceList = useNamespaces(context);
   const nsParam = selectedNs === ALL ? undefined : selectedNs;
-  const { items, loading, error } = useReplicationControllers(context, nsParam);
+  const { items, loading, error } = useK8sResources<ReplicationController>(
+    listReplicationControllers as (params: { name: string; namespace?: string }) => Promise<ReplicationController[]>,
+    context,
+    nsParam
+  );
 
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {

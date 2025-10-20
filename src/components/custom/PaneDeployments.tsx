@@ -5,7 +5,17 @@ import { readyVariant, deploymentStatusVariant } from "../../utils/k8s";
 import { useNamespaceStore, ALL } from "../../state/namespaceStore";
 import { K8sContext } from "../../layouts/Sidebar";
 import { useNamespaces } from "../../hooks/useNamespaces";
-import { useDeployments } from "../../hooks/useDeployments";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listDeployments } from "../../services/k8s";
+
+
+export interface Deployment {
+  name: string;
+  namespace: string;
+  ready: string;
+  status: string;
+  creation_timestamp: string;
+}
 
 interface PaneDeploymentsProps {
   context?: K8sContext | null;
@@ -17,7 +27,11 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
 
   const namespaceList = useNamespaces(context);
   const nsParam = selectedNs === ALL ? undefined : selectedNs;
-  const { items, loading, error } = useDeployments(context, nsParam);
+  const { items, loading, error } = useK8sResources<Deployment>(
+    listDeployments as (params: { name: string; namespace?: string }) => Promise<Deployment[]>,
+    context,
+    nsParam
+  );
 
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {

@@ -5,7 +5,17 @@ import { suspendVariant } from "../../utils/k8s";
 import { useNamespaceStore, ALL } from "../../state/namespaceStore";
 import { K8sContext } from "../../layouts/Sidebar";
 import { useNamespaces } from "../../hooks/useNamespaces";
-import { useCronJobs } from "../../hooks/useCronJobs";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listCronJobs } from "../../services/k8s";
+
+interface CronJob {
+  name: string;
+  namespace: string;
+  schedule: string;
+  suspend: boolean;
+  last_schedule?: string;
+  creation_timestamp: string;
+}
 
 interface PaneCronJobProps {
   context?: K8sContext | null;
@@ -17,7 +27,12 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
 
   const namespaceList = useNamespaces(context);
   const nsParam = selectedNs === ALL ? undefined : selectedNs;
-  const { items, loading, error } = useCronJobs(context, nsParam);
+
+  const { items, loading, error } = useK8sResources<CronJob>(
+    listCronJobs as (params: { name: string; namespace?: string }) => Promise<CronJob[]>,
+    context,
+    nsParam
+  );
 
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
@@ -50,7 +65,9 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
         />
       </div>
 
-      {error && <div className="rounded-md border border-red-500/30 bg-red-500/10 text-red-200 p-2 text-sm">{error}</div>}
+      {error && (
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 text-red-200 p-2 text-sm">{error}</div>
+      )}
 
       <div className="rounded-xl border border-white/10 bg-neutral-900/60 overflow-hidden">
         <Table>
@@ -66,8 +83,12 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
             </Tr>
           </Thead>
           <Tbody>
-            {loading && <Tr><Td colSpan={7} className="text-white/60">Loading...</Td></Tr>}
-            {!loading && filtered.length === 0 && <Tr><Td colSpan={7} className="text-white/60">No cronjobs</Td></Tr>}
+            {loading && (
+              <Tr><Td colSpan={7} className="text-white/60">Loading...</Td></Tr>
+            )}
+            {!loading && filtered.length === 0 && (
+              <Tr><Td colSpan={7} className="text-white/60">No cronjobs</Td></Tr>
+            )}
             {!loading && filtered.map((d) => (
               <Tr key={d.name}>
                 <Td className="font-medium">{d.name}</Td>

@@ -5,7 +5,16 @@ import { readyVariant } from "../../utils/k8s";
 import { useNamespaceStore, ALL } from "../../state/namespaceStore";
 import { K8sContext } from "../../layouts/Sidebar";
 import { useNamespaces } from "../../hooks/useNamespaces";
-import { useDaemonSets } from "../../hooks/useDaemonSets";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listDaemonSets } from "../../services/k8s";
+
+
+export interface DaemonSet {
+  name: string;
+  namespace: string;
+  ready: string;
+  creation_timestamp: string;
+}
 
 interface PaneDaemonSetsProps {
   context?: K8sContext | null;
@@ -17,8 +26,11 @@ export default function PaneDaemonSets({ context }: PaneDaemonSetsProps) {
 
   const namespaceList = useNamespaces(context);
   const nsParam = selectedNs === ALL ? undefined : selectedNs;
-  const { items, loading, error } = useDaemonSets(context, nsParam);
-
+  const { items, loading, error } = useK8sResources<DaemonSet>(
+    listDaemonSets as (params: { name: string; namespace?: string }) => Promise<DaemonSet[]>,
+    context,
+    nsParam
+  );
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();

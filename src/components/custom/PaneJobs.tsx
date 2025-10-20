@@ -5,7 +5,17 @@ import { progressVariant } from "../../utils/k8s";
 import { useNamespaceStore, ALL } from "../../state/namespaceStore";
 import { K8sContext } from "../../layouts/Sidebar";
 import { useNamespaces } from "../../hooks/useNamespaces";
-import { useJobs } from "../../hooks/useJobs";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listJobs } from "../../services/k8s";
+
+
+
+export interface Job {
+  name: string;
+  namespace: string;
+  progress: string;
+  creation_timestamp: string;
+}
 
 interface PaneJobsProps {
   context?: K8sContext | null;
@@ -17,7 +27,11 @@ export default function PaneJobs({ context }: PaneJobsProps) {
 
   const namespaceList = useNamespaces(context);
   const nsParam = selectedNs === ALL ? undefined : selectedNs;
-  const { items, loading, error } = useJobs(context, nsParam);
+  const { items, loading, error } = useK8sResources<Job>(
+    listJobs as (params: { name: string; namespace?: string }) => Promise<Job[]>,
+    context,
+    nsParam
+  );
 
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {

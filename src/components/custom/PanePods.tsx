@@ -5,7 +5,22 @@ import { podStatusVariant } from "../../utils/k8s";
 import { useNamespaceStore, ALL } from "../../state/namespaceStore";
 import { K8sContext } from "../../layouts/Sidebar";
 import { useNamespaces } from "../../hooks/useNamespaces";
-import { usePods } from "../../hooks/usePods";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listPods } from "../../services/k8s";
+
+export interface Pod {
+  name: string;
+  namespace: string;
+  containers?: number;
+  container_states?: string[];
+  cpu?: string;
+  memory?: string;
+  restart?: number;
+  node?: string;
+  qos?: string;
+  creation_timestamp: string;
+  phase?: string;
+}
 
 interface PanePodsProps {
   context?: K8sContext | null;
@@ -17,14 +32,18 @@ export default function PanePods({ context }: PanePodsProps) {
 
   const namespaceList = useNamespaces(context);
   const nsParam = selectedNs === ALL ? undefined : selectedNs;
-  const { items: pods, loading, error } = usePods(context, nsParam);
+  const { items, loading, error } = useK8sResources<Pod>(
+    listPods as (params: { name: string; namespace?: string }) => Promise<Pod[]>,
+    context,
+    nsParam
+  );
 
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return pods;
-    return pods.filter((p) => (p.name || "").toLowerCase().includes(term));
-  }, [pods, q]);
+    if (!term) return items;
+    return items.filter((p) => (p.name || "").toLowerCase().includes(term));
+  }, [items, q]);
 
   const dotClass = (s: string | undefined) => {
     if (s === "Running") return "bg-green-500";

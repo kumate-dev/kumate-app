@@ -5,7 +5,15 @@ import { readyVariant } from "../../utils/k8s";
 import { useNamespaceStore, ALL } from "../../state/namespaceStore";
 import { K8sContext } from "../../layouts/Sidebar";
 import { useNamespaces } from "../../hooks/useNamespaces";
-import { useReplicaSets, ReplicaSet } from "../../hooks/useReplicaSets";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listReplicaSets } from "../../services/k8s";
+
+export interface ReplicaSet {
+  name: string;
+  namespace: string;
+  ready: string;
+  creation_timestamp: string;
+}
 
 interface PaneReplicaSetsProps {
   context?: K8sContext | null;
@@ -17,7 +25,11 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
 
   const namespaceList = useNamespaces(context);
   const nsParam = selectedNs === ALL ? undefined : selectedNs;
-  const { items, loading, error } = useReplicaSets(context, nsParam);
+  const { items, loading, error } = useK8sResources<ReplicaSet>(
+    listReplicaSets as (params: { name: string; namespace?: string }) => Promise<ReplicaSet[]>,
+    context,
+    nsParam
+  );
 
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {

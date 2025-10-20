@@ -3,14 +3,31 @@ import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from "../ui";
 import { relativeAge } from "../../utils/time";
 import { conditionVariant } from "../../utils/k8s";
 import { K8sContext } from "../../layouts/Sidebar";
-import { useNodes } from "../../hooks/useNodes";
+import { useK8sResources } from "../../hooks/useK8sResources";
+import { listNodes } from "../../services/k8s";
+
+export interface Node {
+  name: string;
+  cpu?: string;
+  memory?: string;
+  disk?: string;
+  taints?: string;
+  roles?: string;
+  version?: string;
+  age?: string;
+  condition?: string;
+}
 
 interface PaneNodesProps {
   context?: K8sContext | null;
 }
 
 export default function PaneNodes({ context }: PaneNodesProps) {
-  const { items: nodes, loading, error } = useNodes(context);
+  const { items: nodes, loading, error } = useK8sResources<Node>(
+    listNodes as (params: { name: string }) => Promise<Node[]>,
+    context,
+    undefined
+  );
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
