@@ -26,12 +26,12 @@ anyhow = "1"
 thiserror = "1"
 rand = "0.8"
 dirs = "5"
-ring = "0.16.20"
-sqlx = { version = "0.7", features = ["sqlite", "macros", "runtime-tokio-rustls", "chrono"] }
+sqlx = { version = "0.8", features = ["sqlite", "macros", "runtime-tokio-rustls", "chrono"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs"] }
-base64 = "0.21"
+base64 = "0.22"
 serde_yaml = "0.9"
 kube = { version = "2", default-features = false, features = ["client", "config", "rustls-tls"] }
 k8s-openapi = { version = "0.26", features = ["v1_34"] }
 rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs"] }
 futures-util = "0.3"
+ring = "0.17.14"

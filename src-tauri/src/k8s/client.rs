@@ -48,7 +48,6 @@ impl K8sClient {
         match Config::from_custom_kubeconfig(kcfg, &opts).await {
           Ok(cfg) => match Client::try_from(cfg) {
             Ok(c) => {
-              println!("client_from_context: built Config via custom kubeconfig");
               Ok(Some(c))
             }
             Err(e) => {
