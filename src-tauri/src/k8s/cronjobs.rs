@@ -1,7 +1,7 @@
 use k8s_openapi::api::batch::v1::{CronJob, CronJobSpec, CronJobStatus};
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
-use kube::{Api, ResourceExt, Client};
 use kube::api::{ListParams, ObjectList};
+use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 
 use super::client::K8sClient;
@@ -35,9 +35,21 @@ impl K8sCronJobs {
     }
 
     fn to_item(cj: CronJob) -> CronJobItem {
-        let schedule: String = cj.spec.as_ref().map(|s: &CronJobSpec| s.schedule.clone()).unwrap_or_default();
-        let suspend: bool = cj.spec.as_ref().and_then(|s: &CronJobSpec| s.suspend).unwrap_or(false);
-        let last: Option<String> = cj.status.as_ref().and_then(|st: &CronJobStatus| st.last_schedule_time.as_ref()).map(|t: &Time| t.0.to_rfc3339());
+        let schedule: String = cj
+            .spec
+            .as_ref()
+            .map(|s: &CronJobSpec| s.schedule.clone())
+            .unwrap_or_default();
+        let suspend: bool = cj
+            .spec
+            .as_ref()
+            .and_then(|s: &CronJobSpec| s.suspend)
+            .unwrap_or(false);
+        let last: Option<String> = cj
+            .status
+            .as_ref()
+            .and_then(|st: &CronJobStatus| st.last_schedule_time.as_ref())
+            .map(|t: &Time| t.0.to_rfc3339());
         CronJobItem {
             name: cj.name_any(),
             namespace: cj.namespace().unwrap_or_else(|| "default".to_string()),

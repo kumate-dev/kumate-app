@@ -7,8 +7,9 @@
     "build": "vite build",
     "tauri": "tauri",
     "lint": "eslint src --ext .ts,.tsx",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:ts": "prettier --write .",
+    "format:rust": "cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "format": "npm run format:ts && npm run format:rust"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

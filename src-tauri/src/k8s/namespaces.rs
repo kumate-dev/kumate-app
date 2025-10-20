@@ -1,17 +1,17 @@
 use std::pin::Pin;
 
+use crate::k8s::client::K8sClient;
 use futures_util::{Stream, StreamExt};
 use k8s_openapi::{
     api::core::v1::{Namespace, NamespaceStatus},
     apimachinery::pkg::apis::meta::v1::Time,
 };
-use serde::Serialize;
 use kube::{
     api::{ListParams, ObjectList, WatchEvent, WatchParams},
     Api, Client,
 };
+use serde::Serialize;
 use tauri::Emitter;
-use crate::k8s::client::K8sClient;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct NamespaceItem {
@@ -35,20 +35,28 @@ impl K8sNamespaces {
         Ok(items.into_iter().map(Self::to_item).collect())
     }
 
-    pub async fn watch(app_handle: tauri::AppHandle, name: String, event_name: String) -> Result<(), String> {
+    pub async fn watch(
+        app_handle: tauri::AppHandle,
+        name: String,
+        event_name: String,
+    ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
         let api: Api<Namespace> = Api::all(client);
 
-        let mut stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<Namespace>, kube::Error>> + Send>> = api
+        let mut stream: Pin<
+            Box<dyn Stream<Item = Result<WatchEvent<Namespace>, kube::Error>> + Send>,
+        > = api
             .watch(&WatchParams::default(), "0")
             .await
             .map_err(|e| e.to_string())?
-            .boxed(); 
+            .boxed();
 
         while let Some(status) = stream.next().await {
             match status {
                 Ok(WatchEvent::Added(ns)) => Self::emit(&app_handle, &event_name, "ADDED", ns),
-                Ok(WatchEvent::Modified(ns)) => Self::emit(&app_handle, &event_name, "MODIFIED", ns),
+                Ok(WatchEvent::Modified(ns)) => {
+                    Self::emit(&app_handle, &event_name, "MODIFIED", ns)
+                }
                 Ok(WatchEvent::Deleted(ns)) => Self::emit(&app_handle, &event_name, "DELETED", ns),
                 Err(e) => eprintln!("Watch error: {}", e),
                 _ => {}
@@ -76,14 +84,14 @@ impl K8sNamespaces {
     }
 
     fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: &str, ns: Namespace) {
-      if ns.metadata.name.is_some() {
-          let item: NamespaceItem = Self::to_item(ns);
-          let event: NamespaceEvent = NamespaceEvent {
-              r#type: kind.to_string(),
-              object: item,
-          };
+        if ns.metadata.name.is_some() {
+            let item: NamespaceItem = Self::to_item(ns);
+            let event: NamespaceEvent = NamespaceEvent {
+                r#type: kind.to_string(),
+                object: item,
+            };
 
-          let _ = app_handle.emit(event_name, event);
-      }
+            let _ = app_handle.emit(event_name, event);
+        }
     }
 }

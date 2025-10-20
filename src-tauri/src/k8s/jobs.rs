@@ -1,7 +1,7 @@
 use k8s_openapi::api::batch::v1::{Job, JobSpec, JobStatus};
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
-use kube::{Api, ResourceExt, Client};
 use kube::api::{ListParams, ObjectList};
+use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 
 use super::client::K8sClient;
@@ -28,18 +28,32 @@ impl K8sJobs {
     async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<Job>, String> {
         let api: Api<Job> = K8sClient::api::<Job>(client, namespace).await;
         let lp: ListParams = ListParams::default();
-        let list: ObjectList<Job> = api.list(&lp).await.map_err(|e: kube::Error| e.to_string())?;
+        let list: ObjectList<Job> = api
+            .list(&lp)
+            .await
+            .map_err(|e: kube::Error| e.to_string())?;
         Ok(list.items)
     }
 
     fn to_item(j: Job) -> JobItem {
-        let completions: i32 = j.status.as_ref().and_then(|s: &JobStatus| s.succeeded).unwrap_or(0);
-        let desired: i32 = j.spec.as_ref().and_then(|s: &JobSpec| s.completions).unwrap_or(0);
+        let completions: i32 = j
+            .status
+            .as_ref()
+            .and_then(|s: &JobStatus| s.succeeded)
+            .unwrap_or(0);
+        let desired: i32 = j
+            .spec
+            .as_ref()
+            .and_then(|s: &JobSpec| s.completions)
+            .unwrap_or(0);
         JobItem {
             name: j.name_any(),
             namespace: j.namespace().unwrap_or_else(|| "default".to_string()),
             progress: format!("{}/{}", completions, desired),
-            creation_timestamp: j.metadata.creation_timestamp.map(|t: Time| t.0.to_rfc3339()),
+            creation_timestamp: j
+                .metadata
+                .creation_timestamp
+                .map(|t: Time| t.0.to_rfc3339()),
         }
     }
 }

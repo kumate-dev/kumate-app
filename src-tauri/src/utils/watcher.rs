@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::future::Future;
-use tokio::task::JoinHandle;
-use tokio::sync::Mutex;
 use tauri::AppHandle;
+use tokio::sync::Mutex;
+use tokio::task::JoinHandle;
 
 #[derive(Default)]
 pub struct WatchManager {

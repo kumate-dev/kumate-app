@@ -3,24 +3,23 @@
 use std::path::PathBuf;
 use tauri::Manager;
 
+mod commands;
+mod k8s;
 mod state;
 mod utils;
-mod k8s;
-mod commands;
 
 use crate::commands::contexts;
-use crate::commands::nodes;
-use crate::commands::namespaces;
-use crate::commands::pods;
-use crate::commands::deployments;
+use crate::commands::cronjobs;
 use crate::commands::daemonsets;
-use crate::commands::statefulsets;
+use crate::commands::deployments;
+use crate::commands::jobs;
+use crate::commands::namespaces;
+use crate::commands::nodes;
+use crate::commands::pods;
 use crate::commands::replicasets;
 use crate::commands::replicationcontrollers;
-use crate::commands::jobs;
-use crate::commands::cronjobs;
+use crate::commands::statefulsets;
 use crate::utils::watcher::WatchManager;
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -32,7 +31,9 @@ pub fn run() {
             let app_handle = app.handle();
 
             // Use home dir to avoid permission issues in dev
-            let data_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from(".")).join(".kumate");
+            let data_dir = dirs::home_dir()
+                .unwrap_or_else(|| PathBuf::from("."))
+                .join(".kumate");
             // Ensure subdir for our app
             let db_path = data_dir.join("kumate.db");
 
@@ -40,7 +41,7 @@ pub fn run() {
                 let st = state::AppState::init(db_path).await.expect("init db");
                 app_handle.manage(st);
             });
-            
+
             Ok(())
         })
         .manage(WatchManager::default())

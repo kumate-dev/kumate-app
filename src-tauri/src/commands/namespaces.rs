@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
-use tauri::AppHandle;
+use crate::{
+    k8s::namespaces::{K8sNamespaces, NamespaceItem},
+    utils::watcher::WatchManager,
+};
 use anyhow::Result;
-use crate::{k8s::namespaces::{K8sNamespaces, NamespaceItem}, utils::watcher::WatchManager};
-
+use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_namespaces(name: String) -> Result<Vec<NamespaceItem>, String> {
-  K8sNamespaces::list(name).await
+    K8sNamespaces::list(name).await
 }
 
 #[tauri::command]

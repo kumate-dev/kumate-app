@@ -1,5 +1,5 @@
-use anyhow::Result;
 use crate::k8s::deployments::{DeploymentItem, K8sDeployments};
+use anyhow::Result;
 
 #[tauri::command]
 pub async fn list_deployments(

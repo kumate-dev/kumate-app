@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
+use base64::{engine::general_purpose::STANDARD, Engine};
 use rand::RngCore;
 use ring::aead::{self, Aad, LessSafeKey, Nonce, UnboundKey};
 use std::fs;
 use std::path::PathBuf;
-use base64::{engine::general_purpose::STANDARD, Engine};
 
 const SERVICE_DIR: &str = ".kumate";
 const MAIN_KEY_FILE: &str = "main.key";
@@ -47,7 +47,9 @@ impl Crypto {
         let key_bytes: Vec<u8> = if key_path.exists() {
             let s: String = fs::read_to_string(&key_path)?;
             let s_trim: &str = s.trim();
-            STANDARD.decode(s_trim).map_err(|e: base64::DecodeError| anyhow!(e))?
+            STANDARD
+                .decode(s_trim)
+                .map_err(|e: base64::DecodeError| anyhow!(e))?
         } else {
             let mut kb: [u8; 32] = [0u8; 32];
             rand::thread_rng().fill_bytes(&mut kb);
@@ -58,7 +60,9 @@ impl Crypto {
 
         let unbound: UnboundKey = UnboundKey::new(&aead::CHACHA20_POLY1305, &key_bytes)
             .map_err(|_| anyhow!("invalid key"))?;
-        Ok(Self { key: LessSafeKey::new(unbound) })
+        Ok(Self {
+            key: LessSafeKey::new(unbound),
+        })
     }
 
     pub fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>> {
@@ -78,9 +82,12 @@ impl Crypto {
     }
 
     pub fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>> {
-        if data.len() < 12 + 16 { return Err(anyhow!("cipher too short")); }
+        if data.len() < 12 + 16 {
+            return Err(anyhow!("cipher too short"));
+        }
         let (nonce_bytes, cipher) = data.split_at(12);
-        let nonce = Nonce::assume_unique_for_key(nonce_bytes.try_into().map_err(|_| anyhow!("bad nonce"))?);
+        let nonce =
+            Nonce::assume_unique_for_key(nonce_bytes.try_into().map_err(|_| anyhow!("bad nonce"))?);
         let mut in_out = cipher.to_vec();
         let plain = self
             .key
@@ -92,7 +99,9 @@ impl Crypto {
 
 pub fn secrets_set(name: &str, cipher_b64: &str) -> Result<()> {
     let p = secret_path(name);
-    if let Some(parent) = p.parent() { ensure_dir(&parent.to_path_buf())?; }
+    if let Some(parent) = p.parent() {
+        ensure_dir(&parent.to_path_buf())?;
+    }
     fs::write(p, cipher_b64)?;
     Ok(())
 }

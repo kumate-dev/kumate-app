@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-use sqlx::{sqlite::{SqlitePoolOptions, SqliteConnectOptions}, SqlitePool};
+use sqlx::{
+    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
+    SqlitePool,
+};
 use std::str::FromStr;
 
 #[derive(Clone)]
@@ -16,7 +19,8 @@ impl AppState {
         }
 
         let conn_str: String = format!("sqlite://{}", db_path.to_string_lossy());
-        let opts: SqliteConnectOptions = SqliteConnectOptions::from_str(&conn_str)?.create_if_missing(true);
+        let opts: SqliteConnectOptions =
+            SqliteConnectOptions::from_str(&conn_str)?.create_if_missing(true);
         let pool: sqlx::Pool<sqlx::Sqlite> = SqlitePoolOptions::new()
             .max_connections(5)
             .connect_with(opts)
