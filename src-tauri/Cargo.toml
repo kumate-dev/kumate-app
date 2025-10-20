@@ -35,3 +35,4 @@ k8s-openapi = { version = "0.26", features = ["v1_34"] }
 rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs"] }
 futures-util = "0.3"
 ring = "0.17.14"
+tokio-stream = "0.1.17"

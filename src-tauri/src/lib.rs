@@ -52,6 +52,7 @@ pub fn run() {
             contexts::import_kube_contexts,
             nodes::list_nodes,
             namespaces::list_namespaces,
+            namespaces::watch_namespaces,
             pods::list_pods,
             deployments::list_deployments,
             daemonsets::list_daemonsets,

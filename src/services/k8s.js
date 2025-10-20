@@ -33,6 +33,26 @@ export async function listNamespaces({ name }) {
   return invoke("list_namespaces", { name });
 }
 
+export async function watchNamespaces({ name, onEvent }) {
+  const eventName = await invoke("watch_namespaces", { name });
+  const unlisten = await listen(eventName, (evt) => {
+    try {
+      onEvent?.(evt.payload);
+    } catch (err) {
+      console.error("Error in onEvent handler:", err);
+    }
+  });
+  return { eventName, unlisten };
+}
+
+export async function unwatchNamespaces({ name }) {
+  try {
+    await invoke("unwatch_namespaces", { name });
+  } catch (err) {
+    console.warn("unwatchNamespaces failed:", err);
+  }
+}
+
 export async function listNodes({ name }) {
   return invoke("list_nodes", { name });
 }
