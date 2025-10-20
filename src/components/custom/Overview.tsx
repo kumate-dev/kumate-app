@@ -1,5 +1,5 @@
-import { K8sContext } from "../../services/k8s";
-import PaneOverview from "./PaneOverview";
+import { K8sContext } from '../../services/k8s';
+import PaneOverview from './PaneOverview';
 
 interface OverviewProps {
   context?: K8sContext | null;
@@ -11,10 +11,8 @@ export default function Overview({ context }: OverviewProps) {
   }
 
   return (
-    <div className="p-4 space-y-6">
-      <PaneOverview
-        context={context}
-      />
+    <div className="space-y-6 p-4">
+      <PaneOverview context={context} />
     </div>
   );
 }

@@ -1,7 +1,6 @@
-import { relativeAge } from "../../utils/time";
+import { relativeAge } from '../../utils/time';
 
-import { useEffect, useState } from "react";
-
+import { useEffect, useState } from 'react';
 
 export function RelativeAge({ iso }) {
   const [age, setAge] = useState(() => relativeAge(iso));

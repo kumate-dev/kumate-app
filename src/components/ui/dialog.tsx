@@ -1,7 +1,7 @@
-import React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
-import { Button } from "./button";
+import React from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
+import { Button } from './button';
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -12,25 +12,17 @@ interface DialogContentProps
   children?: React.ReactNode;
 }
 
-export function DialogContent({
-  className = "",
-  children,
-  ...props
-}: DialogContentProps) {
+export function DialogContent({ className = '', children, ...props }: DialogContentProps) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
+      <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fixed inset-0 bg-black/60 backdrop-blur-sm" />
       <DialogPrimitive.Content
-        className={`fixed left-1/2 top-1/2 w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-neutral-900/95 p-4 shadow-xl data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 ${className}`}
+        className={`data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 fixed top-1/2 left-1/2 w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-neutral-900/95 p-4 shadow-xl ${className}`}
         {...props}
       >
         {children}
         <DialogPrimitive.Close asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute right-3 top-3 p-2"
-          >
+          <Button variant="ghost" size="sm" className="absolute top-3 right-3 p-2">
             <X className="h-4 w-4" />
           </Button>
         </DialogPrimitive.Close>

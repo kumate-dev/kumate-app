@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
-import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from "../ui";
-import { statusVariant } from "../../utils/k8s";
-import { RelativeAge } from "../shared/RelativeAge";
-import { useNamespacesWatcher } from "../../hooks/useNamespacesWatcher";
+import { useMemo, useState } from 'react';
+import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
+import { statusVariant } from '../../utils/k8s';
+import { RelativeAge } from '../shared/RelativeAge';
+import { useNamespacesWatcher } from '../../hooks/useNamespacesWatcher';
 
 interface PaneNamespacesProps {
   context?: {
@@ -11,8 +11,8 @@ interface PaneNamespacesProps {
 }
 
 export default function PaneNamespaces({ context }: PaneNamespacesProps) {
-  const { items, error } = useNamespacesWatcher(context?.name); 
-  const [q, setQ] = useState<string>("");
+  const { items, error } = useNamespacesWatcher(context?.name);
+  const [q, setQ] = useState<string>('');
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -32,12 +32,12 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 text-red-200 p-2 text-sm">
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-200">
           {error}
         </div>
       )}
 
-      <div className="rounded-xl border border-white/10 bg-neutral-900/60 overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
         <Table>
           <Thead>
             <Tr>
@@ -59,17 +59,15 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
               <Tr key={n.name}>
                 <Td className="font-medium">{n.name}</Td>
                 <Td>
-                <Badge variant={statusVariant(n.status ?? "Unknown")}>
-                  {n.status || "Unknown"}
-                </Badge>
+                  <Badge variant={statusVariant(n.status ?? 'Unknown')}>
+                    {n.status || 'Unknown'}
+                  </Badge>
                 </Td>
                 <Td className="text-white/80">
                   <RelativeAge iso={n.age} />
                 </Td>
                 <Td>
-                  <button className="text-white/60 hover:text-white/80">
-                    ⋮
-                  </button>
+                  <button className="text-white/60 hover:text-white/80">⋮</button>
                 </Td>
               </Tr>
             ))}

@@ -1,6 +1,12 @@
 /* Reset default styles from template; rely on Tailwind */
-html, body, #root { height: 100%; }
-body { margin: 0; }
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+}
 
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);

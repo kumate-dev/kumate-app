@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { listNamespaces, watchNamespaces, unwatchNamespaces, NamespaceItem } from "../services/k8s";
+import { useEffect, useState } from 'react';
+import { listNamespaces, watchNamespaces, unwatchNamespaces, NamespaceItem } from '../services/k8s';
 
 export interface NamespaceEvent {
-  type: "ADDED" | "MODIFIED" | "DELETED";
+  type: 'ADDED' | 'MODIFIED' | 'DELETED';
   object: NamespaceItem;
 }
 
@@ -13,7 +13,7 @@ interface UseNamespacesWatcherResult {
 
 export function useNamespacesWatcher(name?: string): UseNamespacesWatcherResult {
   const [items, setItems] = useState<NamespaceItem[]>([]);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (!name) return;
@@ -29,16 +29,14 @@ export function useNamespacesWatcher(name?: string): UseNamespacesWatcherResult 
           onEvent: (evt: NamespaceEvent) => {
             setItems((prev) => {
               switch (evt.type) {
-                case "ADDED":
+                case 'ADDED':
                   if (!prev.find((i) => i.name === evt.object.name)) {
                     return [...prev, evt.object];
                   }
                   return prev;
-                case "MODIFIED":
-                  return prev.map((i) =>
-                    i.name === evt.object.name ? evt.object : i
-                  );
-                case "DELETED":
+                case 'MODIFIED':
+                  return prev.map((i) => (i.name === evt.object.name ? evt.object : i));
+                case 'DELETED':
                   return prev.filter((i) => i.name !== evt.object.name);
               }
             });

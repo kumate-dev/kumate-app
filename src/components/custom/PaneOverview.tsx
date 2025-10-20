@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui";
-import { Activity, Server, Boxes, Network } from "lucide-react";
-import WorkloadsPane from "./PanePods";
-import PaneNodes from "./PaneNodes";
-import { K8sContext } from "../../services/k8s";
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui';
+import { Activity, Server, Boxes, Network } from 'lucide-react';
+import WorkloadsPane from './PanePods';
+import PaneNodes from './PaneNodes';
+import { K8sContext } from '../../services/k8s';
 
 interface PlaceholderProps {
   title: string;
@@ -13,9 +13,7 @@ function Placeholder({ title }: PlaceholderProps) {
   return (
     <div className="rounded-xl border border-white/10 bg-neutral-900/60 p-4">
       <div className="text-white/80">{title}</div>
-      <div className="text-white/60 text-sm mt-2">
-        Coming soon...
-      </div>
+      <div className="mt-2 text-sm text-white/60">Coming soon...</div>
     </div>
   );
 }
@@ -24,16 +22,14 @@ interface PaneOverviewProps {
   context?: K8sContext | null;
 }
 
-export default function PaneOverview({
-  context
-}: PaneOverviewProps) {
-  const [tab, setTab] = useState<string>("overview");
+export default function PaneOverview({ context }: PaneOverviewProps) {
+  const [tab, setTab] = useState<string>('overview');
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="text-xl font-semibold">{context?.name || "No selection"}</div>
+          <div className="text-xl font-semibold">{context?.name || 'No selection'}</div>
         </div>
       </div>
 

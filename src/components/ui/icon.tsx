@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   className?: string;
   children?: React.ReactNode;
 }
 
-export function Icon({ children, className = "w-4 h-4", ...props }: IconProps) {
+export function Icon({ children, className = 'w-4 h-4', ...props }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

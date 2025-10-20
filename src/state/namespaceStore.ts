@@ -1,6 +1,6 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-export const ALL = "All Namespaces";
+export const ALL = 'All Namespaces';
 
 export interface NamespaceItem {
   name: string;
