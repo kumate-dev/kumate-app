@@ -1,8 +1,11 @@
 import { relativeAge } from '../../utils/time';
-
 import { useEffect, useState } from 'react';
 
-export function RelativeAge({ iso }) {
+interface RelativeAgeProps {
+  iso?: string;
+}
+
+export function RelativeAge({ iso }: RelativeAgeProps) {
   const [age, setAge] = useState(() => relativeAge(iso));
 
   useEffect(() => {

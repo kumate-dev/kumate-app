@@ -64,22 +64,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const collapseKey = (title: string, parent?: string) => (parent ? `${parent}:${title}` : title);
   const toggleGroup = (title: string, parent?: string) =>
     setCollapsed((s) => ({ ...s, [collapseKey(title, parent)]: !s[collapseKey(title, parent)] }));
-  const toggleCluster = (name: string) =>
-    setCollapsed((s) => ({ ...s, [`cluster:${name}`]: !s[`cluster:${name}`] }));
-
-  React.useEffect(() => {
-    setCollapsed((prev) => {
-      const next = { ...prev };
-      contexts.forEach((c) => {
-        if (next[`cluster:${c.name}`] === undefined) next[`cluster:${c.name}`] = true;
-        collapsibleTitles.forEach((t) => {
-          const key = `${c.name}:${t}`;
-          if (next[key] === undefined) next[key] = true;
-        });
-      });
-      return next;
-    });
-  }, [contexts]);
 
   const categoryGroups: PageItem[] = [
     {

@@ -8,8 +8,7 @@
     "tauri": "tauri",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "type:check": "tsc --noEmit"
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -31,9 +30,14 @@
     "@tauri-apps/cli": "^2.9.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-unused-imports": "^4.3.0",
     "husky": "^9.1.7",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",

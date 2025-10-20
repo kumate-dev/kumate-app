@@ -1,14 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sidebar } from '../layouts/Sidebar';
 import PaneOverview from '../components/custom/PaneOverview';
 import WorkloadsPane from '../components/custom/PanePods';
 import PaneNodes from '../components/custom/PaneNodes';
-import {
-  listContexts,
-  getContextSecrets,
-  deleteContext as svcDeleteContext,
-  importKubeContexts,
-} from '../services/k8s';
+import { listContexts, importKubeContexts } from '../services/k8s';
 import PaneNamespaces from '../components/custom/PaneNamespaces';
 import PaneDeployments from '../components/custom/PaneDeployments';
 import PaneDaemonSets from '../components/custom/PaneDaemonSets';
@@ -44,38 +39,41 @@ export default function Dashboard() {
     );
   }
 
-  async function fetchContexts() {
-    setError('');
-    setLoading(true);
-    try {
-      let list: KubeContext[] = [];
-      try {
-        list = (await listContexts()) || [];
-      } catch (_) {
-        setContexts([]);
-        setSelected(null);
-        setError('Please run Tauri app to list clusters.');
-        return;
-      }
-
-      if (list.length === 0) {
-        try {
-          await importKubeContexts();
-        } catch (_) {}
-        try {
-          list = (await listContexts()) || [];
-        } catch (_) {}
-      }
-      setContexts(list);
-      if (!selected && list.length > 0) setSelected(list[0]);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }
+  const selectedRef = useRef(selected);
 
   useEffect(() => {
+    async function fetchContexts() {
+      setError('');
+      setLoading(true);
+      try {
+        let list: KubeContext[] = [];
+        try {
+          list = (await listContexts()) || [];
+        } catch {
+          setContexts([]);
+          setSelected(null);
+          return;
+        }
+
+        if (list.length === 0) {
+          try {
+            await importKubeContexts();
+          } catch {}
+          try {
+            list = (await listContexts()) || [];
+          } catch {}
+        }
+        setContexts(list);
+
+        // dùng ref thay vì selected trực tiếp
+        if (!selectedRef.current && list.length > 0) setSelected(list[0]);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchContexts();
   }, []);
 
