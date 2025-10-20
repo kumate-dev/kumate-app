@@ -14,9 +14,6 @@ export default function PaneReplicationControllers({ context }) {
   const selectedNs = useNamespaceStore((s) => s.selectedNs);
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
 
-  useEffect(() => {}, []);
-
-
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

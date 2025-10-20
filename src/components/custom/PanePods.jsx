@@ -16,13 +16,7 @@ export default function WorkloadsPane({ context }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
-  const [ageTick, setAgeTick] = useState(0);
-
-  // Force re-render every minute to update age counters
-  useEffect(() => {
-    const t = setInterval(() => setAgeTick((n) => n + 1), 60000);
-    return () => clearInterval(t);
-  }, []);
+  const [ageTick] = useState(0);
 
   // Fetch namespaces for dropdown
   useEffect(() => {

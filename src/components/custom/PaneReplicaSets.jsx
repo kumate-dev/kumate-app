@@ -6,6 +6,7 @@ import { readyVariant } from "../../utils/k8s";
 import { useNamespaceStore } from "../../state/namespaceStore";
 
 
+
 export default function PaneReplicaSets({ context }) {
   const ALL = "All Namespaces";
   const namespaces = useNamespaceStore((s) => s.namespaces);
@@ -13,9 +14,6 @@ export default function PaneReplicaSets({ context }) {
   const setNamespaces = useNamespaceStore((s) => s.setNamespaces);
   const selectedNs = useNamespaceStore((s) => s.selectedNs);
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
-
-  useEffect(() => {}, []);
-
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
