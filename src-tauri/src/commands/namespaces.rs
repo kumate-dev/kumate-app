@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
+use tauri::AppHandle;
 use anyhow::Result;
-use crate::k8s::namespaces::{K8sNamespaces, NamespaceItem};
+use crate::{k8s::namespaces::{K8sNamespaces, NamespaceItem}, utils::watcher::WatchManager};
 
 
 #[tauri::command]
@@ -7,20 +10,31 @@ pub async fn list_namespaces(name: String) -> Result<Vec<NamespaceItem>, String>
   K8sNamespaces::list(name).await
 }
 
+#[tauri::command]
+pub async fn watch_namespaces(
+    app_handle: AppHandle,
+    name: String,
+    state: tauri::State<'_, WatchManager>,
+) -> Result<String, String> {
+    let event_name: Arc<String> = Arc::new(format!("k8s://{}/namespaces", name));
+    let event_name_clone: Arc<String> = Arc::clone(&event_name);
+
+    state
+        .watch(app_handle, name.clone(), move |app_handle, name| {
+            let event_name_inner = Arc::clone(&event_name_clone);
+            async move {
+                K8sNamespaces::watch(app_handle, name, event_name_inner.to_string()).await
+            }
+        })
+        .await?;
+
+    Ok(event_name.to_string())
+}
 
 #[tauri::command]
-pub async fn watch_namespaces(app_handle: tauri::AppHandle, name: String) -> Result<String, String> {
-    let event_name = format!("k8s://{}/namespaces", name);
-    let handle = app_handle.clone();
-    let event_name_clone = event_name.clone(); 
-
-    tauri::async_runtime::spawn(async move {
-        tokio::spawn(async move {
-            if let Err(err) = K8sNamespaces::watch(handle, name.clone(), event_name_clone).await {
-                eprintln!("watch_namespaces({}): {}", name, err);
-            }
-        });
-    });
-
-    Ok(event_name)
+pub async fn unwatch_namespaces(
+    state: tauri::State<'_, WatchManager>,
+    name: String,
+) -> Result<(), String> {
+    state.unwatch(&name).await
 }

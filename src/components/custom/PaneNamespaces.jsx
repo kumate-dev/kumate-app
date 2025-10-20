@@ -53,6 +53,7 @@ export default function PaneNamespaces({ context }) {
     return () => {
       if (unlisten) unlisten();
       unwatchNamespaces({ name: context.name });
+      setItems([]);
     };
   }, [context?.name]);
 

@@ -19,7 +19,7 @@ use crate::commands::replicasets;
 use crate::commands::replicationcontrollers;
 use crate::commands::jobs;
 use crate::commands::cronjobs;
-
+use crate::utils::watcher::WatchManager;
 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -40,9 +40,10 @@ pub fn run() {
                 let st = state::AppState::init(db_path).await.expect("init db");
                 app_handle.manage(st);
             });
-
+            
             Ok(())
         })
+        .manage(WatchManager::default())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             contexts::add_context,
@@ -53,6 +54,7 @@ pub fn run() {
             nodes::list_nodes,
             namespaces::list_namespaces,
             namespaces::watch_namespaces,
+            namespaces::unwatch_namespaces,
             pods::list_pods,
             deployments::list_deployments,
             daemonsets::list_daemonsets,
