@@ -6,9 +6,10 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listReplicationControllers } from '../../services/k8s';
+import { listReplicationControllers } from '../../services/replicationcontrollers';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
+import AgeCell from '../shared/AgeCell';
 
 export interface ReplicationController {
   name: string;
@@ -88,7 +89,7 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
                   <Td>
                     <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
                   </Td>
-                  <Td className="text-white/80">{relativeAge(d.creation_timestamp)}</Td>
+                  <AgeCell timestamp={d.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

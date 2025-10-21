@@ -6,9 +6,10 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listDaemonSets } from '../../services/k8s';
+import { listDaemonSets, watchDaemonSets } from '../../services/daemonsets';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
+import AgeCell from '../shared/AgeCell';
 
 export interface DaemonSet {
   name: string;
@@ -29,7 +30,8 @@ export default function PaneDaemonSets({ context }: PaneDaemonSetsProps) {
   const { items, loading, error } = useK8sResources<DaemonSet>(
     listDaemonSets as (params: { name: string; namespace?: string }) => Promise<DaemonSet[]>,
     context,
-    getSelectedNamespace(selectedNs)
+    getSelectedNamespace(selectedNs),
+    watchDaemonSets
   );
 
   const [q, setQ] = useState('');
@@ -85,7 +87,7 @@ export default function PaneDaemonSets({ context }: PaneDaemonSetsProps) {
                   <Td>
                     <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
                   </Td>
-                  <Td className="text-white/80">{relativeAge(d.creation_timestamp)}</Td>
+                  <AgeCell timestamp={d.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

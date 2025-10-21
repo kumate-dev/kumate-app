@@ -6,16 +6,11 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listJobs } from '../../services/k8s';
+import { listJobs } from '../../services/jobs';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
-
-export interface Job {
-  name: string;
-  namespace: string;
-  progress: string;
-  creation_timestamp: string;
-}
+import { JobItem, watchJobs } from '../../services/jobs';
+import AgeCell from '../shared/AgeCell';
 
 interface PaneJobsProps {
   context?: K8sContext | null;
@@ -26,10 +21,11 @@ export default function PaneJobs({ context }: PaneJobsProps) {
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
 
   const namespaceList = useSelectedNamespaces(context);
-  const { items, loading, error } = useK8sResources<Job>(
-    listJobs as (params: { name: string; namespace?: string }) => Promise<Job[]>,
+  const { items, loading, error } = useK8sResources<JobItem>(
+    listJobs as (params: { name: string; namespace?: string }) => Promise<JobItem[]>,
     context,
-    getSelectedNamespace(selectedNs)
+    getSelectedNamespace(selectedNs),
+    watchJobs
   );
 
   const [q, setQ] = useState('');
@@ -85,7 +81,7 @@ export default function PaneJobs({ context }: PaneJobsProps) {
                   <Td>
                     <Badge variant={progressVariant(d.progress)}>{d.progress}</Badge>
                   </Td>
-                  <Td className="text-white/80">{relativeAge(d.creation_timestamp)}</Td>
+                  <AgeCell timestamp={d.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

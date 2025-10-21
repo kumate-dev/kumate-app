@@ -6,9 +6,10 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listPods } from '../../services/k8s';
+import { listPods } from '../../services/pods';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
+import AgeCell from '../shared/AgeCell';
 
 export interface Pod {
   name: string;
@@ -125,7 +126,7 @@ export default function PanePods({ context }: PanePodsProps) {
                   <Td className="text-white/80">{p.restart ?? '-'}</Td>
                   <Td className="text-white/80">{p.node || '-'}</Td>
                   <Td className="text-white/80">{p.qos || '-'}</Td>
-                  <Td className="text-white/80">{relativeAge(p.creation_timestamp)}</Td>
+                  <AgeCell timestamp={p.creation_timestamp || ''} />
                   <Badge variant={podStatusVariant(p.phase ?? 'Unknown')}>
                     {p.phase ?? 'Unknown'}
                   </Badge>

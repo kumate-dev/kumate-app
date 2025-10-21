@@ -1,8 +1,15 @@
+use std::pin::Pin;
+
+use futures_util::{Stream, StreamExt};
 use k8s_openapi::api::batch::v1::{CronJob, CronJobSpec, CronJobStatus};
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
-use kube::api::{ListParams, ObjectList};
+use kube::api::{ListParams, ObjectList, WatchEvent, WatchParams};
 use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
+use tauri::Emitter;
+
+use crate::types::event::EventType;
+use crate::utils::k8s::{to_creation_timestamp, to_namespace};
 
 use super::client::K8sClient;
 
@@ -16,6 +23,12 @@ pub struct CronJobItem {
     pub creation_timestamp: Option<String>,
 }
 
+#[derive(Serialize, Clone)]
+struct CronJobEvent {
+    r#type: EventType,
+    object: CronJobItem,
+}
+
 pub struct K8sCronJobs;
 
 impl K8sCronJobs {
@@ -25,6 +38,41 @@ impl K8sCronJobs {
         let mut out: Vec<CronJobItem> = cronjobs.into_iter().map(Self::to_item).collect();
         out.sort_by(|a: &CronJobItem, b: &CronJobItem| a.name.cmp(&b.name));
         Ok(out)
+    }
+
+    pub async fn watch(
+        app_handle: tauri::AppHandle,
+        name: String,
+        namespace: Option<String>,
+        event_name: String,
+    ) -> Result<(), String> {
+        let client: Client = K8sClient::for_context(&name).await?;
+        let api: Api<CronJob> = K8sClient::api::<CronJob>(client, namespace).await;
+
+        let mut stream: Pin<
+            Box<dyn Stream<Item = Result<WatchEvent<CronJob>, kube::Error>> + Send>,
+        > = api
+            .watch(&WatchParams::default(), "0")
+            .await
+            .map_err(|e| e.to_string())?
+            .boxed();
+
+        while let Some(status) = stream.next().await {
+            match status {
+                Ok(WatchEvent::Added(cj)) => {
+                    Self::emit(&app_handle, &event_name, EventType::ADDED, cj)
+                }
+                Ok(WatchEvent::Modified(cj)) => {
+                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, cj)
+                }
+                Ok(WatchEvent::Deleted(cj)) => {
+                    Self::emit(&app_handle, &event_name, EventType::DELETED, cj)
+                }
+                Err(e) => eprintln!("CronJob watch error: {}", e),
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<CronJob>, String> {
@@ -52,11 +100,22 @@ impl K8sCronJobs {
             .map(|t: &Time| t.0.to_rfc3339());
         CronJobItem {
             name: cj.name_any(),
-            namespace: cj.namespace().unwrap_or_else(|| "default".to_string()),
-            schedule,
-            suspend,
+            namespace: to_namespace(cj.namespace()),
+            schedule: schedule,
+            suspend: suspend,
             last_schedule: last,
-            creation_timestamp: cj.metadata.creation_timestamp.map(|t| t.0.to_rfc3339()),
+            creation_timestamp: to_creation_timestamp(cj.metadata.clone()),
+        }
+    }
+
+    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, cj: CronJob) {
+        if cj.metadata.name.is_some() {
+            let item: CronJobItem = Self::to_item(cj);
+            let event: CronJobEvent = CronJobEvent {
+                r#type: kind,
+                object: item,
+            };
+            let _ = app_handle.emit(event_name, event);
         }
     }
 }

@@ -3,7 +3,6 @@ import { Sidebar } from '../layouts/Sidebar';
 import PaneOverview from '../components/custom/PaneOverview';
 import WorkloadsPane from '../components/custom/PanePods';
 import PaneNodes from '../components/custom/PaneNodes';
-import { listContexts, importKubeContexts } from '../services/k8s';
 import PaneNamespaces from '../components/custom/PaneNamespaces';
 import PaneDeployments from '../components/custom/PaneDeployments';
 import PaneDaemonSets from '../components/custom/PaneDaemonSets';
@@ -14,6 +13,7 @@ import PaneJobs from '../components/custom/PaneJobs';
 import PaneCronJob from '../components/custom/PaneCronJob';
 import { useNamespaceStore } from '../state/namespaceStore';
 import { PageKey } from '../types/pageKey';
+import { importKubeContexts, listContexts } from '../services/contexts';
 
 interface KubeContext {
   name: string;

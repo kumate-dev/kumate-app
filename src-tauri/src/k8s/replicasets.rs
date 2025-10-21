@@ -1,16 +1,18 @@
 use std::pin::Pin;
 
 use futures_util::{Stream, StreamExt};
-use k8s_openapi::{
-    api::apps::v1::{ReplicaSet, ReplicaSetSpec, ReplicaSetStatus},
-    apimachinery::pkg::apis::meta::v1::Time,
-};
+use k8s_openapi::api::apps::v1::{ReplicaSet, ReplicaSetSpec, ReplicaSetStatus};
 use kube::{
     api::{ListParams, ObjectList, WatchEvent, WatchParams},
     Api, Client, ResourceExt,
 };
 use serde::Serialize;
 use tauri::Emitter;
+
+use crate::{
+    types::event::EventType,
+    utils::k8s::{to_creation_timestamp, to_namespace, to_replicas_ready},
+};
 
 use super::client::K8sClient;
 
@@ -24,7 +26,7 @@ pub struct ReplicaSetItem {
 
 #[derive(Serialize, Clone)]
 struct ReplicaSetEvent {
-    r#type: String, // ADDED / MODIFIED / DELETED
+    r#type: EventType,
     object: ReplicaSetItem,
 }
 
@@ -42,7 +44,6 @@ impl K8sReplicaSets {
         Ok(out)
     }
 
-    /// Watch deployments for real-time updates
     pub async fn watch(
         app_handle: tauri::AppHandle,
         name: String,
@@ -62,12 +63,14 @@ impl K8sReplicaSets {
 
         while let Some(status) = stream.next().await {
             match status {
-                Ok(WatchEvent::Added(dep)) => Self::emit(&app_handle, &event_name, "ADDED", dep),
+                Ok(WatchEvent::Added(dep)) => {
+                    Self::emit(&app_handle, &event_name, EventType::ADDED, dep)
+                }
                 Ok(WatchEvent::Modified(dep)) => {
-                    Self::emit(&app_handle, &event_name, "MODIFIED", dep)
+                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, dep)
                 }
                 Ok(WatchEvent::Deleted(dep)) => {
-                    Self::emit(&app_handle, &event_name, "DELETED", dep)
+                    Self::emit(&app_handle, &event_name, EventType::DELETED, dep)
                 }
                 Err(e) => eprintln!("ReplicaSet watch error: {}", e),
                 _ => {}
@@ -87,32 +90,33 @@ impl K8sReplicaSets {
     }
 
     fn to_item(r: ReplicaSet) -> ReplicaSetItem {
-        let replicas: i32 = r
-            .spec
-            .as_ref()
-            .and_then(|sp: &ReplicaSetSpec| sp.replicas)
-            .unwrap_or(0);
-        let ready: i32 = r
-            .status
-            .as_ref()
-            .and_then(|st: &ReplicaSetStatus| st.ready_replicas)
-            .unwrap_or(0);
         ReplicaSetItem {
             name: r.name_any(),
-            namespace: r.namespace().unwrap_or_else(|| "default".to_string()),
-            ready: format!("{}/{}", ready, replicas),
-            creation_timestamp: r
-                .metadata
-                .creation_timestamp
-                .map(|t: Time| t.0.to_rfc3339()),
+            namespace: to_namespace(r.namespace()),
+            ready: Self::extract_ready(&r),
+            creation_timestamp: to_creation_timestamp(r.metadata),
         }
     }
 
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: &str, r: ReplicaSet) {
+    fn extract_ready(d: &ReplicaSet) -> String {
+        let replicas: i32 = d
+            .spec
+            .as_ref()
+            .and_then(|s: &ReplicaSetSpec| s.replicas)
+            .unwrap_or(0);
+        let ready: i32 = d
+            .status
+            .as_ref()
+            .and_then(|s: &ReplicaSetStatus| s.ready_replicas)
+            .unwrap_or(0);
+        to_replicas_ready(replicas, ready)
+    }
+
+    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, r: ReplicaSet) {
         if r.metadata.name.is_some() {
             let item: ReplicaSetItem = Self::to_item(r);
             let event: ReplicaSetEvent = ReplicaSetEvent {
-                r#type: kind.to_string(),
+                r#type: kind,
                 object: item,
             };
             let _ = app_handle.emit(event_name, event);

@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui';
 import { Activity, Server, Boxes, Network } from 'lucide-react';
 import WorkloadsPane from './PanePods';
 import PaneNodes from './PaneNodes';
-import { K8sContext } from '../../services/k8s';
+import { K8sContext } from '../../services/contexts';
 
 interface PlaceholderProps {
   title: string;

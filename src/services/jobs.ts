@@ -2,39 +2,39 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '../types/k8sEvent';
 
-export interface ReplicaSetItem {
+export interface JobItem {
   name: string;
   namespace: string;
-  ready: string;
+  progress: string;
   creation_timestamp?: string;
 }
 
-export interface ReplicaSetEvent {
+export interface JobEvent {
   type: EventType;
-  object: ReplicaSetItem;
+  object: JobItem;
 }
 
-export async function listReplicaSets({
+export async function listJobs({
   name,
   namespace,
 }: {
   name: string;
   namespace?: string;
-}): Promise<ReplicaSetItem[]> {
-  return await invoke<ReplicaSetItem[]>('list_replicasets', { name, namespace });
+}): Promise<JobItem[]> {
+  return await invoke<JobItem[]>('list_jobs', { name, namespace });
 }
 
-export async function watchReplicaSets({
+export async function watchJobs({
   name,
   namespace,
   onEvent,
 }: {
   name: string;
   namespace?: string;
-  onEvent?: EventHandler<ReplicaSetEvent>;
+  onEvent?: EventHandler<JobEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_replicasets', { name, namespace });
-  const unlisten = await listen<ReplicaSetEvent>(eventName, (evt) => {
+  const eventName = await invoke<string>('watch_jobs', { name, namespace });
+  const unlisten = await listen<JobEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
     } catch (err) {

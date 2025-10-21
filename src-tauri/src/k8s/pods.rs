@@ -1,10 +1,22 @@
+use std::pin::Pin;
+
+use futures_util::{Stream, StreamExt};
 use k8s_openapi::api::core::v1::{Container, ContainerStatus, Pod, PodSpec, PodStatus};
-use kube::api::{ListParams, ObjectList};
-use kube::{Api, Client, ResourceExt};
+use kube::{
+    api::{ListParams, ObjectList, WatchEvent, WatchParams},
+    Api, Client, ResourceExt,
+};
 use serde::Serialize;
+use tauri::Emitter;
 
 use super::client::K8sClient;
-use crate::utils::bytes::Bytes;
+use crate::{
+    types::event::EventType,
+    utils::{
+        bytes::Bytes,
+        k8s::{to_creation_timestamp, to_namespace},
+    },
+};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct PodItem {
@@ -21,6 +33,12 @@ pub struct PodItem {
     pub qos: Option<String>,
 }
 
+#[derive(Serialize, Clone)]
+struct PodEvent {
+    r#type: EventType,
+    object: PodItem,
+}
+
 pub struct K8sPods;
 
 impl K8sPods {
@@ -30,6 +48,39 @@ impl K8sPods {
         let mut out: Vec<PodItem> = pods.into_iter().map(Self::to_item).collect();
         out.sort_by(|a: &PodItem, b: &PodItem| a.name.cmp(&b.name));
         Ok(out)
+    }
+
+    pub async fn watch(
+        app_handle: tauri::AppHandle,
+        name: String,
+        namespace: Option<String>,
+        event_name: String,
+    ) -> Result<(), String> {
+        let client: Client = K8sClient::for_context(&name).await?;
+        let api: Api<Pod> = K8sClient::api::<Pod>(client, namespace).await;
+
+        let mut stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<Pod>, kube::Error>> + Send>> =
+            api.watch(&WatchParams::default(), "0")
+                .await
+                .map_err(|e| e.to_string())?
+                .boxed();
+
+        while let Some(status) = stream.next().await {
+            match status {
+                Ok(WatchEvent::Added(dep)) => {
+                    Self::emit(&app_handle, &event_name, EventType::ADDED, dep)
+                }
+                Ok(WatchEvent::Modified(dep)) => {
+                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, dep)
+                }
+                Ok(WatchEvent::Deleted(dep)) => {
+                    Self::emit(&app_handle, &event_name, EventType::DELETED, dep)
+                }
+                Err(e) => eprintln!("Pod watch error: {}", e),
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<Pod>, String> {
@@ -43,49 +94,41 @@ impl K8sPods {
     }
 
     pub fn to_item(p: Pod) -> PodItem {
-        let name: String = p.name_any();
-        let namespace: String = p.namespace().unwrap_or_else(|| "default".to_string());
-        let phase: Option<String> = p.status.as_ref().and_then(|s: &PodStatus| s.phase.clone());
-        let creation_timestamp: Option<String> = p
-            .metadata
-            .creation_timestamp
-            .as_ref()
-            .map(|t| t.0.to_rfc3339());
-        let containers: usize = Self::count_containers(&p);
-        let container_states: Option<Vec<String>> = Self::extract_container_states(&p);
-        let cpu: Option<String> = Self::aggregate_cpu(&p);
-        let memory: Option<String> = Self::aggregate_memory(&p);
-        let restart: Option<i32> = Self::sum_restarts(&p);
-        let node: Option<String> = p.spec.as_ref().and_then(|s: &PodSpec| s.node_name.clone());
-        let qos: Option<String> = p
-            .status
-            .as_ref()
-            .and_then(|s: &PodStatus| s.qos_class.clone());
-
         PodItem {
-            name,
-            namespace,
-            phase,
-            creation_timestamp,
-            containers,
-            container_states,
-            cpu,
-            memory,
-            restart,
-            node,
-            qos,
+            name: p.name_any(),
+            namespace: to_namespace(p.namespace()),
+            phase: p.status.as_ref().and_then(|s: &PodStatus| s.phase.clone()),
+            creation_timestamp: to_creation_timestamp(p.metadata.clone()),
+            containers: p
+                .spec
+                .as_ref()
+                .map(|s: &PodSpec| s.containers.len())
+                .unwrap_or(0),
+            container_states: Self::extract_container_states(p.status.clone()),
+            cpu: Self::aggregate_cpu(p.spec.clone()),
+            memory: Self::aggregate_memory(p.spec.clone()),
+            restart: Self::sum_restarts(p.status.clone()),
+            node: p.spec.as_ref().and_then(|s: &PodSpec| s.node_name.clone()),
+            qos: p
+                .status
+                .as_ref()
+                .and_then(|s: &PodStatus| s.qos_class.clone()),
         }
     }
 
-    fn count_containers(p: &Pod) -> usize {
-        p.spec
-            .as_ref()
-            .map(|s: &PodSpec| s.containers.len())
-            .unwrap_or(0)
+    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, p: Pod) {
+        if p.metadata.name.is_some() {
+            let item: PodItem = Self::to_item(p);
+            let event: PodEvent = PodEvent {
+                r#type: kind,
+                object: item,
+            };
+            let _ = app_handle.emit(event_name, event);
+        }
     }
 
-    fn extract_container_states(p: &Pod) -> Option<Vec<String>> {
-        p.status
+    fn extract_container_states(status: Option<PodStatus>) -> Option<Vec<String>> {
+        status
             .as_ref()
             .and_then(|st: &PodStatus| st.container_statuses.as_ref())
             .map(|css: &Vec<ContainerStatus>| {
@@ -109,10 +152,10 @@ impl K8sPods {
             })
     }
 
-    fn sum_restarts(p: &Pod) -> Option<i32> {
+    fn sum_restarts(status: Option<PodStatus>) -> Option<i32> {
         let mut total: i32 = 0;
         let mut has_any: bool = false;
-        if let Some(st) = p.status.as_ref() {
+        if let Some(st) = status.as_ref() {
             if let Some(css) = st.container_statuses.as_ref() {
                 for cs in css.iter() {
                     total += cs.restart_count;
@@ -133,8 +176,8 @@ impl K8sPods {
         }
     }
 
-    fn aggregate_cpu(p: &Pod) -> Option<String> {
-        let containers: &Vec<Container> = match p.spec.as_ref() {
+    fn aggregate_cpu(spec: Option<PodSpec>) -> Option<String> {
+        let containers: &Vec<Container> = match spec.as_ref() {
             Some(sp) => &sp.containers,
             None => return None,
         };
@@ -182,8 +225,8 @@ impl K8sPods {
         }
     }
 
-    fn aggregate_memory(p: &Pod) -> Option<String> {
-        let containers: &Vec<Container> = match p.spec.as_ref() {
+    fn aggregate_memory(spec: Option<PodSpec>) -> Option<String> {
+        let containers: &Vec<Container> = match spec.as_ref() {
             Some(sp) => &sp.containers,
             None => return None,
         };

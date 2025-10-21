@@ -6,9 +6,10 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listStatefulSets } from '../../services/k8s';
+import { listStatefulSets } from '../../services/statefulsets';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
+import AgeCell from '../shared/AgeCell';
 
 export interface StatefulSet {
   name: string;
@@ -85,7 +86,7 @@ export default function PaneStatefulSets({ context }: PaneStatefulSetsProps) {
                   <Td>
                     <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
                   </Td>
-                  <Td className="text-white/80">{relativeAge(d.creation_timestamp)}</Td>
+                  <AgeCell timestamp={d.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

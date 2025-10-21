@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
+    commands::common::watch,
     k8s::replicasets::{K8sReplicaSets, ReplicaSetItem},
     utils::watcher::WatchManager,
 };
@@ -22,24 +23,13 @@ pub async fn watch_replicasets(
     namespace: Option<String>,
     state: tauri::State<'_, WatchManager>,
 ) -> Result<String, String> {
-    let ns: String = namespace.unwrap_or_else(|| "default".to_string());
-    let event_name: Arc<String> = Arc::new(format!("k8s://{}/replicasets/{}", name, ns));
-    let event_name_clone: Arc<String> = Arc::clone(&event_name);
-    state
-        .watch(app_handle, name.clone(), move |app_handle, name| {
-            let event_name_inner = Arc::clone(&event_name_clone);
-            let ns_inner = ns.clone();
-            async move {
-                K8sReplicaSets::watch(
-                    app_handle,
-                    name,
-                    Some(ns_inner),
-                    event_name_inner.to_string(),
-                )
-                .await
-            }
-        })
-        .await?;
-
-    Ok(event_name.to_string())
+    watch(
+        app_handle,
+        name,
+        "replicasets".to_string(),
+        namespace,
+        state,
+        Arc::new(K8sReplicaSets::watch),
+    )
+    .await
 }

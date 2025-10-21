@@ -2,39 +2,41 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '../types/k8sEvent';
 
-export interface ReplicaSetItem {
+export interface CronJobItem {
   name: string;
   namespace: string;
-  ready: string;
+  schedule: string;
+  suspend: boolean;
+  last_schedule?: string;
   creation_timestamp?: string;
 }
 
-export interface ReplicaSetEvent {
+export interface CronJobEvent {
   type: EventType;
-  object: ReplicaSetItem;
+  object: CronJobItem;
 }
 
-export async function listReplicaSets({
+export async function listCronJobs({
   name,
   namespace,
 }: {
   name: string;
   namespace?: string;
-}): Promise<ReplicaSetItem[]> {
-  return await invoke<ReplicaSetItem[]>('list_replicasets', { name, namespace });
+}): Promise<CronJobItem[]> {
+  return await invoke<CronJobItem[]>('list_cronjobs', { name, namespace });
 }
 
-export async function watchReplicaSets({
+export async function watchCronJobs({
   name,
   namespace,
   onEvent,
 }: {
   name: string;
   namespace?: string;
-  onEvent?: EventHandler<ReplicaSetEvent>;
+  onEvent?: EventHandler<CronJobEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_replicasets', { name, namespace });
-  const unlisten = await listen<ReplicaSetEvent>(eventName, (evt) => {
+  const eventName = await invoke<string>('watch_cronjobs', { name, namespace });
+  const unlisten = await listen<CronJobEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
     } catch (err) {

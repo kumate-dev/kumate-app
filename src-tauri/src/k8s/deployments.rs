@@ -1,15 +1,18 @@
+use std::pin::Pin;
+
 use futures_util::{Stream, StreamExt};
 use k8s_openapi::api::apps::v1::{
     Deployment, DeploymentCondition, DeploymentSpec, DeploymentStatus,
 };
-use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
 use kube::{
     api::{ListParams, ObjectList, WatchEvent, WatchParams},
     Api, Client, ResourceExt,
 };
 use serde::Serialize;
-use std::pin::Pin;
 use tauri::Emitter;
+
+use crate::types::event::EventType;
+use crate::utils::k8s::{to_creation_timestamp, to_namespace, to_replicas_ready};
 
 use super::client::K8sClient;
 
@@ -24,7 +27,7 @@ pub struct DeploymentItem {
 
 #[derive(Serialize, Clone)]
 struct DeploymentEvent {
-    r#type: String, // ADDED / MODIFIED / DELETED
+    r#type: EventType,
     object: DeploymentItem,
 }
 
@@ -42,7 +45,6 @@ impl K8sDeployments {
         Ok(out)
     }
 
-    /// Watch deployments for real-time updates
     pub async fn watch(
         app_handle: tauri::AppHandle,
         name: String,
@@ -62,12 +64,14 @@ impl K8sDeployments {
 
         while let Some(status) = stream.next().await {
             match status {
-                Ok(WatchEvent::Added(dep)) => Self::emit(&app_handle, &event_name, "ADDED", dep),
+                Ok(WatchEvent::Added(dep)) => {
+                    Self::emit(&app_handle, &event_name, EventType::ADDED, dep)
+                }
                 Ok(WatchEvent::Modified(dep)) => {
-                    Self::emit(&app_handle, &event_name, "MODIFIED", dep)
+                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, dep)
                 }
                 Ok(WatchEvent::Deleted(dep)) => {
-                    Self::emit(&app_handle, &event_name, "DELETED", dep)
+                    Self::emit(&app_handle, &event_name, EventType::DELETED, dep)
                 }
                 Err(e) => eprintln!("Deployment watch error: {}", e),
                 _ => {}
@@ -84,6 +88,16 @@ impl K8sDeployments {
     }
 
     fn to_item(d: Deployment) -> DeploymentItem {
+        DeploymentItem {
+            name: d.name_any(),
+            namespace: to_namespace(d.namespace()),
+            ready: Self::extract_ready(&d),
+            status: Self::extract_status(&d),
+            creation_timestamp: to_creation_timestamp(d.metadata),
+        }
+    }
+
+    fn extract_ready(d: &Deployment) -> String {
         let replicas: i32 = d
             .spec
             .as_ref()
@@ -94,18 +108,7 @@ impl K8sDeployments {
             .as_ref()
             .and_then(|s: &DeploymentStatus| s.ready_replicas)
             .unwrap_or(0);
-        let status: Option<String> = Self::extract_status(&d);
-        DeploymentItem {
-            name: d.name_any(),
-            namespace: d.namespace().unwrap_or_else(|| "default".to_string()),
-            ready: format!("{}/{}", ready, replicas),
-            creation_timestamp: d
-                .metadata
-                .creation_timestamp
-                .as_ref()
-                .map(|t: &Time| t.0.to_rfc3339()),
-            status,
-        }
+        to_replicas_ready(replicas, ready)
     }
 
     fn extract_status(d: &Deployment) -> Option<String> {
@@ -135,11 +138,11 @@ impl K8sDeployments {
         None
     }
 
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: &str, d: Deployment) {
+    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, d: Deployment) {
         if d.metadata.name.is_some() {
             let item: DeploymentItem = Self::to_item(d);
             let event: DeploymentEvent = DeploymentEvent {
-                r#type: kind.to_string(),
+                r#type: kind,
                 object: item,
             };
             let _ = app_handle.emit(event_name, event);

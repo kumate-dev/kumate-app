@@ -1,11 +1,8 @@
 use std::pin::Pin;
 
-use crate::k8s::client::K8sClient;
+use crate::{k8s::client::K8sClient, types::event::EventType, utils::k8s::to_creation_timestamp};
 use futures_util::{Stream, StreamExt};
-use k8s_openapi::{
-    api::core::v1::{Namespace, NamespaceStatus},
-    apimachinery::pkg::apis::meta::v1::Time,
-};
+use k8s_openapi::api::core::v1::{Namespace, NamespaceStatus};
 use kube::{
     api::{ListParams, ObjectList, WatchEvent, WatchParams},
     Api, Client,
@@ -22,7 +19,7 @@ pub struct NamespaceItem {
 
 #[derive(Serialize, Clone)]
 struct NamespaceEvent {
-    r#type: String, // ADDED / MODIFIED / DELETED
+    r#type: EventType,
     object: NamespaceItem,
 }
 
@@ -53,12 +50,16 @@ impl K8sNamespaces {
 
         while let Some(status) = stream.next().await {
             match status {
-                Ok(WatchEvent::Added(ns)) => Self::emit(&app_handle, &event_name, "ADDED", ns),
-                Ok(WatchEvent::Modified(ns)) => {
-                    Self::emit(&app_handle, &event_name, "MODIFIED", ns)
+                Ok(WatchEvent::Added(ns)) => {
+                    Self::emit(&app_handle, &event_name, EventType::ADDED, ns)
                 }
-                Ok(WatchEvent::Deleted(ns)) => Self::emit(&app_handle, &event_name, "DELETED", ns),
-                Err(e) => eprintln!("Watch error: {}", e),
+                Ok(WatchEvent::Modified(ns)) => {
+                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, ns)
+                }
+                Ok(WatchEvent::Deleted(ns)) => {
+                    Self::emit(&app_handle, &event_name, EventType::DELETED, ns)
+                }
+                Err(e) => eprintln!("Namespace watch error: {}", e),
                 _ => {}
             }
         }
@@ -73,25 +74,18 @@ impl K8sNamespaces {
     }
 
     fn to_item(n: Namespace) -> NamespaceItem {
-        let name: String = n.metadata.name.unwrap_or_default();
-        let status: Option<String> = n.status.and_then(|s: NamespaceStatus| s.phase);
-        let creation_timestamp: Option<String> = n
-            .metadata
-            .creation_timestamp
-            .as_ref()
-            .map(|t: &Time| t.0.to_rfc3339());
         NamespaceItem {
-            name,
-            status,
-            creation_timestamp,
+            name: n.metadata.clone().name.unwrap_or_default(),
+            status: n.status.and_then(|s: NamespaceStatus| s.phase),
+            creation_timestamp: to_creation_timestamp(n.metadata.clone()),
         }
     }
 
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: &str, ns: Namespace) {
+    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, ns: Namespace) {
         if ns.metadata.name.is_some() {
             let item: NamespaceItem = Self::to_item(ns);
             let event: NamespaceEvent = NamespaceEvent {
-                r#type: kind.to_string(),
+                r#type: kind,
                 object: item,
             };
 

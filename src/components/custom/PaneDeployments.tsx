@@ -24,7 +24,6 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
     listDeployments,
     context,
     getSelectedNamespace(selectedNs),
-    15000,
     watchDeployments
   );
 
@@ -75,17 +74,17 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((d) => (
-                <Tr key={`${d.namespace}-${d.name}`}>
-                  <Td className="font-medium">{d.name}</Td>
-                  <Td className="text-white/80">{d.namespace}</Td>
+              filtered.map((i) => (
+                <Tr key={`${i.namespace}-${i.name}`}>
+                  <Td className="font-medium">{i.name}</Td>
+                  <Td className="text-white/80">{i.namespace}</Td>
                   <Td>
-                    <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
+                    <Badge variant={readyVariant(i.ready)}>{i.ready}</Badge>
                   </Td>
-                  <AgeCell timestamp={d.creation_timestamp || ''} />
+                  <AgeCell timestamp={i.creation_timestamp || ''} />
                   <Td>
-                    <Badge variant={deploymentStatusVariant(d.status || 'Unknown')}>
-                      {d.status || 'Unknown'}
+                    <Badge variant={deploymentStatusVariant(i.status || 'Unknown')}>
+                      {i.status || 'Unknown'}
                     </Badge>
                   </Td>
                   <Td>

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
 import { getSelectedNamespace, readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
@@ -25,7 +24,6 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
     listReplicaSets,
     context,
     getSelectedNamespace(selectedNs),
-    15000,
     watchReplicaSets
   );
 

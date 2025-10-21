@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { EventHandler } from './k8s';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
+import { EventHandler, EventType } from '../types/k8sEvent';
 
 export interface NamespaceItem {
   name: string;
@@ -9,7 +9,7 @@ export interface NamespaceItem {
 }
 
 export interface NamespaceEvent {
-  type: 'ADDED' | 'MODIFIED' | 'DELETED';
+  type: EventType;
   object: NamespaceItem;
 }
 

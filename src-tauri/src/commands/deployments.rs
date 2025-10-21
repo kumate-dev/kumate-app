@@ -1,4 +1,5 @@
 use crate::{
+    commands::common::watch,
     k8s::deployments::{DeploymentItem, K8sDeployments},
     utils::watcher::WatchManager,
 };
@@ -21,24 +22,13 @@ pub async fn watch_deployments(
     namespace: Option<String>,
     state: tauri::State<'_, WatchManager>,
 ) -> Result<String, String> {
-    let ns: String = namespace.unwrap_or_else(|| "default".to_string());
-    let event_name: Arc<String> = Arc::new(format!("k8s://{}/deployments/{}", name, ns));
-    let event_name_clone: Arc<String> = Arc::clone(&event_name);
-    state
-        .watch(app_handle, name.clone(), move |app_handle, name| {
-            let event_name_inner = Arc::clone(&event_name_clone);
-            let ns_inner = ns.clone();
-            async move {
-                K8sDeployments::watch(
-                    app_handle,
-                    name,
-                    Some(ns_inner),
-                    event_name_inner.to_string(),
-                )
-                .await
-            }
-        })
-        .await?;
-
-    Ok(event_name.to_string())
+    watch(
+        app_handle,
+        name,
+        "deployments".to_string(),
+        namespace,
+        state,
+        Arc::new(K8sDeployments::watch),
+    )
+    .await
 }

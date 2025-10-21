@@ -17,7 +17,6 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
     listNamespaces,
     context,
     undefined,
-    15000,
     watchNamespaces
   );
 

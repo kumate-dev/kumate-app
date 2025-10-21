@@ -1,2 +1,2 @@
 export const ALL_NAMESPACES = 'All Namespaces';
-export const DEFAULT_REFRESH_INTERVAL = 15000;
+export const K8S_REQUEST_TIMEOUT = 10000;

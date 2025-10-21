@@ -6,6 +6,7 @@ use tauri::Manager;
 mod commands;
 mod k8s;
 mod state;
+mod types;
 mod utils;
 
 use crate::commands::common;
@@ -58,15 +59,21 @@ pub fn run() {
             namespaces::list_namespaces,
             namespaces::watch_namespaces,
             pods::list_pods,
+            pods::watch_pods,
             deployments::list_deployments,
             deployments::watch_deployments,
             replicasets::list_replicasets,
             replicasets::watch_replicasets,
             daemonsets::list_daemonsets,
+            daemonsets::watch_daemonsets,
             statefulsets::list_statefulsets,
+            statefulsets::watch_statefulsets,
             replicationcontrollers::list_replicationcontrollers,
+            replicationcontrollers::watch_replicationcontrollers,
             jobs::list_jobs,
+            jobs::watch_jobs,
             cronjobs::list_cronjobs,
+            cronjobs::watch_cronjobs,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

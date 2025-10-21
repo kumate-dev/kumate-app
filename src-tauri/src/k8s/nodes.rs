@@ -4,13 +4,13 @@ use k8s_openapi::api::core::v1::{
     Node, NodeCondition, NodeSpec, NodeStatus, NodeSystemInfo, Taint,
 };
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
-use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
-use kube::api::{ListParams, ObjectList};
+use kube::api::{ListParams, ObjectList, ObjectMeta};
 use kube::{Api, Client};
 use serde::Serialize;
 
 use crate::k8s::client::K8sClient;
 use crate::utils::bytes::Bytes;
+use crate::utils::k8s::to_creation_timestamp;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct NodeItem {
@@ -21,7 +21,7 @@ pub struct NodeItem {
     pub taints: Option<String>,
     pub roles: Option<String>,
     pub version: Option<String>,
-    pub age: Option<String>,
+    pub creation_timestamp: Option<String>,
     pub condition: Option<String>,
 }
 
@@ -49,45 +49,28 @@ impl K8sNodes {
     }
 
     fn to_item(n: Node) -> NodeItem {
-        let name: String = n.metadata.name.clone().unwrap_or_default();
-        let age: Option<String> = Self::extract_age(&n);
-        let version: Option<String> = Self::extract_version(&n);
-        let condition: Option<String> = Self::extract_condition(&n);
-        let taints: Option<String> = Self::extract_taints(&n);
-        let roles: Option<String> = Self::extract_roles(&n);
-        let cpu: Option<String> = Self::extract_cpu(&n);
-        let memory: Option<String> = Self::extract_memory(&n);
-        let disk: Option<String> = Self::extract_disk(&n);
-
         NodeItem {
-            name,
-            cpu,
-            memory,
-            disk,
-            taints,
-            roles,
-            version,
-            age,
-            condition,
+            name: n.metadata.name.clone().unwrap_or_default(),
+            cpu: Self::extract_cpu(n.status.clone()),
+            memory: Self::extract_memory(n.status.clone()),
+            disk: Self::extract_disk(n.status.clone()),
+            taints: Self::extract_taints(n.spec.clone()),
+            roles: Self::extract_roles(n.metadata.clone()),
+            version: Self::extract_version(n.status.clone()),
+            creation_timestamp: to_creation_timestamp(n.metadata.clone()),
+            condition: Self::extract_condition(n.status.clone()),
         }
     }
 
-    fn extract_age(n: &Node) -> Option<String> {
-        n.metadata
-            .creation_timestamp
-            .as_ref()
-            .map(|t: &Time| t.0.to_rfc3339())
-    }
-
-    fn extract_version(n: &Node) -> Option<String> {
-        n.status
+    fn extract_version(status: Option<NodeStatus>) -> Option<String> {
+        status
             .as_ref()
             .and_then(|s: &NodeStatus| s.node_info.as_ref())
             .map(|ni: &NodeSystemInfo| ni.kubelet_version.clone())
     }
 
-    fn extract_condition(n: &Node) -> Option<String> {
-        n.status
+    fn extract_condition(status: Option<NodeStatus>) -> Option<String> {
+        status
             .as_ref()
             .and_then(|s: &NodeStatus| s.conditions.as_ref())
             .and_then(|cs: &Vec<NodeCondition>| {
@@ -105,9 +88,8 @@ impl K8sNodes {
             })
     }
 
-    fn extract_taints(n: &Node) -> Option<String> {
-        n.spec
-            .as_ref()
+    fn extract_taints(spec: Option<NodeSpec>) -> Option<String> {
+        spec.as_ref()
             .and_then(|sp: &NodeSpec| sp.taints.as_ref())
             .map(|ts: &Vec<Taint>| {
                 ts.iter()
@@ -125,8 +107,8 @@ impl K8sNodes {
             })
     }
 
-    fn extract_roles(n: &Node) -> Option<String> {
-        n.metadata
+    fn extract_roles(metadata: ObjectMeta) -> Option<String> {
+        metadata
             .labels
             .as_ref()
             .map(|labels: &BTreeMap<String, String>| {
@@ -141,24 +123,24 @@ impl K8sNodes {
             })
     }
 
-    fn extract_cpu(n: &Node) -> Option<String> {
-        n.status
+    fn extract_cpu(status: Option<NodeStatus>) -> Option<String> {
+        status
             .as_ref()
             .and_then(|s: &NodeStatus| s.capacity.as_ref())
             .and_then(|c: &BTreeMap<String, Quantity>| c.get("cpu"))
             .map(|q: &Quantity| q.0.clone())
     }
 
-    fn extract_memory(n: &Node) -> Option<String> {
-        n.status
+    fn extract_memory(status: Option<NodeStatus>) -> Option<String> {
+        status
             .as_ref()
             .and_then(|s: &NodeStatus| s.capacity.as_ref())
             .and_then(|c: &BTreeMap<String, Quantity>| c.get("memory"))
             .map(|q: &Quantity| Bytes::pretty_size(&q.0))
     }
 
-    fn extract_disk(n: &Node) -> Option<String> {
-        n.status
+    fn extract_disk(status: Option<NodeStatus>) -> Option<String> {
+        status
             .as_ref()
             .and_then(|s: &NodeStatus| s.capacity.as_ref())
             .and_then(|c: &BTreeMap<String, Quantity>| c.get("ephemeral-storage"))

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import { K8sContext } from '../layouts/Sidebar';
+import { K8S_REQUEST_TIMEOUT } from '../constants/k8s';
 
 type WatchEvent<T> = {
   type: 'ADDED' | 'MODIFIED' | 'DELETED';
@@ -11,7 +12,6 @@ export function useK8sResources<T>(
   listFn: (params: { name: string; namespace?: string }) => Promise<T[]>,
   context?: K8sContext | null,
   namespace?: string,
-  timeoutMs = 15000,
   watchFn?: (params: { name: string; namespace?: string }) => Promise<{ eventName: string }>
 ) {
   const [items, setItems] = useState<T[]>([]);
@@ -42,7 +42,7 @@ export function useK8sResources<T>(
       setLoading(true);
       setError('');
       try {
-        const res = await withTimeout(listFn({ name, namespace: nsParam }), timeoutMs);
+        const res = await withTimeout(listFn({ name, namespace: nsParam }), K8S_REQUEST_TIMEOUT);
         if (active) setItems(res || []);
       } catch (e: any) {
         if (active) setError(e?.message || String(e));
@@ -54,7 +54,10 @@ export function useK8sResources<T>(
     async function watch() {
       if (!watchFn) return;
       try {
-        const { eventName } = await withTimeout(watchFn({ name, namespace: nsParam }), timeoutMs);
+        const { eventName } = await withTimeout(
+          watchFn({ name, namespace: nsParam }),
+          K8S_REQUEST_TIMEOUT
+        );
         unlisten = await listen<WatchEvent<T>>(eventName, (evt) => {
           const { type, object } = evt.payload;
           setItems((prev) => {
@@ -89,7 +92,7 @@ export function useK8sResources<T>(
       active = false;
       if (unlisten) unlisten();
     };
-  }, [context?.name, namespace, listFn, watchFn, timeoutMs]);
+  }, [context?.name, namespace, listFn, watchFn, K8S_REQUEST_TIMEOUT]);
 
   return { items, loading, error };
 }

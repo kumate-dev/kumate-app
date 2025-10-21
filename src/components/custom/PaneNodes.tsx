@@ -4,21 +4,9 @@ import { relativeAge } from '../../utils/time';
 import { conditionVariant } from '../../utils/k8s';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listNodes } from '../../services/k8s';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneSearch } from '../shared/PaneSearch';
-
-export interface Node {
-  name: string;
-  cpu?: string;
-  memory?: string;
-  disk?: string;
-  taints?: string;
-  roles?: string;
-  version?: string;
-  age?: string;
-  condition?: string;
-}
+import { listNodes, NodeItem } from '../../services/nodes';
 
 interface PaneNodesProps {
   context?: K8sContext | null;
@@ -29,8 +17,8 @@ export default function PaneNodes({ context }: PaneNodesProps) {
     items: nodes,
     loading,
     error,
-  } = useK8sResources<Node>(
-    listNodes as (params: { name: string }) => Promise<Node[]>,
+  } = useK8sResources<NodeItem>(
+    listNodes as (params: { name: string }) => Promise<NodeItem[]>,
     context,
     undefined
   );
@@ -82,7 +70,7 @@ export default function PaneNodes({ context }: PaneNodesProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((i: Node) => (
+              filtered.map((i: NodeItem) => (
                 <Tr key={i.name}>
                   <Td className="font-medium">{i.name}</Td>
                   <Td>{i.cpu || '—'}</Td>

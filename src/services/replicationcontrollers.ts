@@ -2,39 +2,42 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '../types/k8sEvent';
 
-export interface ReplicaSetItem {
+export interface ReplicationControllerItem {
   name: string;
   namespace: string;
   ready: string;
   creation_timestamp?: string;
 }
 
-export interface ReplicaSetEvent {
+export interface ReplicationControllerEvent {
   type: EventType;
-  object: ReplicaSetItem;
+  object: ReplicationControllerItem;
 }
 
-export async function listReplicaSets({
+export async function listReplicationControllers({
   name,
   namespace,
 }: {
   name: string;
   namespace?: string;
-}): Promise<ReplicaSetItem[]> {
-  return await invoke<ReplicaSetItem[]>('list_replicasets', { name, namespace });
+}): Promise<ReplicationControllerItem[]> {
+  return await invoke<ReplicationControllerItem[]>('list_replicationcontrollers', {
+    name,
+    namespace,
+  });
 }
 
-export async function watchReplicaSets({
+export async function watchReplicationControllers({
   name,
   namespace,
   onEvent,
 }: {
   name: string;
   namespace?: string;
-  onEvent?: EventHandler<ReplicaSetEvent>;
+  onEvent?: EventHandler<ReplicationControllerEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_replicasets', { name, namespace });
-  const unlisten = await listen<ReplicaSetEvent>(eventName, (evt) => {
+  const eventName = await invoke<string>('watch_replicationcontrollers', { name, namespace });
+  const unlisten = await listen<ReplicationControllerEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
     } catch (err) {
