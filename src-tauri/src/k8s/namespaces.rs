@@ -17,7 +17,7 @@ use tauri::Emitter;
 pub struct NamespaceItem {
     pub name: String,
     pub status: Option<String>,
-    pub age: Option<String>,
+    pub creation_timestamp: Option<String>,
 }
 
 #[derive(Serialize, Clone)]
@@ -75,12 +75,16 @@ impl K8sNamespaces {
     fn to_item(n: Namespace) -> NamespaceItem {
         let name: String = n.metadata.name.unwrap_or_default();
         let status: Option<String> = n.status.and_then(|s: NamespaceStatus| s.phase);
-        let age: Option<String> = n
+        let creation_timestamp: Option<String> = n
             .metadata
             .creation_timestamp
             .as_ref()
             .map(|t: &Time| t.0.to_rfc3339());
-        NamespaceItem { name, status, age }
+        NamespaceItem {
+            name,
+            status,
+            creation_timestamp,
+        }
     }
 
     fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: &str, ns: Namespace) {

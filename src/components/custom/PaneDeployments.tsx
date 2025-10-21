@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { readyVariant, deploymentStatusVariant } from '../../utils/k8s';
-import { useNamespaceStore, ALL_NAMESPACES } from '../../state/namespaceStore';
+import { readyVariant, deploymentStatusVariant, getSelectedNamespace } from '../../utils/k8s';
+import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
@@ -19,12 +19,11 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
 
   const namespaceList = useSelectedNamespaces(context);
-  const nsParam = selectedNs === ALL_NAMESPACES ? undefined : selectedNs;
 
   const { items, loading, error } = useK8sResources<DeploymentItem>(
     listDeployments,
     context,
-    nsParam,
+    getSelectedNamespace(selectedNs),
     15000,
     watchDeployments
   );
@@ -83,7 +82,7 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
                   <Td>
                     <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
                   </Td>
-                  <AgeCell timestamp={d.creation_timestamp || ''} /> 
+                  <AgeCell timestamp={d.creation_timestamp || ''} />
                   <Td>
                     <Badge variant={deploymentStatusVariant(d.status || 'Unknown')}>
                       {d.status || 'Unknown'}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { listNamespaces } from '../services/k8s';
+import { listNamespaces } from '../services/namespaces';
 import { useNamespaceStore } from '../state/namespaceStore';
 import { K8sContext } from '../layouts/Sidebar';
 

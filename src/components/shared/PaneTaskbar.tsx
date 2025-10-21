@@ -1,4 +1,4 @@
-import { ALL_NAMESPACES } from '../../state/namespaceStore';
+import { ALL_NAMESPACES } from '../../constants/k8s';
 import { PaneSearch } from './PaneSearch';
 
 interface NamespaceOption {

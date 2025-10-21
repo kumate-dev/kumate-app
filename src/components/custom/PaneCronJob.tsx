@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { relativeAge } from '../../utils/time';
-import { suspendVariant } from '../../utils/k8s';
-import { useNamespaceStore, ALL_NAMESPACES } from '../../state/namespaceStore';
+import { getSelectedNamespace, suspendVariant } from '../../utils/k8s';
+import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
@@ -28,12 +28,11 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
 
   const namespaceList = useSelectedNamespaces(context);
-  const nsParam = selectedNs === ALL_NAMESPACES ? undefined : selectedNs;
 
   const { items, loading, error } = useK8sResources<CronJob>(
     listCronJobs as (params: { name: string; namespace?: string }) => Promise<CronJob[]>,
     context,
-    nsParam
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');

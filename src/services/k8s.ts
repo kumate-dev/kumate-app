@@ -1,18 +1,11 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import { NamespaceEvent } from '../hooks/useNamespaces';
 
 // --- Types ---
 export interface K8sContext {
   name: string;
   cluster?: string;
   user?: string;
-}
-
-export interface NamespaceItem {
-  name: string;
-  status?: string;
-  age?: string;
 }
 
 export interface PodItem {
@@ -47,29 +40,6 @@ export async function unwatch({ name }: { name: string }): Promise<void> {
   } catch (err) {
     console.warn('unwatch failed:', err);
   }
-}
-
-// --- Namespaces ---
-export async function listNamespaces({ name }: { name: string }): Promise<NamespaceItem[]> {
-  return invoke('list_namespaces', { name });
-}
-
-export async function watchNamespaces({
-  name,
-  onEvent,
-}: {
-  name: string;
-  onEvent?: EventHandler<NamespaceEvent>;
-}): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_namespaces', { name });
-  const unlisten = await listen<NamespaceEvent>(eventName, (evt) => {
-    try {
-      onEvent?.(evt.payload);
-    } catch (err) {
-      console.error('Error in onEvent handler:', err);
-    }
-  });
-  return { eventName, unlisten };
 }
 
 // --- Pods ---

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { relativeAge } from '../../utils/time';
-import { readyVariant } from '../../utils/k8s';
-import { useNamespaceStore, ALL_NAMESPACES } from '../../state/namespaceStore';
+import { getSelectedNamespace, readyVariant } from '../../utils/k8s';
+import { useNamespaceStore } from '../../state/namespaceStore';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
@@ -26,11 +26,10 @@ export default function PaneStatefulSets({ context }: PaneStatefulSetsProps) {
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
 
   const namespaceList = useSelectedNamespaces(context);
-  const nsParam = selectedNs === ALL_NAMESPACES ? undefined : selectedNs;
   const { items, loading, error } = useK8sResources<StatefulSet>(
     listStatefulSets as (params: { name: string; namespace?: string }) => Promise<StatefulSet[]>,
     context,
-    nsParam
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');

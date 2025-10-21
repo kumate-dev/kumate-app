@@ -1,3 +1,5 @@
+import { ALL_NAMESPACES } from '../constants/k8s';
+
 export type Variant = 'default' | 'success' | 'warning' | 'error' | 'secondary';
 
 export function readyVariant(ready: string | number): Variant {
@@ -58,4 +60,8 @@ export function deploymentStatusVariant(s: string): Variant {
   if (s === 'Failed' || s === 'ReplicaFailure') return 'error';
   if (s === 'Terminating') return 'secondary';
   return 'default';
+}
+
+export function getSelectedNamespace(name?: string) {
+  return name === ALL_NAMESPACES ? undefined : name;
 }

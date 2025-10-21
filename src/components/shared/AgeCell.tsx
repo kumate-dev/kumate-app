@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
-import { relativeAge } from "../../utils/time";
-import { Td } from "../ui";
+import { useEffect, useRef } from 'react';
+import { relativeAge } from '../../utils/time';
+import { Td } from '../ui';
 
 export default function AgeCell({ timestamp }: { timestamp: string }) {
   const ref = useRef<HTMLTableCellElement>(null);

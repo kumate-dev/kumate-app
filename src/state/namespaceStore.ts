@@ -1,12 +1,6 @@
 import { create } from 'zustand';
-
-export const ALL_NAMESPACES = 'All Namespaces';
-
-export interface NamespaceItem {
-  name: string;
-  status?: string;
-  age?: string;
-}
+import { NamespaceItem } from '../services/namespaces';
+import { ALL_NAMESPACES } from '../constants/k8s';
 
 interface NamespaceStore {
   selectedNs: string;
