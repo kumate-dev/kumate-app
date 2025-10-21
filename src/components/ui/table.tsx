@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 export function Table({ className = '', ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return <table className={`w-full border-collapse text-left text-sm ${className}`} {...props} />;
@@ -25,6 +25,10 @@ export function Th({ className = '', ...props }: React.ThHTMLAttributes<HTMLTabl
   );
 }
 
-export function Td({ className = '', ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={`px-3 py-2 ${className}`} {...props} />;
-}
+export const Td = forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(
+  ({ className = '', ...props }, ref) => {
+    return <td ref={ref} className={`px-3 py-2 ${className}`} {...props} />;
+  }
+);
+
+Td.displayName = 'Td';

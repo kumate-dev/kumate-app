@@ -1,22 +1,14 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
 import { readyVariant, deploymentStatusVariant } from '../../utils/k8s';
 import { useNamespaceStore, ALL_NAMESPACES } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listDeployments } from '../../services/k8s';
+import { DeploymentItem, listDeployments, watchDeployments } from '../../services/deployments';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
-
-export interface Deployment {
-  name: string;
-  namespace: string;
-  ready: string;
-  status: string;
-  creation_timestamp: string;
-}
+import AgeCell from '../shared/AgeCell';
 
 interface PaneDeploymentsProps {
   context?: K8sContext | null;
@@ -28,10 +20,13 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
 
   const namespaceList = useSelectedNamespaces(context);
   const nsParam = selectedNs === ALL_NAMESPACES ? undefined : selectedNs;
-  const { items, loading, error } = useK8sResources<Deployment>(
-    listDeployments as (params: { name: string; namespace?: string }) => Promise<Deployment[]>,
+
+  const { items, loading, error } = useK8sResources<DeploymentItem>(
+    listDeployments,
     context,
-    nsParam
+    nsParam,
+    15000,
+    watchDeployments
   );
 
   const [q, setQ] = useState('');
@@ -82,15 +77,15 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
             )}
             {!loading &&
               filtered.map((d) => (
-                <Tr key={d.name}>
+                <Tr key={`${d.namespace}-${d.name}`}>
                   <Td className="font-medium">{d.name}</Td>
                   <Td className="text-white/80">{d.namespace}</Td>
                   <Td>
                     <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
                   </Td>
-                  <Td className="text-white/80">{relativeAge(d.creation_timestamp)}</Td>
+                  <AgeCell timestamp={d.creation_timestamp || ''} /> 
                   <Td>
-                    <Badge variant={deploymentStatusVariant(d.status)}>
+                    <Badge variant={deploymentStatusVariant(d.status || 'Unknown')}>
                       {d.status || 'Unknown'}
                     </Badge>
                   </Td>

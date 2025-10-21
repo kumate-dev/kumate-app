@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import { NamespaceEvent } from '../hooks/useNamespacesWatcher';
+import { NamespaceEvent } from '../hooks/useNamespaces';
 
 // --- Types ---
 export interface K8sContext {
@@ -41,6 +41,14 @@ export async function getContextSecrets(name: string): Promise<Record<string, st
   return invoke('get_context_secrets', { name });
 }
 
+export async function unwatch({ name }: { name: string }): Promise<void> {
+  try {
+    await invoke('unwatch', { name });
+  } catch (err) {
+    console.warn('unwatch failed:', err);
+  }
+}
+
 // --- Namespaces ---
 export async function listNamespaces({ name }: { name: string }): Promise<NamespaceItem[]> {
   return invoke('list_namespaces', { name });
@@ -64,14 +72,6 @@ export async function watchNamespaces({
   return { eventName, unlisten };
 }
 
-export async function unwatchNamespaces({ name }: { name: string }): Promise<void> {
-  try {
-    await invoke('unwatch_namespaces', { name });
-  } catch (err) {
-    console.warn('unwatchNamespaces failed:', err);
-  }
-}
-
 // --- Pods ---
 export async function listPods({
   name,
@@ -81,11 +81,6 @@ export async function listPods({
   namespace?: string;
 }): Promise<PodItem[]> {
   return invoke('list_pods', { name, namespace });
-}
-
-// --- Other resources ---
-export async function listDeployments({ name, namespace }: { name: string; namespace?: string }) {
-  return invoke('list_deployments', { name, namespace });
 }
 
 export async function listDaemonSets({ name, namespace }: { name: string; namespace?: string }) {

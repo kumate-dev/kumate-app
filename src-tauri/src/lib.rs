@@ -8,6 +8,7 @@ mod k8s;
 mod state;
 mod utils;
 
+use crate::commands::common;
 use crate::commands::contexts;
 use crate::commands::cronjobs;
 use crate::commands::daemonsets;
@@ -52,12 +53,13 @@ pub fn run() {
             contexts::get_context_secrets,
             contexts::delete_context,
             contexts::import_kube_contexts,
+            common::unwatch,
             nodes::list_nodes,
             namespaces::list_namespaces,
             namespaces::watch_namespaces,
-            namespaces::unwatch_namespaces,
             pods::list_pods,
             deployments::list_deployments,
+            deployments::watch_deployments,
             daemonsets::list_daemonsets,
             statefulsets::list_statefulsets,
             replicasets::list_replicasets,

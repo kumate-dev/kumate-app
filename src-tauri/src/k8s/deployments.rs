@@ -1,10 +1,15 @@
+use futures_util::{Stream, StreamExt};
 use k8s_openapi::api::apps::v1::{
     Deployment, DeploymentCondition, DeploymentSpec, DeploymentStatus,
 };
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
-use kube::api::{ListParams, ObjectList};
-use kube::{Api, Client, ResourceExt};
+use kube::{
+    api::{ListParams, ObjectList, WatchEvent, WatchParams},
+    Api, Client, ResourceExt,
+};
 use serde::Serialize;
+use std::pin::Pin;
+use tauri::Emitter;
 
 use super::client::K8sClient;
 
@@ -17,9 +22,16 @@ pub struct DeploymentItem {
     pub status: Option<String>,
 }
 
+#[derive(Serialize, Clone)]
+struct DeploymentEvent {
+    r#type: String, // ADDED / MODIFIED / DELETED
+    object: DeploymentItem,
+}
+
 pub struct K8sDeployments;
 
 impl K8sDeployments {
+    /// List deployments in a namespace or across all namespaces
     pub async fn list(
         name: String,
         namespace: Option<String>,
@@ -29,6 +41,40 @@ impl K8sDeployments {
         let mut out: Vec<DeploymentItem> = deps.into_iter().map(Self::to_item).collect();
         out.sort_by(|a: &DeploymentItem, b: &DeploymentItem| a.name.cmp(&b.name));
         Ok(out)
+    }
+
+    /// Watch deployments for real-time updates
+    pub async fn watch(
+        app_handle: tauri::AppHandle,
+        name: String,
+        namespace: Option<String>,
+        event_name: String,
+    ) -> Result<(), String> {
+        let client: Client = K8sClient::for_context(&name).await?;
+        let api: Api<Deployment> = K8sClient::api::<Deployment>(client, namespace).await;
+
+        let mut stream: Pin<
+            Box<dyn Stream<Item = Result<WatchEvent<Deployment>, kube::Error>> + Send>,
+        > = api
+            .watch(&WatchParams::default(), "0")
+            .await
+            .map_err(|e| e.to_string())?
+            .boxed();
+
+        while let Some(status) = stream.next().await {
+            match status {
+                Ok(WatchEvent::Added(dep)) => Self::emit(&app_handle, &event_name, "ADDED", dep),
+                Ok(WatchEvent::Modified(dep)) => {
+                    Self::emit(&app_handle, &event_name, "MODIFIED", dep)
+                }
+                Ok(WatchEvent::Deleted(dep)) => {
+                    Self::emit(&app_handle, &event_name, "DELETED", dep)
+                }
+                Err(e) => eprintln!("Deployment watch error: {}", e),
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<Deployment>, String> {
@@ -88,5 +134,16 @@ impl K8sDeployments {
             return Some("Progressing".to_string());
         }
         None
+    }
+
+    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: &str, d: Deployment) {
+        if d.metadata.name.is_some() {
+            let item: DeploymentItem = Self::to_item(d);
+            let event: DeploymentEvent = DeploymentEvent {
+                r#type: kind.to_string(),
+                object: item,
+            };
+            let _ = app_handle.emit(event_name, event);
+        }
     }
 }

@@ -77,8 +77,6 @@ impl K8sPods {
         }
     }
 
-    // --- helpers ---
-
     fn count_containers(p: &Pod) -> usize {
         p.spec
             .as_ref()

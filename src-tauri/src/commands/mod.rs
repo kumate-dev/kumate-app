@@ -1,4 +1,5 @@
 pub mod contexts;
+pub mod common;
 pub mod cronjobs;
 pub mod daemonsets;
 pub mod deployments;

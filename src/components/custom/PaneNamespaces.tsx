@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { statusVariant } from '../../utils/k8s';
 import { RelativeAge } from '../shared/RelativeAge';
-import { useNamespacesWatcher } from '../../hooks/useNamespacesWatcher';
+import { useNamespaces } from '../../hooks/useNamespaces';
 import { PaneSearch } from '../shared/PaneSearch';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 
@@ -13,7 +13,7 @@ interface PaneNamespacesProps {
 }
 
 export default function PaneNamespaces({ context }: PaneNamespacesProps) {
-  const { items, error } = useNamespacesWatcher(context?.name);
+  const { items, error } = useNamespaces(context?.name);
   const [q, setQ] = useState<string>('');
 
   const filtered = useFilteredItems(items, q);

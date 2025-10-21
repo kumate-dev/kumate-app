@@ -32,11 +32,3 @@ pub async fn watch_namespaces(
 
     Ok(event_name.to_string())
 }
-
-#[tauri::command]
-pub async fn unwatch_namespaces(
-    state: tauri::State<'_, WatchManager>,
-    name: String,
-) -> Result<(), String> {
-    state.unwatch(&name).await
-}

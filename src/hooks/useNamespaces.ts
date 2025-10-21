@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { watchNamespaces, unwatchNamespaces, NamespaceItem } from '../services/k8s';
+import { watchNamespaces, unwatch, NamespaceItem } from '../services/k8s';
 
 export interface NamespaceEvent {
   type: 'ADDED' | 'MODIFIED' | 'DELETED';
   object: NamespaceItem;
 }
 
-interface UseNamespacesWatcherResult {
+interface UseNamespacesResult {
   items: NamespaceItem[];
   error: string;
 }
 
-export function useNamespacesWatcher(name?: string): UseNamespacesWatcherResult {
+export function useNamespaces(name?: string): UseNamespacesResult {
   const [items, setItems] = useState<NamespaceItem[]>([]);
   const [error, setError] = useState<string>('');
 
@@ -50,7 +50,7 @@ export function useNamespacesWatcher(name?: string): UseNamespacesWatcherResult 
 
     return () => {
       unlisten?.();
-      unwatchNamespaces({ name }).catch(() => {});
+      unwatch({ name }).catch(() => {});
       setItems([]);
     };
   }, [name]);
