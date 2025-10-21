@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
+import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { relativeAge } from '../../utils/time';
 import { suspendVariant } from '../../utils/k8s';
 import { useNamespaceStore, ALL_NAMESPACES } from '../../state/namespaceStore';
@@ -8,6 +8,7 @@ import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { listCronJobs } from '../../services/k8s';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
+import { PaneTaskbar } from '../shared/PaneTaskbar';
 
 interface CronJob {
   name: string;
@@ -40,29 +41,13 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-white/60">Namespace</span>
-          <select
-            value={selectedNs}
-            onChange={(e) => setSelectedNs(e.target.value)}
-            className="rounded bg-white/10 px-2 py-1 text-xs text-white"
-          >
-            <option value={ALL_NAMESPACES}>{ALL_NAMESPACES}</option>
-            {namespaceList.map((ns) => (
-              <option key={ns.name} value={ns.name}>
-                {ns.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <Input
-          placeholder="Search..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="max-w-xs"
-        />
-      </div>
+      <PaneTaskbar
+        namespaceList={namespaceList}
+        selectedNs={selectedNs}
+        onSelectNamespace={setSelectedNs}
+        query={q}
+        onQueryChange={setQ}
+      />
 
       {error && (
         <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-200">

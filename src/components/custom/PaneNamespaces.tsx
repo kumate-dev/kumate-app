@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
+import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { statusVariant } from '../../utils/k8s';
 import { RelativeAge } from '../shared/RelativeAge';
 import { useNamespacesWatcher } from '../../hooks/useNamespacesWatcher';
+import { PaneSearch } from '../shared/PaneSearch';
+import { useFilteredItems } from '../../hooks/useFilteredItems';
 
 interface PaneNamespacesProps {
   context?: {
@@ -14,15 +16,12 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
   const { items, error } = useNamespacesWatcher(context?.name);
   const [q, setQ] = useState<string>('');
 
+  const filtered = useFilteredItems(items, q);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Input
-          placeholder="Search..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="max-w-xs"
-        />
+        <PaneSearch query={q} onQueryChange={setQ} />
       </div>
 
       {error && (
@@ -42,14 +41,14 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
             </Tr>
           </Thead>
           <Tbody>
-            {items.length === 0 && (
+            {filtered.length === 0 && (
               <Tr>
                 <Td colSpan={4} className="text-white/60">
                   No namespaces
                 </Td>
               </Tr>
             )}
-            {items.map((n) => (
+            {filtered.map((n) => (
               <Tr key={n.name}>
                 <Td className="font-medium">{n.name}</Td>
                 <Td>

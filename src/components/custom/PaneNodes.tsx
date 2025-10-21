@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
-import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
+import { useState } from 'react';
+import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { relativeAge } from '../../utils/time';
 import { conditionVariant } from '../../utils/k8s';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { listNodes } from '../../services/k8s';
+import { useFilteredItems } from '../../hooks/useFilteredItems';
+import { PaneSearch } from '../shared/PaneSearch';
 
 export interface Node {
   name: string;
@@ -32,23 +34,14 @@ export default function PaneNodes({ context }: PaneNodesProps) {
     context,
     undefined
   );
-  const [q, setQ] = useState('');
 
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return nodes;
-    return nodes.filter((n) => (n.name || '').toLowerCase().includes(term));
-  }, [nodes, q]);
+  const [q, setQ] = useState('');
+  const filtered = useFilteredItems(nodes, q);
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Input
-          placeholder="Search..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="max-w-xs"
-        />
+        <PaneSearch query={q} onQueryChange={setQ} />
       </div>
 
       {error && (
