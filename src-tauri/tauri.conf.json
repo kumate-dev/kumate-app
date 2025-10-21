@@ -1,34 +1,72 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "kumate",
+  "productName": "Kumate",
   "version": "0.1.0",
   "identifier": "kumate.dev",
   "build": {
-    "beforeDevCommand": "pnpm run build",
-    "beforeBuildCommand": "pnpm run build",
+    "beforeDevCommand": "bun run build",
+    "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
         "title": "Kumate",
-        "width": 1024,
-        "height": 768
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "visible": true
       }
-    ],
-    "security": {
-      "csp": null
-    }
+    ]
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "app",      
+      "dmg",     
+      "msi",      
+      "nsis",      
+      "deb",   
+      "appimage"
+    ],
     "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
       "icons/icon.icns",
-      "icons/icon.ico"
-    ]
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+
+    "resources": [],
+    "externalBin": [],
+    "copyright": "© 2025 Kumate",
+    "category": "DeveloperTool",
+    "shortDescription": "A modern Kubernetes resource manager",
+    "longDescription": "Kumate helps developers visualize, monitor, and manage Kubernetes clusters efficiently — a lightweight alternative to Lens.",
+
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "signingIdentity": null,
+      "dmg": {
+        "background": null
+      }
+    },
+
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      },
+      "nsis": {
+        "displayLanguageSelector": false
+      }
+    },
+
+    "linux": {
+      "deb": {
+        "depends": ["libgtk-3-0", "libayatana-appindicator3-1", "libwebkit2gtk-4.0-37"]
+      }
+    }
   }
 }
