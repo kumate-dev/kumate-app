@@ -25,8 +25,8 @@ interface PaneReplicationControllersProps {
 }
 
 export default function PaneReplicationControllers({ context }: PaneReplicationControllersProps) {
-  const selectedNs = useNamespaceStore((s) => s.selectedNs);
-  const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
+  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
+  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
 
   const namespaceList = useSelectedNamespaces(context);
   const { items, loading, error } = useK8sResources<ReplicationController>(
@@ -36,18 +36,18 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
     }) => Promise<ReplicationController[]>,
     watchReplicationControllers,
     context,
-    getSelectedNamespace(selectedNs)
+    selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, q);
+  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
 
   return (
     <div className="space-y-3">
       <PaneTaskbar
         namespaceList={namespaceList}
-        selectedNs={selectedNs}
-        onSelectNamespace={setSelectedNs}
+        selectedNamespaces={selectedNamespaces}
+        onSelectNamespace={setSelectedNamespaces}
         query={q}
         onQueryChange={setQ}
       />

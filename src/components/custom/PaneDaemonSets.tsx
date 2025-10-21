@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
-import { getSelectedNamespace, readyVariant } from '../../utils/k8s';
+import { readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
@@ -10,7 +9,6 @@ import { listDaemonSets, watchDaemonSets } from '../../services/daemonsets';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
-import { BadgeVariant } from '../../types/variant';
 
 export interface DaemonSet {
   name: string;
@@ -24,26 +22,26 @@ interface PaneDaemonSetsProps {
 }
 
 export default function PaneDaemonSets({ context }: PaneDaemonSetsProps) {
-  const selectedNs = useNamespaceStore((s) => s.selectedNs);
-  const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
+  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
+  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
 
   const namespaceList = useSelectedNamespaces(context);
   const { items, loading, error } = useK8sResources<DaemonSet>(
     listDaemonSets as (params: { name: string; namespace?: string }) => Promise<DaemonSet[]>,
     watchDaemonSets,
     context,
-    getSelectedNamespace(selectedNs)
+    selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, q);
+  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
 
   return (
     <div className="space-y-3">
       <PaneTaskbar
         namespaceList={namespaceList}
-        selectedNs={selectedNs}
-        onSelectNamespace={setSelectedNs}
+        selectedNamespaces={selectedNamespaces}
+        onSelectNamespace={setSelectedNamespaces}
         query={q}
         onQueryChange={setQ}
       />

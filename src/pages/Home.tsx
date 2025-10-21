@@ -28,7 +28,7 @@ export default function Dashboard() {
   const [page, setPage] = useState<PageKey>('overview');
 
   const ALL_NAMESPACES = 'All Namespaces';
-  const resetNsToAll = () => useNamespaceStore.setState({ selectedNs: ALL_NAMESPACES });
+  const resetNsToAll = () => useNamespaceStore.setState({ selectedNamespaces: [ALL_NAMESPACES] });
 
   function Placeholder({ title }: { title: string }) {
     return (

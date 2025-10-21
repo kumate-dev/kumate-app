@@ -24,7 +24,7 @@ export default function PaneNodes({ context }: PaneNodesProps) {
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(nodes, q);
+  const filtered = useFilteredItems(nodes, [], q, ['name']);
 
   function conditionVariant(cond: string): BadgeVariant {
     switch (cond) {

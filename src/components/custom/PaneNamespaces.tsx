@@ -20,7 +20,7 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, q);
+  const filtered = useFilteredItems(items, [], q, ['name']);
 
   function statusVariant(status: string): BadgeVariant {
     switch (status) {

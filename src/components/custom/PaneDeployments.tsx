@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { readyVariant, getSelectedNamespace } from '../../utils/k8s';
+import { readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
@@ -16,8 +16,8 @@ interface PaneDeploymentsProps {
 }
 
 export default function PaneDeployments({ context }: PaneDeploymentsProps) {
-  const selectedNs = useNamespaceStore((s) => s.selectedNs);
-  const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
+  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
+  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
 
   const namespaceList = useSelectedNamespaces(context);
 
@@ -25,11 +25,11 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
     listDeployments,
     watchDeployments,
     context,
-    getSelectedNamespace(selectedNs)
+    selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, q);
+  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
 
   function statusVariant(s: string): BadgeVariant {
     switch (s) {
@@ -57,8 +57,8 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
     <div className="space-y-3">
       <PaneTaskbar
         namespaceList={namespaceList}
-        selectedNs={selectedNs}
-        onSelectNamespace={setSelectedNs}
+        selectedNamespaces={selectedNamespaces}
+        onSelectNamespace={setSelectedNamespaces}
         query={q}
         onQueryChange={setQ}
       />

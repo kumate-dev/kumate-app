@@ -14,6 +14,6 @@ export function readyVariant(ready: string | number): Variant {
   }
 }
 
-export function getSelectedNamespace(name?: string) {
-  return name === ALL_NAMESPACES ? undefined : name;
+export function getSelectedNamespace(namespaces?: string[]) {
+  return namespaces?.includes(ALL_NAMESPACES) ? undefined : namespaces;
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { getSelectedNamespace } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
@@ -10,6 +9,7 @@ import { PaneTaskbar } from '../shared/PaneTaskbar';
 import { listCronJobs, watchCronJobs } from '../../services/cronjobs';
 import AgeCell from '../shared/AgeCell';
 import { BadgeVariant } from '../../types/variant';
+import { ALL_NAMESPACES } from '../../constants/k8s';
 
 interface CronJob {
   name: string;
@@ -25,8 +25,8 @@ interface PaneCronJobProps {
 }
 
 export default function PaneCronJob({ context }: PaneCronJobProps) {
-  const selectedNs = useNamespaceStore((s) => s.selectedNs);
-  const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
+  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
+  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
 
   const namespaceList = useSelectedNamespaces(context);
 
@@ -34,11 +34,11 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
     listCronJobs as (params: { name: string; namespace?: string }) => Promise<CronJob[]>,
     watchCronJobs,
     context,
-    getSelectedNamespace(selectedNs)
+    selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, q);
+  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
 
   function suspendVariant(suspend: boolean | string): BadgeVariant {
     switch (suspend) {
@@ -57,8 +57,8 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
     <div className="space-y-3">
       <PaneTaskbar
         namespaceList={namespaceList}
-        selectedNs={selectedNs}
-        onSelectNamespace={setSelectedNs}
+        selectedNamespaces={selectedNamespaces}
+        onSelectNamespace={setSelectedNamespaces}
         query={q}
         onQueryChange={setQ}
       />
@@ -99,7 +99,7 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
             )}
             {!loading &&
               filtered.map((f) => (
-                <Tr key={f.name}>
+                <Tr key={`${f.namespace}/${f.name}`}>
                   <Td className="font-medium">{f.name}</Td>
                   <Td className="text-white/80">{f.namespace}</Td>
                   <Td className="text-white/80">{f.schedule}</Td>

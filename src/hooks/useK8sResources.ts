@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import { K8sContext } from '../layouts/Sidebar';
-import { K8S_REQUEST_TIMEOUT } from '../constants/k8s';
-
-type WatchEvent<T> = {
-  type: 'ADDED' | 'MODIFIED' | 'DELETED';
-  object: T;
-};
+import { UnlistenFn } from '@tauri-apps/api/event';
+import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES } from '../constants/k8s';
+import { WatchEvent } from '../types/k8sEvent';
+import { unwatch } from '../services/unwatch';
 
 export function useK8sResources<T>(
-  listFn: (params: { name: string; namespace?: string }) => Promise<T[]>,
-  watchFn?: (params: { name: string; namespace?: string }) => Promise<{ eventName: string }>,
-  context?: K8sContext | null,
-  namespace?: string
+  listFn: (params: { name: string; namespaces?: string[] }) => Promise<T[]>,
+  watchFn?: (params: {
+    name: string;
+    namespaces?: string[];
+    onEvent?: (evt: WatchEvent<T>) => void;
+  }) => Promise<{ eventName: string; unlisten: UnlistenFn }>,
+  context?: { name: string } | null,
+  namespaces?: string[]
 ) {
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,8 +20,9 @@ export function useK8sResources<T>(
 
   useEffect(() => {
     if (!context?.name || !listFn) return;
-    const name = context.name;
-    const nsParam = namespace && namespace !== 'All Namespaces' ? namespace : undefined;
+    const clusterName = context.name;
+
+    const nsList = namespaces && !namespaces.includes(ALL_NAMESPACES) ? namespaces : undefined;
 
     let active = true;
     let unlisten: UnlistenFn | null = null;
@@ -42,8 +43,11 @@ export function useK8sResources<T>(
       setLoading(true);
       setError('');
       try {
-        const res = await withTimeout(listFn({ name, namespace: nsParam }), K8S_REQUEST_TIMEOUT);
-        if (active) setItems(res || []);
+        const results = await withTimeout(
+          listFn({ name: clusterName, namespaces: nsList }),
+          K8S_REQUEST_TIMEOUT
+        );
+        if (active) setItems(results || []);
       } catch (e: any) {
         if (active) setError(e?.message || String(e));
       } finally {
@@ -54,45 +58,63 @@ export function useK8sResources<T>(
     async function watch() {
       if (!watchFn) return;
       try {
-        const { eventName } = await withTimeout(
-          watchFn({ name, namespace: nsParam }),
+        const { unlisten: u } = await withTimeout(
+          watchFn({
+            name: clusterName,
+            namespaces: nsList,
+            onEvent: (evt) => {
+              const { type, object } = evt;
+
+              setItems((prev) => {
+                let newList: typeof prev;
+
+                switch (type) {
+                  case 'ADDED':
+                    if (prev.find((f: any) => (f as any).name === (object as any).name)) {
+                      newList = prev.map((f: any) =>
+                        (f as any).name === (object as any).name ? object : f
+                      );
+                    } else {
+                      newList = [...prev, object];
+                    }
+                    break;
+
+                  case 'MODIFIED':
+                    newList = prev.map((f: any) =>
+                      (f as any).name === (object as any).name ? object : f
+                    );
+                    break;
+
+                  case 'DELETED':
+                    newList = prev.filter((f: any) => (f as any).name !== (object as any).name);
+                    break;
+
+                  default:
+                    newList = prev;
+                }
+
+                return [...newList].sort((a: any, b: any) => a.name.localeCompare(b.name));
+              });
+            },
+          }),
           K8S_REQUEST_TIMEOUT
         );
-        unlisten = await listen<WatchEvent<T>>(eventName, (evt) => {
-          const { type, object } = evt.payload;
-          setItems((prev) => {
-            switch (type) {
-              case 'ADDED':
-                if (prev.find((f: any) => (f as any).name === (object as any).name)) return prev;
-                return [...prev, object];
-              case 'MODIFIED':
-                return prev.map((f: any) =>
-                  (f as any).name === (object as any).name ? object : f
-                );
-              case 'DELETED':
-                return prev.filter((f: any) => (f as any).name !== (object as any).name);
-              default:
-                return prev;
-            }
-          });
-        });
+
+        unlisten = u;
       } catch (err) {
         console.error('Failed to start watch:', err);
       }
     }
 
-    async function setup() {
-      await list();
-      await watch();
-    }
-
-    setup();
+    list();
+    watch();
 
     return () => {
       active = false;
-      if (unlisten) unlisten();
+      unlisten?.();
+      unwatch({ name: clusterName });
     };
-  }, [context?.name, namespace, listFn, watchFn, K8S_REQUEST_TIMEOUT]);
+  }, [context?.name, namespaces?.join(','), listFn, watchFn]);
 
   return { items, loading, error };
 }

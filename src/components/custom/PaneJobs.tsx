@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { getSelectedNamespace } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
@@ -17,19 +16,19 @@ interface PaneJobsProps {
 }
 
 export default function PaneJobs({ context }: PaneJobsProps) {
-  const selectedNs = useNamespaceStore((s) => s.selectedNs);
-  const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
+  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
+  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
 
   const namespaceList = useSelectedNamespaces(context);
   const { items, loading, error } = useK8sResources<JobItem>(
     listJobs as (params: { name: string; namespace?: string }) => Promise<JobItem[]>,
     watchJobs,
     context,
-    getSelectedNamespace(selectedNs)
+    selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, q);
+  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
 
   function progressVariant(progress: string | number): BadgeVariant {
     try {
@@ -50,8 +49,8 @@ export default function PaneJobs({ context }: PaneJobsProps) {
     <div className="space-y-3">
       <PaneTaskbar
         namespaceList={namespaceList}
-        selectedNs={selectedNs}
-        onSelectNamespace={setSelectedNs}
+        selectedNamespaces={selectedNamespaces}
+        onSelectNamespace={setSelectedNamespaces}
         query={q}
         onQueryChange={setQ}
       />

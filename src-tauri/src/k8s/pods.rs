@@ -42,44 +42,79 @@ struct PodEvent {
 pub struct K8sPods;
 
 impl K8sPods {
-    pub async fn list(name: String, namespace: Option<String>) -> Result<Vec<PodItem>, String> {
+    pub async fn list(
+        name: String,
+        namespaces: Option<Vec<String>>,
+    ) -> Result<Vec<PodItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let pods: Vec<Pod> = Self::fetch(client, namespace).await?;
-        let mut out: Vec<PodItem> = pods.into_iter().map(Self::to_item).collect();
-        out.sort_by(|a: &PodItem, b: &PodItem| a.name.cmp(&b.name));
-        Ok(out)
+        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
+        let mut all_pods: Vec<PodItem> = Vec::new();
+
+        for ns in target_namespaces {
+            let pods: Vec<Pod> = Self::fetch(
+                client.clone(),
+                if ns.is_empty() {
+                    None
+                } else {
+                    Some(ns.clone())
+                },
+            )
+            .await?;
+            let mut pod_items: Vec<PodItem> = pods.into_iter().map(Self::to_item).collect();
+            all_pods.append(&mut pod_items);
+        }
+
+        all_pods.sort_by(|a, b| a.name.cmp(&b.name));
+        Ok(all_pods)
     }
 
     pub async fn watch(
         app_handle: tauri::AppHandle,
         name: String,
-        namespace: Option<String>,
+        namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let api: Api<Pod> = K8sClient::api::<Pod>(client, namespace).await;
+        let target_namespaces = namespaces.unwrap_or_else(|| vec![String::from("")]);
 
-        let mut stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<Pod>, kube::Error>> + Send>> =
-            api.watch(&WatchParams::default(), "0")
-                .await
-                .map_err(|e| e.to_string())?
-                .boxed();
+        for ns in target_namespaces {
+            let api: Api<Pod> = K8sClient::api::<Pod>(
+                client.clone(),
+                if ns.is_empty() {
+                    None
+                } else {
+                    Some(ns.clone())
+                },
+            )
+            .await;
+            let stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<Pod>, kube::Error>> + Send>> =
+                api.watch(&WatchParams::default(), "0")
+                    .await
+                    .map_err(|e| e.to_string())?
+                    .boxed();
 
-        while let Some(status) = stream.next().await {
-            match status {
-                Ok(WatchEvent::Added(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::ADDED, dep)
+            let app_handle = app_handle.clone();
+            let event_name = event_name.clone();
+            tokio::spawn(async move {
+                let mut s = stream;
+                while let Some(status) = s.next().await {
+                    match status {
+                        Ok(WatchEvent::Added(pod)) => {
+                            Self::emit(&app_handle, &event_name, EventType::ADDED, pod);
+                        }
+                        Ok(WatchEvent::Modified(pod)) => {
+                            Self::emit(&app_handle, &event_name, EventType::MODIFIED, pod);
+                        }
+                        Ok(WatchEvent::Deleted(pod)) => {
+                            Self::emit(&app_handle, &event_name, EventType::DELETED, pod);
+                        }
+                        Err(e) => eprintln!("Pod watch error (ns={}): {}", ns, e),
+                        _ => {}
+                    }
                 }
-                Ok(WatchEvent::Modified(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, dep)
-                }
-                Ok(WatchEvent::Deleted(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::DELETED, dep)
-                }
-                Err(e) => eprintln!("Pod watch error: {}", e),
-                _ => {}
-            }
+            });
         }
+
         Ok(())
     }
 

@@ -23,24 +23,25 @@ export interface PodEvent {
 
 export async function listPods({
   name,
-  namespace,
+  namespaces,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
 }): Promise<PodItem[]> {
-  return await invoke<PodItem[]>('list_pods', { name, namespace });
+  return await invoke<PodItem[]>('list_pods', { name, namespaces });
 }
 
 export async function watchPods({
   name,
-  namespace,
+  namespaces,
   onEvent,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
   onEvent?: EventHandler<PodEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_pods', { name, namespace });
+  const eventName = await invoke<string>('watch_pods', { name, namespaces });
+
   const unlisten = await listen<PodEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
@@ -48,5 +49,6 @@ export async function watchPods({
       console.error('Error in onEvent handler:', err);
     }
   });
+
   return { eventName, unlisten };
 }
