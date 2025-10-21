@@ -27,8 +27,8 @@ export default function Dashboard() {
   const [_, setOpenAdd] = useState(false);
   const [page, setPage] = useState<PageKey>('overview');
 
-  const ALL = 'All Namespaces';
-  const resetNsToAll = () => useNamespaceStore.setState({ selectedNs: ALL });
+  const ALL_NAMESPACES = 'All Namespaces';
+  const resetNsToAll = () => useNamespaceStore.setState({ selectedNs: ALL_NAMESPACES });
 
   function Placeholder({ title }: { title: string }) {
     return (

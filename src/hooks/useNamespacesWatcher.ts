@@ -21,9 +21,6 @@ export function useNamespacesWatcher(name?: string): UseNamespacesWatcherResult 
 
     const setup = async () => {
       try {
-        const initial = await listNamespaces({ name });
-        setItems(initial || []);
-
         const watcher = await watchNamespaces({
           name,
           onEvent: (evt: NamespaceEvent) => {

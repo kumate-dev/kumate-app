@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react';
 import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { relativeAge } from '../../utils/time';
 import { suspendVariant } from '../../utils/k8s';
-import { useNamespaceStore, ALL } from '../../state/namespaceStore';
+import { useNamespaceStore, ALL_NAMESPACES } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
-import { useNamespaces } from '../../hooks/useNamespaces';
+import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { listCronJobs } from '../../services/k8s';
+import { useFilteredItems } from '../../hooks/useFilteredItems';
 
 interface CronJob {
   name: string;
@@ -25,8 +26,8 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
   const selectedNs = useNamespaceStore((s) => s.selectedNs);
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
 
-  const namespaceList = useNamespaces(context);
-  const nsParam = selectedNs === ALL ? undefined : selectedNs;
+  const namespaceList = useSelectedNamespaces(context);
+  const nsParam = selectedNs === ALL_NAMESPACES ? undefined : selectedNs;
 
   const { items, loading, error } = useK8sResources<CronJob>(
     listCronJobs as (params: { name: string; namespace?: string }) => Promise<CronJob[]>,
@@ -35,11 +36,7 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
   );
 
   const [q, setQ] = useState('');
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return items;
-    return items.filter((n) => (n.name || '').toLowerCase().includes(term));
-  }, [items, q]);
+  const filtered = useFilteredItems(items, q);
 
   return (
     <div className="space-y-3">
@@ -51,7 +48,7 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
             onChange={(e) => setSelectedNs(e.target.value)}
             className="rounded bg-white/10 px-2 py-1 text-xs text-white"
           >
-            <option value={ALL}>{ALL}</option>
+            <option value={ALL_NAMESPACES}>{ALL_NAMESPACES}</option>
             {namespaceList.map((ns) => (
               <option key={ns.name} value={ns.name}>
                 {ns.name}

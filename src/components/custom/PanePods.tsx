@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react';
 import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { relativeAge } from '../../utils/time';
 import { podStatusVariant } from '../../utils/k8s';
-import { useNamespaceStore, ALL } from '../../state/namespaceStore';
+import { useNamespaceStore, ALL_NAMESPACES } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
-import { useNamespaces } from '../../hooks/useNamespaces';
+import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { listPods } from '../../services/k8s';
+import { useFilteredItems } from '../../hooks/useFilteredItems';
 
 export interface Pod {
   name: string;
@@ -30,8 +31,8 @@ export default function PanePods({ context }: PanePodsProps) {
   const selectedNs = useNamespaceStore((s) => s.selectedNs);
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
 
-  const namespaceList = useNamespaces(context);
-  const nsParam = selectedNs === ALL ? undefined : selectedNs;
+  const namespaceList = useSelectedNamespaces(context);
+  const nsParam = selectedNs === ALL_NAMESPACES ? undefined : selectedNs;
   const { items, loading, error } = useK8sResources<Pod>(
     listPods as (params: { name: string; namespace?: string }) => Promise<Pod[]>,
     context,
@@ -39,11 +40,7 @@ export default function PanePods({ context }: PanePodsProps) {
   );
 
   const [q, setQ] = useState('');
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return items;
-    return items.filter((p) => (p.name || '').toLowerCase().includes(term));
-  }, [items, q]);
+  const filtered = useFilteredItems(items, q);
 
   const dotClass = (s: string | undefined) => {
     if (s === 'Running') return 'bg-green-500';
@@ -63,7 +60,7 @@ export default function PanePods({ context }: PanePodsProps) {
             onChange={(e) => setSelectedNs(e.target.value)}
             className="rounded bg-white/10 px-2 py-1 text-xs text-white"
           >
-            <option value={ALL}>{ALL}</option>
+            <option value={ALL_NAMESPACES}>{ALL_NAMESPACES}</option>
             {namespaceList.map((ns) => (
               <option key={ns.name} value={ns.name}>
                 {ns.name}

@@ -3,7 +3,7 @@ import { listNamespaces } from '../services/k8s';
 import { useNamespaceStore } from '../state/namespaceStore';
 import { K8sContext } from '../layouts/Sidebar';
 
-export function useNamespaces(context?: K8sContext | null) {
+export function useSelectedNamespaces(context?: K8sContext | null) {
   const namespacesRaw = useNamespaceStore((s) => s.namespaces);
   const namespacesContext = useNamespaceStore((s) => s.namespacesContext);
   const setNamespaces = useNamespaceStore((s) => s.setNamespaces);

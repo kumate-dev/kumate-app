@@ -14,12 +14,6 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
   const { items, error } = useNamespacesWatcher(context?.name);
   const [q, setQ] = useState<string>('');
 
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return items;
-    return items.filter((n) => n.name.toLowerCase().includes(term));
-  }, [items, q]);
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -48,14 +42,14 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
             </Tr>
           </Thead>
           <Tbody>
-            {filtered.length === 0 && (
+            {items.length === 0 && (
               <Tr>
                 <Td colSpan={4} className="text-white/60">
                   No namespaces
                 </Td>
               </Tr>
             )}
-            {filtered.map((n) => (
+            {items.map((n) => (
               <Tr key={n.name}>
                 <Td className="font-medium">{n.name}</Td>
                 <Td>
