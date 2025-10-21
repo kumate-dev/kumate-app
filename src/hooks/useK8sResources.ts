@@ -63,14 +63,14 @@ export function useK8sResources<T>(
           setItems((prev) => {
             switch (type) {
               case 'ADDED':
-                if (prev.find((i: any) => (i as any).name === (object as any).name)) return prev;
+                if (prev.find((f: any) => (f as any).name === (object as any).name)) return prev;
                 return [...prev, object];
               case 'MODIFIED':
-                return prev.map((i: any) =>
-                  (i as any).name === (object as any).name ? object : i
+                return prev.map((f: any) =>
+                  (f as any).name === (object as any).name ? object : f
                 );
               case 'DELETED':
-                return prev.filter((i: any) => (i as any).name !== (object as any).name);
+                return prev.filter((f: any) => (f as any).name !== (object as any).name);
               default:
                 return prev;
             }

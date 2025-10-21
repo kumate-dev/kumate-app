@@ -73,14 +73,14 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((i: ReplicaSetItem) => (
-                <Tr key={i.name}>
-                  <Td className="font-medium">{i.name}</Td>
-                  <Td className="text-white/80">{i.namespace}</Td>
+              filtered.map((f: ReplicaSetItem) => (
+                <Tr key={f.name}>
+                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="text-white/80">{f.namespace}</Td>
                   <Td>
-                    <Badge variant={readyVariant(i.ready)}>{i.ready}</Badge>
+                    <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
                   </Td>
-                  <AgeCell timestamp={i.creation_timestamp || ''} />
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

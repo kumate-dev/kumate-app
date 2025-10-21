@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { readyVariant, deploymentStatusVariant, getSelectedNamespace } from '../../utils/k8s';
+import { readyVariant, getSelectedNamespace } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
@@ -9,6 +9,7 @@ import { DeploymentItem, listDeployments, watchDeployments } from '../../service
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
+import { BadgeVariant } from '../../types/variant';
 
 interface PaneDeploymentsProps {
   context?: K8sContext | null;
@@ -29,6 +30,28 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
 
   const [q, setQ] = useState('');
   const filtered = useFilteredItems(items, q);
+
+  function statusVariant(s: string): BadgeVariant {
+    switch (s) {
+      case 'Available':
+        return 'success';
+
+      case 'Progressing':
+      case 'Scaling':
+        return 'warning';
+
+      case 'Terminating':
+        return 'secondary';
+
+      case 'Failed':
+      case 'Unavailable':
+        return 'error';
+
+      case 'Unknown':
+      default:
+        return 'default';
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -74,18 +97,16 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((i) => (
-                <Tr key={`${i.namespace}-${i.name}`}>
-                  <Td className="font-medium">{i.name}</Td>
-                  <Td className="text-white/80">{i.namespace}</Td>
+              filtered.map((f) => (
+                <Tr key={`${f.namespace}-${f.name}`}>
+                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="text-white/80">{f.namespace}</Td>
                   <Td>
-                    <Badge variant={readyVariant(i.ready)}>{i.ready}</Badge>
+                    <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
                   </Td>
-                  <AgeCell timestamp={i.creation_timestamp || ''} />
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
-                    <Badge variant={deploymentStatusVariant(i.status || 'Unknown')}>
-                      {i.status || 'Unknown'}
-                    </Badge>
+                    <Badge variant={statusVariant(f.status || '')}>{f.status || ''}</Badge>
                   </Td>
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>

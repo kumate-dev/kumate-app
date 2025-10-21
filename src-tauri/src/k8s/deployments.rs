@@ -115,27 +115,33 @@ impl K8sDeployments {
         if d.metadata.deletion_timestamp.is_some() {
             return Some("Terminating".to_string());
         }
-        let cs: &Vec<DeploymentCondition> =
-            d.status.as_ref().and_then(|s| s.conditions.as_ref())?;
-        if cs
+
+        let status: &DeploymentStatus = d.status.as_ref()?;
+        let conditions: &Vec<DeploymentCondition> = status.conditions.as_ref()?;
+
+        if conditions
             .iter()
-            .any(|c: &DeploymentCondition| c.type_ == "ReplicaFailure" && c.status == "True")
+            .any(|c| c.type_ == "ReplicaFailure" && c.status == "True")
         {
             return Some("Failed".to_string());
         }
-        if cs
-            .iter()
-            .any(|c: &DeploymentCondition| c.type_ == "Available" && c.status == "True")
-        {
-            return Some("Available".to_string());
+
+        let available: Option<&DeploymentCondition> =
+            conditions.iter().find(|c| c.type_ == "Available");
+        let progressing: Option<&DeploymentCondition> =
+            conditions.iter().find(|c| c.type_ == "Progressing");
+
+        match (
+            available.map(|c| c.status.as_str()),
+            progressing.map(|c| c.status.as_str()),
+        ) {
+            (Some("True"), Some("True")) => Some("Scaling".to_string()),
+            (Some("True"), _) => Some("Available".to_string()),
+            (Some("False"), Some("True")) => Some("Progressing".to_string()),
+            (Some("False"), Some("False")) => Some("Unavailable".to_string()),
+            (_, Some("Unknown")) => Some("Progressing".to_string()),
+            _ => Some("Unknown".to_string()),
         }
-        if cs
-            .iter()
-            .any(|c: &DeploymentCondition| c.type_ == "Progressing" && c.status == "True")
-        {
-            return Some("Progressing".to_string());
-        }
-        None
     }
 
     fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, d: Deployment) {

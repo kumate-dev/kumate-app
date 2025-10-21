@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
 import { getSelectedNamespace, readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listStatefulSets } from '../../services/statefulsets';
+import { listStatefulSets, watchStatefulSets } from '../../services/statefulsets';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
@@ -30,7 +29,8 @@ export default function PaneStatefulSets({ context }: PaneStatefulSetsProps) {
   const { items, loading, error } = useK8sResources<StatefulSet>(
     listStatefulSets as (params: { name: string; namespace?: string }) => Promise<StatefulSet[]>,
     context,
-    getSelectedNamespace(selectedNs)
+    getSelectedNamespace(selectedNs),
+    watchStatefulSets
   );
 
   const [q, setQ] = useState('');
@@ -79,14 +79,14 @@ export default function PaneStatefulSets({ context }: PaneStatefulSetsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((d: StatefulSet) => (
-                <Tr key={d.name}>
-                  <Td className="font-medium">{d.name}</Td>
-                  <Td className="text-white/80">{d.namespace}</Td>
+              filtered.map((f: StatefulSet) => (
+                <Tr key={f.name}>
+                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="text-white/80">{f.namespace}</Td>
                   <Td>
-                    <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
+                    <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
                   </Td>
-                  <AgeCell timestamp={d.creation_timestamp || ''} />
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

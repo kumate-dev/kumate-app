@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { relativeAge } from '../../utils/time';
-import { conditionVariant } from '../../utils/k8s';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneSearch } from '../shared/PaneSearch';
 import { listNodes, NodeItem } from '../../services/nodes';
+import { BadgeVariant } from '../../types/variant';
 
 interface PaneNodesProps {
   context?: K8sContext | null;
@@ -25,6 +25,19 @@ export default function PaneNodes({ context }: PaneNodesProps) {
 
   const [q, setQ] = useState('');
   const filtered = useFilteredItems(nodes, q);
+
+  function conditionVariant(cond: string): BadgeVariant {
+    switch (cond) {
+      case 'Ready':
+        return 'success';
+
+      case 'Unknown':
+        return 'warning';
+
+      default:
+        return 'error';
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -70,19 +83,19 @@ export default function PaneNodes({ context }: PaneNodesProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((i: NodeItem) => (
-                <Tr key={i.name}>
-                  <Td className="font-medium">{i.name}</Td>
-                  <Td>{i.cpu || '—'}</Td>
-                  <Td>{i.memory || '—'}</Td>
-                  <Td>{i.disk || '—'}</Td>
-                  <Td className="text-white/70">{i.taints || ''}</Td>
-                  <Td className="text-white/80">{i.roles || ''}</Td>
-                  <Td className="text-white/80">{i.version || ''}</Td>
-                  <Td className="text-white/80">{relativeAge(i.age)}</Td>
+              filtered.map((f: NodeItem) => (
+                <Tr key={f.name}>
+                  <Td className="font-medium">{f.name}</Td>
+                  <Td>{f.cpu || '—'}</Td>
+                  <Td>{f.memory || '—'}</Td>
+                  <Td>{f.disk || '—'}</Td>
+                  <Td className="text-white/70">{f.taints || ''}</Td>
+                  <Td className="text-white/80">{f.roles || ''}</Td>
+                  <Td className="text-white/80">{f.version || ''}</Td>
+                  <Td className="text-white/80">{relativeAge(f.age)}</Td>
                   <Td>
-                    <Badge variant={conditionVariant(i.condition || 'Unknown')}>
-                      {i.condition || 'Unknown'}
+                    <Badge variant={conditionVariant(f.condition || 'Unknown')}>
+                      {f.condition || 'Unknown'}
                     </Badge>
                   </Td>
                   <Td>

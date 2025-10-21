@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { statusVariant } from '../../utils/k8s';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import AgeCell from '../shared/AgeCell';
 import { PaneSearch } from '../shared/PaneSearch';
 import { listNamespaces, NamespaceItem, watchNamespaces } from '../../services/namespaces';
+import { BadgeVariant } from '../../types/variant';
 
 interface PaneNamespacesProps {
   context?: K8sContext | null;
@@ -22,6 +22,19 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
 
   const [q, setQ] = useState('');
   const filtered = useFilteredItems(items, q);
+
+  function statusVariant(status: string): BadgeVariant {
+    switch (status) {
+      case 'Active':
+        return 'success';
+
+      case 'Terminating':
+        return 'warning';
+
+      default:
+        return 'secondary';
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -61,15 +74,15 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
             )}
 
             {!loading &&
-              filtered.map((i: NamespaceItem) => (
-                <Tr key={i.name}>
-                  <Td className="font-medium">{i.name}</Td>
+              filtered.map((f: NamespaceItem) => (
+                <Tr key={f.name}>
+                  <Td className="font-medium">{f.name}</Td>
                   <Td>
-                    <Badge variant={statusVariant(i.status || 'Unknown')}>
-                      {i.status || 'Unknown'}
+                    <Badge variant={statusVariant(f.status || 'Unknown')}>
+                      {f.status || 'Unknown'}
                     </Badge>
                   </Td>
-                  <AgeCell timestamp={i.creation_timestamp || ''} />
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

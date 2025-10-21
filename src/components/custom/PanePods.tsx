@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
-import { getSelectedNamespace, podStatusVariant } from '../../utils/k8s';
+import { getSelectedNamespace } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listPods } from '../../services/pods';
+import { listPods, watchPods } from '../../services/pods';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
+import { AlertTriangle } from 'lucide-react';
+import { BadgeVariant } from '../../types/variant';
 
 export interface Pod {
   name: string;
@@ -37,19 +38,72 @@ export default function PanePods({ context }: PanePodsProps) {
   const { items, loading, error } = useK8sResources<Pod>(
     listPods as (params: { name: string; namespace?: string }) => Promise<Pod[]>,
     context,
-    getSelectedNamespace(selectedNs)
+    getSelectedNamespace(selectedNs),
+    watchPods
   );
 
   const [q, setQ] = useState('');
   const filtered = useFilteredItems(items, q);
 
   const dotClass = (s: string | undefined) => {
-    if (s === 'Running') return 'bg-green-500';
-    if (s === 'Waiting') return 'bg-yellow-500';
-    if (s === 'Failed') return 'bg-red-500';
-    if (s === 'Terminated') return 'bg-gray-500';
-    return 'bg-white/40';
+    switch (s) {
+      case 'Running':
+        return 'bg-green-500';
+      case 'Failed':
+        return 'bg-red-500';
+      case 'Terminated':
+      case 'Completed':
+        return 'bg-gray-500';
+      default:
+        return 'bg-yellow-500';
+    }
   };
+
+  function podStatusVariant(s: string): BadgeVariant {
+    switch (s) {
+      case 'Pending':
+      case 'ContainerCreating':
+        return 'warning';
+
+      case 'Running':
+      case 'Succeeded':
+        return 'success';
+
+      case 'Failed':
+      case 'CrashLoopBackOff':
+      case 'ImagePullBackOff':
+      case 'ErrImagePull':
+      case 'OOMKilled':
+      case 'Terminating':
+        return 'error';
+
+      default:
+        return 'default';
+    }
+  }
+
+  function hasPodWarning(p: Pod): boolean {
+    const phase = p.phase ?? 'Unknown';
+    if (['Failed', 'Unknown'].includes(phase)) return true;
+
+    const badStates = [
+      'CrashLoopBackOff',
+      'ErrImagePull',
+      'ImagePullBackOff',
+      'CreateContainerConfigError',
+      'CreateContainerError',
+      'InvalidImageName',
+      'RunContainerError',
+      'OOMKilled',
+      'Error',
+      'ContainerCannotRun',
+      'DeadlineExceeded',
+    ];
+
+    if (p.container_states?.some((st) => badStates.includes(st))) return true;
+
+    return false;
+  }
 
   return (
     <div className="space-y-3">
@@ -72,6 +126,7 @@ export default function PanePods({ context }: PanePodsProps) {
           <Thead>
             <Tr>
               <Th>Name</Th>
+              <Th></Th>
               <Th>Namespace</Th>
               <Th>Containers</Th>
               <Th>CPU</Th>
@@ -103,6 +158,11 @@ export default function PanePods({ context }: PanePodsProps) {
               filtered.map((p) => (
                 <Tr key={`${p.namespace}/${p.name}`}>
                   <Td className="font-medium">{p.name}</Td>
+                  <Td className="text-center">
+                    {hasPodWarning(p) && (
+                      <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
+                    )}
+                  </Td>
                   <Td className="text-white/80">{p.namespace}</Td>
                   <Td>
                     <div className="flex items-center gap-1">
@@ -127,9 +187,9 @@ export default function PanePods({ context }: PanePodsProps) {
                   <Td className="text-white/80">{p.node || '-'}</Td>
                   <Td className="text-white/80">{p.qos || '-'}</Td>
                   <AgeCell timestamp={p.creation_timestamp || ''} />
-                  <Badge variant={podStatusVariant(p.phase ?? 'Unknown')}>
-                    {p.phase ?? 'Unknown'}
-                  </Badge>
+                  <Td>
+                    <Badge variant={podStatusVariant(p.phase ?? '')}>{p.phase ?? ''}</Badge>
+                  </Td>
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

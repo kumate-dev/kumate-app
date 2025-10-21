@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
-import { getSelectedNamespace, progressVariant } from '../../utils/k8s';
+import { getSelectedNamespace } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
@@ -11,6 +10,7 @@ import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import { JobItem, watchJobs } from '../../services/jobs';
 import AgeCell from '../shared/AgeCell';
+import { BadgeVariant } from '../../types/variant';
 
 interface PaneJobsProps {
   context?: K8sContext | null;
@@ -30,6 +30,21 @@ export default function PaneJobs({ context }: PaneJobsProps) {
 
   const [q, setQ] = useState('');
   const filtered = useFilteredItems(items, q);
+
+  function progressVariant(progress: string | number): BadgeVariant {
+    try {
+      const [succ, comp] = String(progress)
+        .split('/')
+        .map((x) => parseInt(x, 10));
+      if (!isNaN(succ) && !isNaN(comp) && comp > 0) {
+        if (succ >= comp) return 'success';
+        return 'warning';
+      }
+      return 'default';
+    } catch {
+      return 'default';
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -74,14 +89,14 @@ export default function PaneJobs({ context }: PaneJobsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((d) => (
-                <Tr key={d.name}>
-                  <Td className="font-medium">{d.name}</Td>
-                  <Td className="text-white/80">{d.namespace}</Td>
+              filtered.map((f) => (
+                <Tr key={f.name}>
+                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="text-white/80">{f.namespace}</Td>
                   <Td>
-                    <Badge variant={progressVariant(d.progress)}>{d.progress}</Badge>
+                    <Badge variant={progressVariant(f.progress)}>{f.progress}</Badge>
                   </Td>
-                  <AgeCell timestamp={d.creation_timestamp || ''} />
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

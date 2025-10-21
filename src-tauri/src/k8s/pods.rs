@@ -128,28 +128,28 @@ impl K8sPods {
     }
 
     fn extract_container_states(status: Option<PodStatus>) -> Option<Vec<String>> {
-        status
-            .as_ref()
-            .and_then(|st: &PodStatus| st.container_statuses.as_ref())
-            .map(|css: &Vec<ContainerStatus>| {
-                css.iter()
-                    .map(|cs: &ContainerStatus| {
-                        if let Some(state) = cs.state.as_ref() {
-                            if state.running.is_some() {
-                                "Running".to_string()
-                            } else if state.waiting.is_some() {
-                                "Waiting".to_string()
-                            } else if state.terminated.is_some() {
-                                "Terminated".to_string()
-                            } else {
-                                "Unknown".to_string()
-                            }
-                        } else {
-                            "Unknown".to_string()
+        status.as_ref()?.container_statuses.as_ref().map(|css| {
+            css.iter()
+                .map(|cs| {
+                    if let Some(state) = &cs.state {
+                        if let Some(waiting) = &state.waiting {
+                            return waiting
+                                .reason
+                                .clone()
+                                .unwrap_or_else(|| "Waiting".to_string());
+                        } else if let Some(terminated) = &state.terminated {
+                            return terminated
+                                .reason
+                                .clone()
+                                .unwrap_or_else(|| "Terminated".to_string());
+                        } else if state.running.is_some() {
+                            return "Running".to_string();
                         }
-                    })
-                    .collect::<Vec<_>>()
-            })
+                    }
+                    "Unknown".to_string()
+                })
+                .collect::<Vec<_>>()
+        })
     }
 
     fn sum_restarts(status: Option<PodStatus>) -> Option<i32> {

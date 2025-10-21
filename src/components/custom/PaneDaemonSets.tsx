@@ -10,6 +10,7 @@ import { listDaemonSets, watchDaemonSets } from '../../services/daemonsets';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
+import { BadgeVariant } from '../../types/variant';
 
 export interface DaemonSet {
   name: string;
@@ -80,14 +81,14 @@ export default function PaneDaemonSets({ context }: PaneDaemonSetsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((d) => (
-                <Tr key={d.name}>
-                  <Td className="font-medium">{d.name}</Td>
-                  <Td className="text-white/80">{d.namespace}</Td>
+              filtered.map((f) => (
+                <Tr key={f.name}>
+                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="text-white/80">{f.namespace}</Td>
                   <Td>
-                    <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
+                    <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
                   </Td>
-                  <AgeCell timestamp={d.creation_timestamp || ''} />
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
-import { getSelectedNamespace, suspendVariant } from '../../utils/k8s';
+import { getSelectedNamespace } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
@@ -10,6 +9,7 @@ import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import { listCronJobs, watchCronJobs } from '../../services/cronjobs';
 import AgeCell from '../shared/AgeCell';
+import { BadgeVariant } from '../../types/variant';
 
 interface CronJob {
   name: string;
@@ -39,6 +39,19 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
 
   const [q, setQ] = useState('');
   const filtered = useFilteredItems(items, q);
+
+  function suspendVariant(suspend: boolean | string): BadgeVariant {
+    switch (suspend) {
+      case true:
+      case 'true':
+        return 'warning';
+      case false:
+      case 'false':
+        return 'success';
+      default:
+        return 'default';
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -85,16 +98,16 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((d) => (
-                <Tr key={d.name}>
-                  <Td className="font-medium">{d.name}</Td>
-                  <Td className="text-white/80">{d.namespace}</Td>
-                  <Td className="text-white/80">{d.schedule}</Td>
+              filtered.map((f) => (
+                <Tr key={f.name}>
+                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="text-white/80">{f.namespace}</Td>
+                  <Td className="text-white/80">{f.schedule}</Td>
                   <Td>
-                    <Badge variant={suspendVariant(d.suspend)}>{String(d.suspend)}</Badge>
+                    <Badge variant={suspendVariant(f.suspend)}>{String(f.suspend)}</Badge>
                   </Td>
-                  <AgeCell timestamp={d.last_schedule || ''} />
-                  <AgeCell timestamp={d.creation_timestamp || ''} />
+                  <AgeCell timestamp={f.last_schedule || ''} />
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

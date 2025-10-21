@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
 import { getSelectedNamespace, readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
@@ -82,14 +81,14 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
               </Tr>
             )}
             {!loading &&
-              filtered.map((d: ReplicationController) => (
-                <Tr key={d.name}>
-                  <Td className="font-medium">{d.name}</Td>
-                  <Td className="text-white/80">{d.namespace}</Td>
+              filtered.map((f: ReplicationController) => (
+                <Tr key={f.name}>
+                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="text-white/80">{f.namespace}</Td>
                   <Td>
-                    <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
+                    <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
                   </Td>
-                  <AgeCell timestamp={d.creation_timestamp || ''} />
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>
