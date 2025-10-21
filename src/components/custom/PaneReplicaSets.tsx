@@ -22,9 +22,9 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
 
   const { items, loading, error } = useK8sResources<ReplicaSetItem>(
     listReplicaSets,
+    watchReplicaSets,
     context,
-    getSelectedNamespace(selectedNs),
-    watchReplicaSets
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');

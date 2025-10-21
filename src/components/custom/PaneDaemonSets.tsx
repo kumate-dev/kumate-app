@@ -30,9 +30,9 @@ export default function PaneDaemonSets({ context }: PaneDaemonSetsProps) {
   const namespaceList = useSelectedNamespaces(context);
   const { items, loading, error } = useK8sResources<DaemonSet>(
     listDaemonSets as (params: { name: string; namespace?: string }) => Promise<DaemonSet[]>,
+    watchDaemonSets,
     context,
-    getSelectedNamespace(selectedNs),
-    watchDaemonSets
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');

@@ -37,9 +37,9 @@ export default function PanePods({ context }: PanePodsProps) {
   const namespaceList = useSelectedNamespaces(context);
   const { items, loading, error } = useK8sResources<Pod>(
     listPods as (params: { name: string; namespace?: string }) => Promise<Pod[]>,
+    watchPods,
     context,
-    getSelectedNamespace(selectedNs),
-    watchPods
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');
@@ -155,25 +155,25 @@ export default function PanePods({ context }: PanePodsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((p) => (
-                <Tr key={`${p.namespace}/${p.name}`}>
-                  <Td className="font-medium">{p.name}</Td>
+              filtered.map((f) => (
+                <Tr key={`${f.namespace}/${f.name}`}>
+                  <Td className="font-medium">{f.name}</Td>
                   <Td className="text-center">
-                    {hasPodWarning(p) && (
+                    {hasPodWarning(f) && (
                       <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
                     )}
                   </Td>
-                  <Td className="text-white/80">{p.namespace}</Td>
+                  <Td className="text-white/80">{f.namespace}</Td>
                   <Td>
                     <div className="flex items-center gap-1">
-                      {p.container_states?.length
-                        ? p.container_states.map((st, idx) => (
+                      {f.container_states?.length
+                        ? f.container_states.map((st, idx) => (
                             <span
                               key={idx}
                               className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass(st)}`}
                             ></span>
                           ))
-                        : Array.from({ length: p.containers || 0 }).map((_, idx) => (
+                        : Array.from({ length: f.containers || 0 }).map((_, idx) => (
                             <span
                               key={idx}
                               className="inline-block h-2.5 w-2.5 rounded-full bg-white/30"
@@ -181,14 +181,14 @@ export default function PanePods({ context }: PanePodsProps) {
                           ))}
                     </div>
                   </Td>
-                  <Td className="text-white/80">{p.cpu || '-'}</Td>
-                  <Td className="text-white/80">{p.memory || '-'}</Td>
-                  <Td className="text-white/80">{p.restart ?? '-'}</Td>
-                  <Td className="text-white/80">{p.node || '-'}</Td>
-                  <Td className="text-white/80">{p.qos || '-'}</Td>
-                  <AgeCell timestamp={p.creation_timestamp || ''} />
+                  <Td className="text-white/80">{f.cpu || '-'}</Td>
+                  <Td className="text-white/80">{f.memory || '-'}</Td>
+                  <Td className="text-white/80">{f.restart ?? '-'}</Td>
+                  <Td className="text-white/80">{f.node || '-'}</Td>
+                  <Td className="text-white/80">{f.qos || '-'}</Td>
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
-                    <Badge variant={podStatusVariant(p.phase ?? '')}>{p.phase ?? ''}</Badge>
+                    <Badge variant={podStatusVariant(f.phase ?? '')}>{f.phase ?? ''}</Badge>
                   </Td>
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>

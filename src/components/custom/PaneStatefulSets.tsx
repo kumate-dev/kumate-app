@@ -28,9 +28,9 @@ export default function PaneStatefulSets({ context }: PaneStatefulSetsProps) {
   const namespaceList = useSelectedNamespaces(context);
   const { items, loading, error } = useK8sResources<StatefulSet>(
     listStatefulSets as (params: { name: string; namespace?: string }) => Promise<StatefulSet[]>,
+    watchStatefulSets,
     context,
-    getSelectedNamespace(selectedNs),
-    watchStatefulSets
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');

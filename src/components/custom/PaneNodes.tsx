@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { relativeAge } from '../../utils/time';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneSearch } from '../shared/PaneSearch';
-import { listNodes, NodeItem } from '../../services/nodes';
+import { listNodes, NodeItem, watchNodes } from '../../services/nodes';
 import { BadgeVariant } from '../../types/variant';
+import AgeCell from '../shared/AgeCell';
 
 interface PaneNodesProps {
   context?: K8sContext | null;
@@ -19,8 +19,8 @@ export default function PaneNodes({ context }: PaneNodesProps) {
     error,
   } = useK8sResources<NodeItem>(
     listNodes as (params: { name: string }) => Promise<NodeItem[]>,
-    context,
-    undefined
+    watchNodes,
+    context
   );
 
   const [q, setQ] = useState('');
@@ -92,7 +92,7 @@ export default function PaneNodes({ context }: PaneNodesProps) {
                   <Td className="text-white/70">{f.taints || ''}</Td>
                   <Td className="text-white/80">{f.roles || ''}</Td>
                   <Td className="text-white/80">{f.version || ''}</Td>
-                  <Td className="text-white/80">{relativeAge(f.age)}</Td>
+                  <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <Badge variant={conditionVariant(f.condition || 'Unknown')}>
                       {f.condition || 'Unknown'}

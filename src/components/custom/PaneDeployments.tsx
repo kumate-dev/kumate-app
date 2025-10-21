@@ -23,9 +23,9 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
 
   const { items, loading, error } = useK8sResources<DeploymentItem>(
     listDeployments,
+    watchDeployments,
     context,
-    getSelectedNamespace(selectedNs),
-    watchDeployments
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');

@@ -1,14 +1,20 @@
 use std::collections::BTreeMap;
+use std::pin::Pin;
 
-use k8s_openapi::api::core::v1::{
-    Node, NodeCondition, NodeSpec, NodeStatus, NodeSystemInfo, Taint,
+use futures_util::{Stream, StreamExt};
+use k8s_openapi::{
+    api::core::v1::{Node, NodeCondition, NodeSpec, NodeStatus, NodeSystemInfo, Taint},
+    apimachinery::pkg::api::resource::Quantity,
 };
-use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
-use kube::api::{ListParams, ObjectList, ObjectMeta};
-use kube::{Api, Client};
+use kube::{
+    api::{ListParams, ObjectList, ObjectMeta, WatchEvent, WatchParams},
+    Api, Client,
+};
 use serde::Serialize;
+use tauri::Emitter;
 
 use crate::k8s::client::K8sClient;
+use crate::types::event::EventType;
 use crate::utils::bytes::Bytes;
 use crate::utils::k8s::to_creation_timestamp;
 
@@ -25,6 +31,12 @@ pub struct NodeItem {
     pub condition: Option<String>,
 }
 
+#[derive(Serialize, Clone)]
+struct NodeEvent {
+    r#type: EventType,
+    object: NodeItem,
+}
+
 pub struct K8sNodes;
 
 impl K8sNodes {
@@ -36,6 +48,38 @@ impl K8sNodes {
             .map(|n: Node| Self::to_item(n))
             .collect::<Vec<_>>();
         Ok(out)
+    }
+
+    pub async fn watch(
+        app_handle: tauri::AppHandle,
+        name: String,
+        event_name: String,
+    ) -> Result<(), String> {
+        let client: Client = K8sClient::for_context(&name).await?;
+        let api: Api<Node> = Api::all(client);
+
+        let mut stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<Node>, kube::Error>> + Send>> =
+            api.watch(&WatchParams::default(), "0")
+                .await
+                .map_err(|e| e.to_string())?
+                .boxed();
+
+        while let Some(status) = stream.next().await {
+            match status {
+                Ok(WatchEvent::Added(ns)) => {
+                    Self::emit(&app_handle, &event_name, EventType::ADDED, ns)
+                }
+                Ok(WatchEvent::Modified(ns)) => {
+                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, ns)
+                }
+                Ok(WatchEvent::Deleted(ns)) => {
+                    Self::emit(&app_handle, &event_name, EventType::DELETED, ns)
+                }
+                Err(e) => eprintln!("Node watch error: {}", e),
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     async fn fetch(client: Client) -> Result<Vec<Node>, String> {
@@ -145,5 +189,16 @@ impl K8sNodes {
             .and_then(|s: &NodeStatus| s.capacity.as_ref())
             .and_then(|c: &BTreeMap<String, Quantity>| c.get("ephemeral-storage"))
             .map(|q: &Quantity| Bytes::pretty_size(&q.0))
+    }
+
+    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, r: Node) {
+        if r.metadata.name.is_some() {
+            let item: NodeItem = Self::to_item(r);
+            let event: NodeEvent = NodeEvent {
+                r#type: kind,
+                object: item,
+            };
+            let _ = app_handle.emit(event_name, event);
+        }
     }
 }

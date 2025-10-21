@@ -10,9 +10,9 @@ type WatchEvent<T> = {
 
 export function useK8sResources<T>(
   listFn: (params: { name: string; namespace?: string }) => Promise<T[]>,
+  watchFn?: (params: { name: string; namespace?: string }) => Promise<{ eventName: string }>,
   context?: K8sContext | null,
-  namespace?: string,
-  watchFn?: (params: { name: string; namespace?: string }) => Promise<{ eventName: string }>
+  namespace?: string
 ) {
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);

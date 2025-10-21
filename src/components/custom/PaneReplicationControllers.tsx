@@ -5,7 +5,10 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listReplicationControllers } from '../../services/replicationcontrollers';
+import {
+  listReplicationControllers,
+  watchReplicationControllers,
+} from '../../services/replicationcontrollers';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
@@ -31,6 +34,7 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
       name: string;
       namespace?: string;
     }) => Promise<ReplicationController[]>,
+    watchReplicationControllers,
     context,
     getSelectedNamespace(selectedNs)
   );

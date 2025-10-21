@@ -1,7 +1,7 @@
 use std::pin::Pin;
 
 use futures_util::{Stream, StreamExt};
-use k8s_openapi::api::core::v1::{Container, ContainerStatus, Pod, PodSpec, PodStatus};
+use k8s_openapi::api::core::v1::{Container, Pod, PodSpec, PodStatus};
 use kube::{
     api::{ListParams, ObjectList, WatchEvent, WatchParams},
     Api, Client, ResourceExt,

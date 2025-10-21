@@ -15,9 +15,8 @@ interface PaneNamespacesProps {
 export default function PaneNamespaces({ context }: PaneNamespacesProps) {
   const { items, loading, error } = useK8sResources<NamespaceItem>(
     listNamespaces,
-    context,
-    undefined,
-    watchNamespaces
+    watchNamespaces,
+    context
   );
 
   const [q, setQ] = useState('');

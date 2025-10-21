@@ -32,9 +32,9 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
 
   const { items, loading, error } = useK8sResources<CronJob>(
     listCronJobs as (params: { name: string; namespace?: string }) => Promise<CronJob[]>,
+    watchCronJobs,
     context,
-    getSelectedNamespace(selectedNs),
-    watchCronJobs
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');

@@ -21,7 +21,7 @@ export async function listDaemonSets({
   name: string;
   namespace?: string;
 }): Promise<DaemonSetItem[]> {
-  return await invoke<DaemonSetItem[]>('list_daemonsets', { name, namespace });
+  return await invoke<DaemonSetItem[]>('list_replicasets', { name, namespace });
 }
 
 export async function watchDaemonSets({

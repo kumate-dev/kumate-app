@@ -23,9 +23,9 @@ export default function PaneJobs({ context }: PaneJobsProps) {
   const namespaceList = useSelectedNamespaces(context);
   const { items, loading, error } = useK8sResources<JobItem>(
     listJobs as (params: { name: string; namespace?: string }) => Promise<JobItem[]>,
+    watchJobs,
     context,
-    getSelectedNamespace(selectedNs),
-    watchJobs
+    getSelectedNamespace(selectedNs)
   );
 
   const [q, setQ] = useState('');
