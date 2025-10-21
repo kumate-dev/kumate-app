@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { statusVariant } from '../../utils/k8s';
 import { RelativeAge } from '../shared/RelativeAge';

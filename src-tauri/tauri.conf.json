@@ -23,19 +23,8 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "app",      
-      "dmg",     
-      "msi",      
-      "nsis",      
-      "deb",   
-      "appimage"
-    ],
-    "icon": [
-      "icons/icon.icns",
-      "icons/icon.ico",
-      "icons/icon.png"
-    ],
+    "targets": ["app", "dmg", "msi", "nsis", "deb", "appimage"],
+    "icon": ["icons/icon.icns", "icons/icon.ico", "icons/icon.png"],
 
     "resources": [],
     "externalBin": [],

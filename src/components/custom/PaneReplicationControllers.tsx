@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Input, Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { relativeAge } from '../../utils/time';
 import { readyVariant } from '../../utils/k8s';
@@ -37,7 +37,7 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
 
   const [q, setQ] = useState('');
   const filtered = useFilteredItems(items, q);
-  
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">

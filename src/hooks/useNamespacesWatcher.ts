@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listNamespaces, watchNamespaces, unwatchNamespaces, NamespaceItem } from '../services/k8s';
+import { watchNamespaces, unwatchNamespaces, NamespaceItem } from '../services/k8s';
 
 export interface NamespaceEvent {
   type: 'ADDED' | 'MODIFIED' | 'DELETED';
