@@ -82,19 +82,19 @@ export default function PaneNodes({ context }: PaneNodesProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((n) => (
-                <Tr key={n.name}>
-                  <Td className="font-medium">{n.name}</Td>
-                  <Td>{n.cpu || '—'}</Td>
-                  <Td>{n.memory || '—'}</Td>
-                  <Td>{n.disk || '—'}</Td>
-                  <Td className="text-white/70">{n.taints || ''}</Td>
-                  <Td className="text-white/80">{n.roles || ''}</Td>
-                  <Td className="text-white/80">{n.version || ''}</Td>
-                  <Td className="text-white/80">{relativeAge(n.age)}</Td>
+              filtered.map((i: Node) => (
+                <Tr key={i.name}>
+                  <Td className="font-medium">{i.name}</Td>
+                  <Td>{i.cpu || '—'}</Td>
+                  <Td>{i.memory || '—'}</Td>
+                  <Td>{i.disk || '—'}</Td>
+                  <Td className="text-white/70">{i.taints || ''}</Td>
+                  <Td className="text-white/80">{i.roles || ''}</Td>
+                  <Td className="text-white/80">{i.version || ''}</Td>
+                  <Td className="text-white/80">{relativeAge(i.age)}</Td>
                   <Td>
-                    <Badge variant={conditionVariant(n.condition || 'Unknown')}>
-                      {n.condition || 'Unknown'}
+                    <Badge variant={conditionVariant(i.condition || 'Unknown')}>
+                      {i.condition || 'Unknown'}
                     </Badge>
                   </Td>
                   <Td>

@@ -62,15 +62,15 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
             )}
 
             {!loading &&
-              filtered.map((n) => (
-                <Tr key={n.name}>
-                  <Td className="font-medium">{n.name}</Td>
+              filtered.map((i: NamespaceItem) => (
+                <Tr key={i.name}>
+                  <Td className="font-medium">{i.name}</Td>
                   <Td>
-                    <Badge variant={statusVariant(n.status || 'Unknown')}>
-                      {n.status || 'Unknown'}
+                    <Badge variant={statusVariant(i.status || 'Unknown')}>
+                      {i.status || 'Unknown'}
                     </Badge>
                   </Td>
-                  <AgeCell timestamp={n.creation_timestamp || ''} />
+                  <AgeCell timestamp={i.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

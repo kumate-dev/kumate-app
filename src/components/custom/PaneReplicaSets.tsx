@@ -6,16 +6,10 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listReplicaSets } from '../../services/k8s';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
-
-export interface ReplicaSet {
-  name: string;
-  namespace: string;
-  ready: string;
-  creation_timestamp: string;
-}
+import { ReplicaSetItem, listReplicaSets, watchReplicaSets } from '../../services/replicasets';
+import AgeCell from '../shared/AgeCell';
 
 interface PaneReplicaSetsProps {
   context?: K8sContext | null;
@@ -26,10 +20,13 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
   const setSelectedNs = useNamespaceStore((s) => s.setSelectedNs);
 
   const namespaceList = useSelectedNamespaces(context);
-  const { items, loading, error } = useK8sResources<ReplicaSet>(
-    listReplicaSets as (params: { name: string; namespace?: string }) => Promise<ReplicaSet[]>,
+
+  const { items, loading, error } = useK8sResources<ReplicaSetItem>(
+    listReplicaSets,
     context,
-    getSelectedNamespace(selectedNs)
+    getSelectedNamespace(selectedNs),
+    15000,
+    watchReplicaSets
   );
 
   const [q, setQ] = useState('');
@@ -78,14 +75,14 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((d: ReplicaSet) => (
-                <Tr key={d.name}>
-                  <Td className="font-medium">{d.name}</Td>
-                  <Td className="text-white/80">{d.namespace}</Td>
+              filtered.map((i: ReplicaSetItem) => (
+                <Tr key={i.name}>
+                  <Td className="font-medium">{i.name}</Td>
+                  <Td className="text-white/80">{i.namespace}</Td>
                   <Td>
-                    <Badge variant={readyVariant(d.ready)}>{d.ready}</Badge>
+                    <Badge variant={readyVariant(i.ready)}>{i.ready}</Badge>
                   </Td>
-                  <Td className="text-white/80">{relativeAge(d.creation_timestamp)}</Td>
+                  <AgeCell timestamp={i.creation_timestamp || ''} />
                   <Td>
                     <button className="text-white/60 hover:text-white/80">⋮</button>
                   </Td>

@@ -31,7 +31,6 @@ struct DeploymentEvent {
 pub struct K8sDeployments;
 
 impl K8sDeployments {
-    /// List deployments in a namespace or across all namespaces
     pub async fn list(
         name: String,
         namespace: Option<String>,

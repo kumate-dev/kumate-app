@@ -69,10 +69,6 @@ export async function listStatefulSets({ name, namespace }: { name: string; name
   return invoke('list_statefulsets', { name, namespace });
 }
 
-export async function listReplicaSets({ name, namespace }: { name: string; namespace: string }) {
-  return invoke('list_replicasets', { name, namespace });
-}
-
 export async function listReplicationControllers({
   name,
   namespace,
