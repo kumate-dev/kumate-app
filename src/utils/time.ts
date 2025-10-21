@@ -10,17 +10,10 @@ export function relativeAge(iso?: string) {
   const hours = Math.floor(diff / 3600);
   diff -= hours * 3600;
   const mins = Math.floor(diff / 60);
-  diff -= mins * 60;
-  const secs = diff;
+  const secs = diff - mins * 60;
 
-  if (days >= 10) return `${days}d`;
-  if (days > 0) return `${days}d${hours > 0 ? `${hours}h` : ''}`;
-
-  if (hours >= 10) return `${hours}h`;
-  if (hours > 0) return `${hours}h${mins}m`;
-
-  if (mins >= 10) return `${mins}m`;
-  if (mins > 0) return `${mins}m${secs}s`;
-
+  if (days > 0) return days >= 10 ? `${days}d` : `${days}d${hours > 0 ? `${hours}h` : ''}`;
+  if (hours > 0) return hours >= 10 ? `${hours}h` : `${hours}h${mins > 0 ? `${mins}m` : ''}`;
+  if (mins > 0) return mins >= 10 ? `${mins}m` : `${mins}m${secs > 0 ? `${secs}s` : ''}`;
   return `${secs}s`;
 }
