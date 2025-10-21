@@ -10,23 +10,23 @@ use tauri::AppHandle;
 #[tauri::command]
 pub async fn list_deployments(
     name: String,
-    namespace: Option<String>,
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<DeploymentItem>, String> {
-    K8sDeployments::list(name, namespace).await
+    K8sDeployments::list(name, namespaces).await
 }
 
 #[tauri::command]
 pub async fn watch_deployments(
     app_handle: AppHandle,
     name: String,
-    namespace: Option<String>,
+    namespaces: Option<Vec<String>>,
     state: tauri::State<'_, WatchManager>,
 ) -> Result<String, String> {
     watch(
         app_handle,
         name,
         "deployments".to_string(),
-        namespace,
+        namespaces,
         state,
         Arc::new(K8sDeployments::watch),
     )

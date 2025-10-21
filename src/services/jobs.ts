@@ -16,24 +16,25 @@ export interface JobEvent {
 
 export async function listJobs({
   name,
-  namespace,
+  namespaces,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
 }): Promise<JobItem[]> {
-  return await invoke<JobItem[]>('list_jobs', { name, namespace });
+  return await invoke<JobItem[]>('list_jobs', { name, namespaces });
 }
 
 export async function watchJobs({
   name,
-  namespace,
+  namespaces,
   onEvent,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
   onEvent?: EventHandler<JobEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_jobs', { name, namespace });
+  const eventName = await invoke<string>('watch_jobs', { name, namespaces });
+
   const unlisten = await listen<JobEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
@@ -41,5 +42,6 @@ export async function watchJobs({
       console.error('Error in onEvent handler:', err);
     }
   });
+
   return { eventName, unlisten };
 }

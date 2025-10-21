@@ -11,23 +11,23 @@ use tauri::AppHandle;
 #[tauri::command]
 pub async fn list_replicationcontrollers(
     name: String,
-    namespace: Option<String>,
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<ReplicationControllerItem>, String> {
-    K8sReplicationControllers::list(name, namespace).await
+    K8sReplicationControllers::list(name, namespaces).await
 }
 
 #[tauri::command]
 pub async fn watch_replicationcontrollers(
     app_handle: AppHandle,
     name: String,
-    namespace: Option<String>,
+    namespaces: Option<Vec<String>>,
     state: tauri::State<'_, WatchManager>,
 ) -> Result<String, String> {
     watch(
         app_handle,
         name,
         "replicationcontrollers".to_string(),
-        namespace,
+        namespaces,
         state,
         Arc::new(K8sReplicationControllers::watch),
     )

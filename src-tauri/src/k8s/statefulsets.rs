@@ -1,17 +1,15 @@
-use std::pin::Pin;
-
-use futures_util::{Stream, StreamExt};
+use futures_util::future::join_all;
 use k8s_openapi::api::apps::v1::{StatefulSet, StatefulSetSpec, StatefulSetStatus};
 use kube::api::ObjectList;
-use kube::{
-    api::{ListParams, WatchEvent, WatchParams},
-    Api, Client, ResourceExt,
-};
+use kube::{api::ListParams, Api, Client, ResourceExt};
 use serde::Serialize;
 use tauri::Emitter;
 
 use crate::types::event::EventType;
-use crate::utils::k8s::{to_creation_timestamp, to_namespace, to_replicas_ready};
+use crate::utils::k8s::{
+    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace,
+    to_replicas_ready, watch_stream,
+};
 
 use super::client::K8sClient;
 
@@ -34,47 +32,60 @@ pub struct K8sStatefulSets;
 impl K8sStatefulSets {
     pub async fn list(
         name: String,
-        namespace: Option<String>,
+        namespaces: Option<Vec<String>>,
     ) -> Result<Vec<StatefulSetItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let ssets: Vec<StatefulSet> = Self::fetch(client, namespace).await?;
-        let mut out: Vec<StatefulSetItem> = ssets.into_iter().map(Self::to_item).collect();
-        out.sort_by(|a, b| a.name.cmp(&b.name));
-        Ok(out)
+        let target_namespaces: Vec<String> = get_target_namespaces(namespaces);
+
+        let all_statefulsets: Vec<StatefulSetItem> = if target_namespaces.is_empty() {
+            Self::fetch(client.clone(), None)
+                .await?
+                .into_iter()
+                .map(Self::to_item)
+                .collect()
+        } else {
+            let results: Vec<Vec<StatefulSet>> = join_all(
+                target_namespaces
+                    .into_iter()
+                    .map(|ns| Self::fetch(client.clone(), Some(ns))),
+            )
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?;
+            results.into_iter().flatten().map(Self::to_item).collect()
+        };
+
+        Ok(all_statefulsets)
     }
 
     pub async fn watch(
         app_handle: tauri::AppHandle,
         name: String,
-        namespace: Option<String>,
+        namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let api: Api<StatefulSet> = K8sClient::api::<StatefulSet>(client, namespace).await;
+        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
 
-        let mut stream: Pin<
-            Box<dyn Stream<Item = Result<WatchEvent<StatefulSet>, kube::Error>> + Send>,
-        > = api
-            .watch(&WatchParams::default(), "0")
-            .await
-            .map_err(|e| e.to_string())?
-            .boxed();
+        for ns in target_namespaces {
+            let api: Api<StatefulSet> = K8sClient::api::<StatefulSet>(
+                client.clone(),
+                if ns.is_empty() {
+                    None
+                } else {
+                    Some(ns.clone())
+                },
+            )
+            .await;
 
-        while let Some(status) = stream.next().await {
-            match status {
-                Ok(WatchEvent::Added(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::ADDED, dep)
-                }
-                Ok(WatchEvent::Modified(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, dep)
-                }
-                Ok(WatchEvent::Deleted(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::DELETED, dep)
-                }
-                Err(e) => eprintln!("StatefulSet watch error: {}", e),
-                _ => {}
-            }
+            event_spawn_watch(
+                app_handle.clone(),
+                event_name.clone(),
+                watch_stream(&api).await?,
+                Self::emit,
+            );
         }
+
         Ok(())
     }
 

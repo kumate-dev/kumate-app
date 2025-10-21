@@ -1,14 +1,16 @@
-use std::pin::Pin;
-
-use crate::{k8s::client::K8sClient, types::event::EventType, utils::k8s::to_creation_timestamp};
-use futures_util::{Stream, StreamExt};
 use k8s_openapi::api::core::v1::{Namespace, NamespaceStatus};
 use kube::{
-    api::{ListParams, ObjectList, WatchEvent, WatchParams},
+    api::{ListParams, ObjectList},
     Api, Client,
 };
 use serde::Serialize;
 use tauri::Emitter;
+
+use crate::{
+    k8s::client::K8sClient,
+    types::event::EventType,
+    utils::k8s::{event_spawn_watch, to_creation_timestamp, watch_stream},
+};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct NamespaceItem {
@@ -28,8 +30,8 @@ pub struct K8sNamespaces;
 impl K8sNamespaces {
     pub async fn list(name: String) -> Result<Vec<NamespaceItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let items: Vec<Namespace> = Self::fetch(client).await?;
-        Ok(items.into_iter().map(Self::to_item).collect())
+        let namespaces: Vec<Namespace> = Self::fetch(client).await?;
+        Ok(namespaces.into_iter().map(Self::to_item).collect())
     }
 
     pub async fn watch(
@@ -40,29 +42,13 @@ impl K8sNamespaces {
         let client: Client = K8sClient::for_context(&name).await?;
         let api: Api<Namespace> = Api::all(client);
 
-        let mut stream: Pin<
-            Box<dyn Stream<Item = Result<WatchEvent<Namespace>, kube::Error>> + Send>,
-        > = api
-            .watch(&WatchParams::default(), "0")
-            .await
-            .map_err(|e| e.to_string())?
-            .boxed();
+        event_spawn_watch(
+            app_handle,
+            event_name,
+            watch_stream(&api).await?,
+            Self::emit,
+        );
 
-        while let Some(status) = stream.next().await {
-            match status {
-                Ok(WatchEvent::Added(ns)) => {
-                    Self::emit(&app_handle, &event_name, EventType::ADDED, ns)
-                }
-                Ok(WatchEvent::Modified(ns)) => {
-                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, ns)
-                }
-                Ok(WatchEvent::Deleted(ns)) => {
-                    Self::emit(&app_handle, &event_name, EventType::DELETED, ns)
-                }
-                Err(e) => eprintln!("Namespace watch error: {}", e),
-                _ => {}
-            }
-        }
         Ok(())
     }
 

@@ -17,24 +17,25 @@ export interface DeploymentEvent {
 
 export async function listDeployments({
   name,
-  namespace,
+  namespaces,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
 }): Promise<DeploymentItem[]> {
-  return await invoke<DeploymentItem[]>('list_deployments', { name, namespace });
+  return await invoke<DeploymentItem[]>('list_deployments', { name, namespaces });
 }
 
 export async function watchDeployments({
   name,
-  namespace,
+  namespaces,
   onEvent,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
   onEvent?: EventHandler<DeploymentEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_deployments', { name, namespace });
+  const eventName = await invoke<string>('watch_deployments', { name, namespaces });
+
   const unlisten = await listen<DeploymentEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
@@ -42,5 +43,6 @@ export async function watchDeployments({
       console.error('Error in onEvent handler:', err);
     }
   });
+
   return { eventName, unlisten };
 }

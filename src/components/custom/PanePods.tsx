@@ -4,26 +4,12 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listPods, watchPods } from '../../services/pods';
+import { listPods, PodItem, watchPods } from '../../services/pods';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
 import { AlertTriangle } from 'lucide-react';
 import { BadgeVariant } from '../../types/variant';
-
-export interface Pod {
-  name: string;
-  namespace: string;
-  containers?: number;
-  container_states?: string[];
-  cpu?: string;
-  memory?: string;
-  restart?: number;
-  node?: string;
-  qos?: string;
-  creation_timestamp?: string;
-  phase?: string;
-}
 
 interface PanePodsProps {
   context?: K8sContext | null;
@@ -35,8 +21,8 @@ export default function PanePods({ context }: PanePodsProps) {
 
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<Pod>(
-    listPods as (params: { name: string; namespaces?: string[] }) => Promise<Pod[]>,
+  const { items, loading, error } = useK8sResources<PodItem>(
+    listPods,
     watchPods,
     context,
     selectedNamespaces
@@ -83,7 +69,7 @@ export default function PanePods({ context }: PanePodsProps) {
     }
   }
 
-  function hasPodWarning(p: Pod): boolean {
+  function hasPodWarning(p: PodItem): boolean {
     const phase = p.phase ?? 'Unknown';
     if (['Failed', 'Unknown'].includes(phase)) return true;
 

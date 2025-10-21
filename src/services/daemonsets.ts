@@ -16,24 +16,25 @@ export interface DaemonSetEvent {
 
 export async function listDaemonSets({
   name,
-  namespace,
+  namespaces,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
 }): Promise<DaemonSetItem[]> {
-  return await invoke<DaemonSetItem[]>('list_replicasets', { name, namespace });
+  return await invoke<DaemonSetItem[]>('list_daemonsets', { name, namespaces });
 }
 
 export async function watchDaemonSets({
   name,
-  namespace,
+  namespaces,
   onEvent,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
   onEvent?: EventHandler<DaemonSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_daemonsets', { name, namespace });
+  const eventName = await invoke<string>('watch_daemonsets', { name, namespaces });
+
   const unlisten = await listen<DaemonSetEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
@@ -41,5 +42,6 @@ export async function watchDaemonSets({
       console.error('Error in onEvent handler:', err);
     }
   });
+
   return { eventName, unlisten };
 }

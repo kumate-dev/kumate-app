@@ -16,24 +16,25 @@ export interface ReplicaSetEvent {
 
 export async function listReplicaSets({
   name,
-  namespace,
+  namespaces,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
 }): Promise<ReplicaSetItem[]> {
-  return await invoke<ReplicaSetItem[]>('list_replicasets', { name, namespace });
+  return await invoke<ReplicaSetItem[]>('list_replicasets', { name, namespaces });
 }
 
 export async function watchReplicaSets({
   name,
-  namespace,
+  namespaces,
   onEvent,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
   onEvent?: EventHandler<ReplicaSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_replicasets', { name, namespace });
+  const eventName = await invoke<string>('watch_replicasets', { name, namespaces });
+
   const unlisten = await listen<ReplicaSetEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
@@ -41,5 +42,6 @@ export async function watchReplicaSets({
       console.error('Error in onEvent handler:', err);
     }
   });
+
   return { eventName, unlisten };
 }

@@ -16,27 +16,28 @@ export interface ReplicationControllerEvent {
 
 export async function listReplicationControllers({
   name,
-  namespace,
+  namespaces,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
 }): Promise<ReplicationControllerItem[]> {
   return await invoke<ReplicationControllerItem[]>('list_replicationcontrollers', {
     name,
-    namespace,
+    namespaces,
   });
 }
 
 export async function watchReplicationControllers({
   name,
-  namespace,
+  namespaces,
   onEvent,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
   onEvent?: EventHandler<ReplicationControllerEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_replicationcontrollers', { name, namespace });
+  const eventName = await invoke<string>('watch_replicationcontrollers', { name, namespaces });
+
   const unlisten = await listen<ReplicationControllerEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
@@ -44,5 +45,6 @@ export async function watchReplicationControllers({
       console.error('Error in onEvent handler:', err);
     }
   });
+
   return { eventName, unlisten };
 }

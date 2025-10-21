@@ -1,24 +1,18 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { getSelectedNamespace, readyVariant } from '../../utils/k8s';
+import { readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import {
   listReplicationControllers,
+  ReplicationControllerItem,
   watchReplicationControllers,
 } from '../../services/replicationcontrollers';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
-
-export interface ReplicationController {
-  name: string;
-  namespace: string;
-  ready: string;
-  creation_timestamp: string;
-}
 
 interface PaneReplicationControllersProps {
   context?: K8sContext | null;
@@ -29,11 +23,8 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
 
   const namespaceList = useSelectedNamespaces(context);
-  const { items, loading, error } = useK8sResources<ReplicationController>(
-    listReplicationControllers as (params: {
-      name: string;
-      namespace?: string;
-    }) => Promise<ReplicationController[]>,
+  const { items, loading, error } = useK8sResources<ReplicationControllerItem>(
+    listReplicationControllers,
     watchReplicationControllers,
     context,
     selectedNamespaces
@@ -85,7 +76,7 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
               </Tr>
             )}
             {!loading &&
-              filtered.map((f: ReplicationController) => (
+              filtered.map((f: ReplicationControllerItem) => (
                 <Tr key={f.name}>
                   <Td className="font-medium">{f.name}</Td>
                   <Td className="text-white/80">{f.namespace}</Td>

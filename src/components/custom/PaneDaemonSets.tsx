@@ -5,17 +5,10 @@ import { useNamespaceStore } from '../../state/namespaceStore';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listDaemonSets, watchDaemonSets } from '../../services/daemonsets';
+import { DaemonSetItem, listDaemonSets, watchDaemonSets } from '../../services/daemonsets';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
-
-export interface DaemonSet {
-  name: string;
-  namespace: string;
-  ready: string;
-  creation_timestamp: string;
-}
 
 interface PaneDaemonSetsProps {
   context?: K8sContext | null;
@@ -26,8 +19,8 @@ export default function PaneDaemonSets({ context }: PaneDaemonSetsProps) {
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
 
   const namespaceList = useSelectedNamespaces(context);
-  const { items, loading, error } = useK8sResources<DaemonSet>(
-    listDaemonSets as (params: { name: string; namespace?: string }) => Promise<DaemonSet[]>,
+  const { items, loading, error } = useK8sResources<DaemonSetItem>(
+    listDaemonSets,
     watchDaemonSets,
     context,
     selectedNamespaces

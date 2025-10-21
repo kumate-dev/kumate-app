@@ -93,7 +93,7 @@ export function useK8sResources<T>(
                     newList = prev;
                 }
 
-                return [...newList].sort((a: any, b: any) => a.name.localeCompare(b.name));
+                return newList;
               });
             },
           }),
@@ -114,7 +114,7 @@ export function useK8sResources<T>(
       unlisten?.();
       unwatch({ name: clusterName });
     };
-  }, [context?.name, namespaces?.join(','), listFn, watchFn]);
+  }, [context?.name, namespaces, listFn, watchFn]);
 
   return { items, loading, error };
 }

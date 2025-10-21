@@ -1,15 +1,17 @@
-use futures_util::{Stream, StreamExt};
+use futures_util::future::join_all;
 use k8s_openapi::api::batch::v1::{Job, JobSpec, JobStatus};
 use kube::{
-    api::{ListParams, ObjectList, WatchEvent, WatchParams},
+    api::{ListParams, ObjectList},
     Api, Client, ResourceExt,
 };
 use serde::Serialize;
-use std::pin::Pin;
 use tauri::Emitter;
 
-use crate::types::event::EventType;
 use crate::utils::k8s::{to_creation_timestamp, to_namespace};
+use crate::{
+    types::event::EventType,
+    utils::k8s::{event_spawn_watch, get_target_namespaces, watch_stream},
+};
 
 use super::client::K8sClient;
 
@@ -30,44 +32,62 @@ struct JobEvent {
 pub struct K8sJobs;
 
 impl K8sJobs {
-    pub async fn list(name: String, namespace: Option<String>) -> Result<Vec<JobItem>, String> {
+    pub async fn list(
+        name: String,
+        namespaces: Option<Vec<String>>,
+    ) -> Result<Vec<JobItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let jobs: Vec<Job> = Self::fetch(client, namespace).await?;
-        let mut out: Vec<JobItem> = jobs.into_iter().map(Self::to_item).collect();
-        out.sort_by(|a: &JobItem, b: &JobItem| a.name.cmp(&b.name));
-        Ok(out)
+        let target_namespaces: Vec<String> = get_target_namespaces(namespaces);
+
+        let all_jobs: Vec<JobItem> = if target_namespaces.is_empty() {
+            Self::fetch(client.clone(), None)
+                .await?
+                .into_iter()
+                .map(Self::to_item)
+                .collect()
+        } else {
+            let results: Vec<Vec<Job>> = join_all(
+                target_namespaces
+                    .into_iter()
+                    .map(|ns| Self::fetch(client.clone(), Some(ns))),
+            )
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?;
+            results.into_iter().flatten().map(Self::to_item).collect()
+        };
+
+        Ok(all_jobs)
     }
 
     pub async fn watch(
         app_handle: tauri::AppHandle,
         name: String,
-        namespace: Option<String>,
+        namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let api: Api<Job> = K8sClient::api::<Job>(client, namespace).await;
+        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
 
-        let mut stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<Job>, kube::Error>> + Send>> =
-            api.watch(&WatchParams::default(), "0")
-                .await
-                .map_err(|e| e.to_string())?
-                .boxed();
+        for ns in target_namespaces {
+            let api: Api<Job> = K8sClient::api::<Job>(
+                client.clone(),
+                if ns.is_empty() {
+                    None
+                } else {
+                    Some(ns.clone())
+                },
+            )
+            .await;
 
-        while let Some(status) = stream.next().await {
-            match status {
-                Ok(WatchEvent::Added(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::ADDED, dep)
-                }
-                Ok(WatchEvent::Modified(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, dep)
-                }
-                Ok(WatchEvent::Deleted(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::DELETED, dep)
-                }
-                Err(e) => eprintln!("Job watch error: {}", e),
-                _ => {}
-            }
+            event_spawn_watch(
+                app_handle.clone(),
+                event_name.clone(),
+                watch_stream(&api).await?,
+                Self::emit,
+            );
         }
+
         Ok(())
     }
 

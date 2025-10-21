@@ -1,9 +1,7 @@
-use std::pin::Pin;
-
-use futures_util::{Stream, StreamExt};
+use futures_util::future::join_all;
 use k8s_openapi::api::core::v1::{Container, Pod, PodSpec, PodStatus};
 use kube::{
-    api::{ListParams, ObjectList, WatchEvent, WatchParams},
+    api::{ListParams, ObjectList},
     Api, Client, ResourceExt,
 };
 use serde::Serialize;
@@ -14,7 +12,10 @@ use crate::{
     types::event::EventType,
     utils::{
         bytes::Bytes,
-        k8s::{to_creation_timestamp, to_namespace},
+        k8s::{
+            event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace,
+            watch_stream,
+        },
     },
 };
 
@@ -47,24 +48,26 @@ impl K8sPods {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<PodItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
-        let mut all_pods: Vec<PodItem> = Vec::new();
+        let target_namespaces: Vec<String> = get_target_namespaces(namespaces);
 
-        for ns in target_namespaces {
-            let pods: Vec<Pod> = Self::fetch(
-                client.clone(),
-                if ns.is_empty() {
-                    None
-                } else {
-                    Some(ns.clone())
-                },
+        let all_pods: Vec<PodItem> = if target_namespaces.is_empty() {
+            Self::fetch(client.clone(), None)
+                .await?
+                .into_iter()
+                .map(Self::to_item)
+                .collect()
+        } else {
+            let results: Vec<Vec<Pod>> = join_all(
+                target_namespaces
+                    .into_iter()
+                    .map(|ns| Self::fetch(client.clone(), Some(ns))),
             )
-            .await?;
-            let mut pod_items: Vec<PodItem> = pods.into_iter().map(Self::to_item).collect();
-            all_pods.append(&mut pod_items);
-        }
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?;
+            results.into_iter().flatten().map(Self::to_item).collect()
+        };
 
-        all_pods.sort_by(|a, b| a.name.cmp(&b.name));
         Ok(all_pods)
     }
 
@@ -75,46 +78,17 @@ impl K8sPods {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces = namespaces.unwrap_or_else(|| vec![String::from("")]);
+        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
 
         for ns in target_namespaces {
-            let api: Api<Pod> = K8sClient::api::<Pod>(
-                client.clone(),
-                if ns.is_empty() {
-                    None
-                } else {
-                    Some(ns.clone())
-                },
-            )
-            .await;
-            let stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<Pod>, kube::Error>> + Send>> =
-                api.watch(&WatchParams::default(), "0")
-                    .await
-                    .map_err(|e| e.to_string())?
-                    .boxed();
-
-            let app_handle = app_handle.clone();
-            let event_name = event_name.clone();
-            tokio::spawn(async move {
-                let mut s = stream;
-                while let Some(status) = s.next().await {
-                    match status {
-                        Ok(WatchEvent::Added(pod)) => {
-                            Self::emit(&app_handle, &event_name, EventType::ADDED, pod);
-                        }
-                        Ok(WatchEvent::Modified(pod)) => {
-                            Self::emit(&app_handle, &event_name, EventType::MODIFIED, pod);
-                        }
-                        Ok(WatchEvent::Deleted(pod)) => {
-                            Self::emit(&app_handle, &event_name, EventType::DELETED, pod);
-                        }
-                        Err(e) => eprintln!("Pod watch error (ns={}): {}", ns, e),
-                        _ => {}
-                    }
-                }
-            });
+            let api: Api<Pod> = K8sClient::api::<Pod>(client.clone(), Some(ns.clone())).await;
+            event_spawn_watch(
+                app_handle.clone(),
+                event_name.clone(),
+                watch_stream(&api).await?,
+                Self::emit,
+            );
         }
-
         Ok(())
     }
 

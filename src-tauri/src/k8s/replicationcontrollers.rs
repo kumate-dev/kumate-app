@@ -1,19 +1,20 @@
-use std::pin::Pin;
-
-use futures_util::{Stream, StreamExt};
+use futures_util::future::join_all;
 
 use k8s_openapi::api::core::v1::{
     ReplicationController, ReplicationControllerSpec, ReplicationControllerStatus,
 };
 use kube::{
-    api::{ListParams, WatchEvent, WatchParams},
+    api::{ListParams, ObjectList},
     Api, Client, ResourceExt,
 };
 use serde::Serialize;
 use tauri::Emitter;
 
-use crate::types::event::EventType;
 use crate::utils::k8s::{to_creation_timestamp, to_namespace, to_replicas_ready};
+use crate::{
+    types::event::EventType,
+    utils::k8s::{event_spawn_watch, get_target_namespaces, watch_stream},
+};
 
 use super::client::K8sClient;
 
@@ -36,50 +37,61 @@ pub struct K8sReplicationControllers;
 impl K8sReplicationControllers {
     pub async fn list(
         name: String,
-        namespace: Option<String>,
+        namespaces: Option<Vec<String>>,
     ) -> Result<Vec<ReplicationControllerItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let rcs: Vec<ReplicationController> = Self::fetch(client, namespace).await?;
-        let mut out: Vec<ReplicationControllerItem> = rcs.into_iter().map(Self::to_item).collect();
-        out.sort_by(
-            |a: &ReplicationControllerItem, b: &ReplicationControllerItem| a.name.cmp(&b.name),
-        );
-        Ok(out)
+        let target_namespaces: Vec<String> = get_target_namespaces(namespaces);
+
+        let all_replicationcontrollers: Vec<ReplicationControllerItem> =
+            if target_namespaces.is_empty() {
+                Self::fetch(client.clone(), None)
+                    .await?
+                    .into_iter()
+                    .map(Self::to_item)
+                    .collect()
+            } else {
+                let results: Vec<Vec<ReplicationController>> = join_all(
+                    target_namespaces
+                        .into_iter()
+                        .map(|ns| Self::fetch(client.clone(), Some(ns))),
+                )
+                .await
+                .into_iter()
+                .collect::<Result<Vec<_>, _>>()?;
+                results.into_iter().flatten().map(Self::to_item).collect()
+            };
+
+        Ok(all_replicationcontrollers)
     }
 
     pub async fn watch(
         app_handle: tauri::AppHandle,
         name: String,
-        namespace: Option<String>,
+        namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let api: Api<ReplicationController> =
-            K8sClient::api::<ReplicationController>(client, namespace).await;
+        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
 
-        let mut stream: Pin<
-            Box<dyn Stream<Item = Result<WatchEvent<ReplicationController>, kube::Error>> + Send>,
-        > = api
-            .watch(&WatchParams::default(), "0")
-            .await
-            .map_err(|e| e.to_string())?
-            .boxed();
+        for ns in target_namespaces {
+            let api: Api<ReplicationController> = K8sClient::api::<ReplicationController>(
+                client.clone(),
+                if ns.is_empty() {
+                    None
+                } else {
+                    Some(ns.clone())
+                },
+            )
+            .await;
 
-        while let Some(status) = stream.next().await {
-            match status {
-                Ok(WatchEvent::Added(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::ADDED, dep)
-                }
-                Ok(WatchEvent::Modified(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, dep)
-                }
-                Ok(WatchEvent::Deleted(dep)) => {
-                    Self::emit(&app_handle, &event_name, EventType::DELETED, dep)
-                }
-                Err(e) => eprintln!("ReplicaSet watch error: {}", e),
-                _ => {}
-            }
+            event_spawn_watch(
+                app_handle.clone(),
+                event_name.clone(),
+                watch_stream(&api).await?,
+                Self::emit,
+            );
         }
+
         Ok(())
     }
 
@@ -90,7 +102,7 @@ impl K8sReplicationControllers {
         let api: Api<ReplicationController> =
             K8sClient::api::<ReplicationController>(client, namespace).await;
         let lp: ListParams = ListParams::default();
-        let list: kube::api::ObjectList<ReplicationController> = api
+        let list: ObjectList<ReplicationController> = api
             .list(&lp)
             .await
             .map_err(|e: kube::Error| e.to_string())?;

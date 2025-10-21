@@ -16,24 +16,25 @@ export interface StatefulSetEvent {
 
 export async function listStatefulSets({
   name,
-  namespace,
+  namespaces,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
 }): Promise<StatefulSetItem[]> {
-  return await invoke<StatefulSetItem[]>('list_statefulsets', { name, namespace });
+  return await invoke<StatefulSetItem[]>('list_statefulsets', { name, namespaces });
 }
 
 export async function watchStatefulSets({
   name,
-  namespace,
+  namespaces,
   onEvent,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
   onEvent?: EventHandler<StatefulSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_statefulsets', { name, namespace });
+  const eventName = await invoke<string>('watch_pods', { name, namespaces });
+
   const unlisten = await listen<StatefulSetEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
@@ -41,5 +42,6 @@ export async function watchStatefulSets({
       console.error('Error in onEvent handler:', err);
     }
   });
+
   return { eventName, unlisten };
 }

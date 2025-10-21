@@ -1,15 +1,15 @@
-use std::pin::Pin;
-
-use futures_util::{Stream, StreamExt};
+use futures_util::future::join_all;
 use k8s_openapi::api::batch::v1::{CronJob, CronJobSpec, CronJobStatus};
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
-use kube::api::{ListParams, ObjectList, WatchEvent, WatchParams};
+use kube::api::{ListParams, ObjectList};
 use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
-use tauri::Emitter;
+use tauri::{AppHandle, Emitter};
 
 use crate::types::event::EventType;
-use crate::utils::k8s::{to_creation_timestamp, to_namespace};
+use crate::utils::k8s::{
+    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace, watch_stream,
+};
 
 use super::client::K8sClient;
 
@@ -32,46 +32,62 @@ struct CronJobEvent {
 pub struct K8sCronJobs;
 
 impl K8sCronJobs {
-    pub async fn list(name: String, namespace: Option<String>) -> Result<Vec<CronJobItem>, String> {
+    pub async fn list(
+        name: String,
+        namespaces: Option<Vec<String>>,
+    ) -> Result<Vec<CronJobItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let cronjobs: Vec<CronJob> = Self::fetch(client, namespace).await?;
-        let mut out: Vec<CronJobItem> = cronjobs.into_iter().map(Self::to_item).collect();
-        out.sort_by(|a: &CronJobItem, b: &CronJobItem| a.name.cmp(&b.name));
-        Ok(out)
+        let target_namespaces: Vec<String> = get_target_namespaces(namespaces);
+
+        let all_cronjobs: Vec<CronJobItem> = if target_namespaces.is_empty() {
+            Self::fetch(client.clone(), None)
+                .await?
+                .into_iter()
+                .map(Self::to_item)
+                .collect()
+        } else {
+            let results: Vec<Vec<CronJob>> = join_all(
+                target_namespaces
+                    .into_iter()
+                    .map(|ns| Self::fetch(client.clone(), Some(ns))),
+            )
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?;
+            results.into_iter().flatten().map(Self::to_item).collect()
+        };
+
+        Ok(all_cronjobs)
     }
 
     pub async fn watch(
-        app_handle: tauri::AppHandle,
+        app_handle: AppHandle,
         name: String,
-        namespace: Option<String>,
+        namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let api: Api<CronJob> = K8sClient::api::<CronJob>(client, namespace).await;
+        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
 
-        let mut stream: Pin<
-            Box<dyn Stream<Item = Result<WatchEvent<CronJob>, kube::Error>> + Send>,
-        > = api
-            .watch(&WatchParams::default(), "0")
-            .await
-            .map_err(|e| e.to_string())?
-            .boxed();
+        for ns in target_namespaces {
+            let api: Api<CronJob> = K8sClient::api::<CronJob>(
+                client.clone(),
+                if ns.is_empty() {
+                    None
+                } else {
+                    Some(ns.clone())
+                },
+            )
+            .await;
 
-        while let Some(status) = stream.next().await {
-            match status {
-                Ok(WatchEvent::Added(cj)) => {
-                    Self::emit(&app_handle, &event_name, EventType::ADDED, cj)
-                }
-                Ok(WatchEvent::Modified(cj)) => {
-                    Self::emit(&app_handle, &event_name, EventType::MODIFIED, cj)
-                }
-                Ok(WatchEvent::Deleted(cj)) => {
-                    Self::emit(&app_handle, &event_name, EventType::DELETED, cj)
-                }
-                Err(e) => eprintln!("CronJob watch error: {}", e),
-                _ => {}
-            }
+            event_spawn_watch(
+                app_handle.clone(),
+                event_name.clone(),
+                watch_stream(&api).await?,
+                Self::emit,
+            );
         }
+
         Ok(())
     }
 

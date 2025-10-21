@@ -11,23 +11,23 @@ use tauri::AppHandle;
 #[tauri::command]
 pub async fn list_statefulsets(
     name: String,
-    namespace: Option<String>,
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<StatefulSetItem>, String> {
-    K8sStatefulSets::list(name, namespace).await
+    K8sStatefulSets::list(name, namespaces).await
 }
 
 #[tauri::command]
 pub async fn watch_statefulsets(
     app_handle: AppHandle,
     name: String,
-    namespace: Option<String>,
+    namespaces: Option<Vec<String>>,
     state: tauri::State<'_, WatchManager>,
 ) -> Result<String, String> {
     watch(
         app_handle,
         name,
         "statefulsets".to_string(),
-        namespace,
+        namespaces,
         state,
         Arc::new(K8sStatefulSets::watch),
     )

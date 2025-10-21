@@ -6,19 +6,9 @@ import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
-import { listCronJobs, watchCronJobs } from '../../services/cronjobs';
+import { CronJobItem, listCronJobs, watchCronJobs } from '../../services/cronjobs';
 import AgeCell from '../shared/AgeCell';
 import { BadgeVariant } from '../../types/variant';
-import { ALL_NAMESPACES } from '../../constants/k8s';
-
-interface CronJob {
-  name: string;
-  namespace: string;
-  schedule: string;
-  suspend: boolean;
-  last_schedule?: string;
-  creation_timestamp: string;
-}
 
 interface PaneCronJobProps {
   context?: K8sContext | null;
@@ -30,8 +20,8 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
 
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<CronJob>(
-    listCronJobs as (params: { name: string; namespace?: string }) => Promise<CronJob[]>,
+  const { items, loading, error } = useK8sResources<CronJobItem>(
+    listCronJobs,
     watchCronJobs,
     context,
     selectedNamespaces

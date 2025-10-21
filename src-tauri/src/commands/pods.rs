@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch_all,
+    commands::common::watch,
     k8s::pods::{K8sPods, PodItem},
     utils::watcher::WatchManager,
 };
@@ -23,8 +23,7 @@ pub async fn watch_pods(
     namespaces: Option<Vec<String>>,
     state: tauri::State<'_, WatchManager>,
 ) -> Result<String, String> {
-    println!("watch_pods: name={}, namespaces={:?}", name, namespaces);
-    watch_all(
+    watch(
         app_handle,
         name,
         "pods".to_string(),

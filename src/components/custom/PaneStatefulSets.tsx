@@ -1,21 +1,14 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { getSelectedNamespace, readyVariant } from '../../utils/k8s';
+import { readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
-import { listStatefulSets, watchStatefulSets } from '../../services/statefulsets';
+import { listStatefulSets, StatefulSetItem, watchStatefulSets } from '../../services/statefulsets';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
-
-export interface StatefulSet {
-  name: string;
-  namespace: string;
-  ready: string;
-  creation_timestamp: string;
-}
 
 interface PaneStatefulSetsProps {
   context?: K8sContext | null;
@@ -26,8 +19,8 @@ export default function PaneStatefulSets({ context }: PaneStatefulSetsProps) {
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
 
   const namespaceList = useSelectedNamespaces(context);
-  const { items, loading, error } = useK8sResources<StatefulSet>(
-    listStatefulSets as (params: { name: string; namespace?: string }) => Promise<StatefulSet[]>,
+  const { items, loading, error } = useK8sResources<StatefulSetItem>(
+    listStatefulSets,
     watchStatefulSets,
     context,
     selectedNamespaces
@@ -79,7 +72,7 @@ export default function PaneStatefulSets({ context }: PaneStatefulSetsProps) {
               </Tr>
             )}
             {!loading &&
-              filtered.map((f: StatefulSet) => (
+              filtered.map((f: StatefulSetItem) => (
                 <Tr key={f.name}>
                   <Td className="font-medium">{f.name}</Td>
                   <Td className="text-white/80">{f.namespace}</Td>

@@ -18,24 +18,25 @@ export interface CronJobEvent {
 
 export async function listCronJobs({
   name,
-  namespace,
+  namespaces,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
 }): Promise<CronJobItem[]> {
-  return await invoke<CronJobItem[]>('list_cronjobs', { name, namespace });
+  return await invoke<CronJobItem[]>('list_cronjobs', { name, namespaces });
 }
 
 export async function watchCronJobs({
   name,
-  namespace,
+  namespaces,
   onEvent,
 }: {
   name: string;
-  namespace?: string;
+  namespaces?: string[];
   onEvent?: EventHandler<CronJobEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_cronjobs', { name, namespace });
+  const eventName = await invoke<string>('watch_cronjobs', { name, namespaces });
+
   const unlisten = await listen<CronJobEvent>(eventName, (evt) => {
     try {
       onEvent?.(evt.payload);
@@ -43,5 +44,6 @@ export async function watchCronJobs({
       console.error('Error in onEvent handler:', err);
     }
   });
+
   return { eventName, unlisten };
 }
