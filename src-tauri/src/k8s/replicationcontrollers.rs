@@ -40,26 +40,20 @@ impl K8sReplicationControllers {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<ReplicationControllerItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<String> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
 
-        let all_replicationcontrollers: Vec<ReplicationControllerItem> =
-            if target_namespaces.is_empty() {
-                Self::fetch(client.clone(), None)
-                    .await?
-                    .into_iter()
-                    .map(Self::to_item)
-                    .collect()
-            } else {
-                let results: Vec<Vec<ReplicationController>> = join_all(
-                    target_namespaces
-                        .into_iter()
-                        .map(|ns| Self::fetch(client.clone(), Some(ns))),
-                )
-                .await
+        let all_replicationcontrollers: Vec<ReplicationControllerItem> = join_all(
+            target_namespaces
                 .into_iter()
-                .collect::<Result<Vec<_>, _>>()?;
-                results.into_iter().flatten().map(Self::to_item).collect()
-            };
+                .map(|ns| Self::fetch(client.clone(), ns)),
+        )
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .map(Self::to_item)
+        .collect();
 
         Ok(all_replicationcontrollers)
     }
@@ -71,18 +65,11 @@ impl K8sReplicationControllers {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
+        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
-            let api: Api<ReplicationController> = K8sClient::api::<ReplicationController>(
-                client.clone(),
-                if ns.is_empty() {
-                    None
-                } else {
-                    Some(ns.clone())
-                },
-            )
-            .await;
+            let api: Api<ReplicationController> =
+                K8sClient::api::<ReplicationController>(client.clone(), ns).await;
 
             event_spawn_watch(
                 app_handle.clone(),

@@ -26,13 +26,12 @@ pub fn to_creation_timestamp(metadata: ObjectMeta) -> Option<String> {
     metadata.creation_timestamp.map(|t: Time| t.0.to_rfc3339())
 }
 
-pub fn get_target_namespaces(namespaces: Option<Vec<String>>) -> Vec<String> {
+pub fn get_target_namespaces(namespaces: Option<Vec<String>>) -> Vec<Option<String>> {
     match namespaces {
-        Some(v) if !v.is_empty() => v,
-        _ => vec![],
+        Some(v) if !v.is_empty() => v.into_iter().map(Some).collect(),
+        _ => vec![None],
     }
 }
-
 pub fn event_spawn_watch<R, F>(
     app_handle: AppHandle,
     event_name: String,

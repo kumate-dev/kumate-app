@@ -48,25 +48,20 @@ impl K8sPods {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<PodItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<String> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
 
-        let all_pods: Vec<PodItem> = if target_namespaces.is_empty() {
-            Self::fetch(client.clone(), None)
-                .await?
+        let all_pods: Vec<PodItem> = join_all(
+            target_namespaces
                 .into_iter()
-                .map(Self::to_item)
-                .collect()
-        } else {
-            let results: Vec<Vec<Pod>> = join_all(
-                target_namespaces
-                    .into_iter()
-                    .map(|ns| Self::fetch(client.clone(), Some(ns))),
-            )
-            .await
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()?;
-            results.into_iter().flatten().map(Self::to_item).collect()
-        };
+                .map(|ns| Self::fetch(client.clone(), ns)),
+        )
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .map(Self::to_item)
+        .collect();
 
         Ok(all_pods)
     }
@@ -78,10 +73,10 @@ impl K8sPods {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
+        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
-            let api: Api<Pod> = K8sClient::api::<Pod>(client.clone(), Some(ns.clone())).await;
+            let api: Api<Pod> = K8sClient::api::<Pod>(client.clone(), ns).await;
             event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),

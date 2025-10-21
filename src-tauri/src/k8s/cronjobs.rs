@@ -37,25 +37,20 @@ impl K8sCronJobs {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<CronJobItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<String> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
 
-        let all_cronjobs: Vec<CronJobItem> = if target_namespaces.is_empty() {
-            Self::fetch(client.clone(), None)
-                .await?
+        let all_cronjobs: Vec<CronJobItem> = join_all(
+            target_namespaces
                 .into_iter()
-                .map(Self::to_item)
-                .collect()
-        } else {
-            let results: Vec<Vec<CronJob>> = join_all(
-                target_namespaces
-                    .into_iter()
-                    .map(|ns| Self::fetch(client.clone(), Some(ns))),
-            )
-            .await
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()?;
-            results.into_iter().flatten().map(Self::to_item).collect()
-        };
+                .map(|ns| Self::fetch(client.clone(), ns)),
+        )
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .map(Self::to_item)
+        .collect();
 
         Ok(all_cronjobs)
     }
@@ -67,18 +62,10 @@ impl K8sCronJobs {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<String> = namespaces.unwrap_or_else(|| vec![String::from("")]);
+        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
-            let api: Api<CronJob> = K8sClient::api::<CronJob>(
-                client.clone(),
-                if ns.is_empty() {
-                    None
-                } else {
-                    Some(ns.clone())
-                },
-            )
-            .await;
+            let api: Api<CronJob> = K8sClient::api::<CronJob>(client.clone(), ns).await;
 
             event_spawn_watch(
                 app_handle.clone(),

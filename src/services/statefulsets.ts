@@ -33,7 +33,7 @@ export async function watchStatefulSets({
   namespaces?: string[];
   onEvent?: EventHandler<StatefulSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_pods', { name, namespaces });
+  const eventName = await invoke<string>('watch_statefulsets', { name, namespaces });
 
   const unlisten = await listen<StatefulSetEvent>(eventName, (evt) => {
     try {
