@@ -1,0 +1,177 @@
+import { useState } from 'react';
+import { PaneK8sResource } from './PaneK8sResource';
+import { useNamespaceStore } from '@/state/namespaceStore';
+import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
+import { useK8sResources } from '@/hooks/useK8sResources';
+import { listPods, watchPods, PodItem } from '@/services/pods';
+import { ColumnDef, TableHeader } from './TableHeader';
+import { Td, Tr } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import AgeCell from '@/components/custom/AgeCell';
+import { AlertTriangle } from 'lucide-react';
+import { K8sContext } from '@/services/contexts';
+import { BadgeVariant } from '@/types/variant';
+import { useFilteredItems } from '@/hooks/useFilteredItems';
+
+interface PanePodsProps {
+  context?: K8sContext | null;
+}
+
+export default function PanePods({ context }: PanePodsProps) {
+  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
+  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
+  const namespaceList = useSelectedNamespaces(context);
+
+  const { items, loading, error } = useK8sResources<PodItem>(
+    listPods,
+    watchPods,
+    context,
+    selectedNamespaces
+  );
+
+  const [q, setQ] = useState('');
+  const [sortBy, setSortBy] = useState<keyof PodItem>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const filtered = useFilteredItems(
+    items,
+    selectedNamespaces,
+    q,
+    ['name', 'namespace'],
+    sortBy,
+    sortOrder
+  );
+
+  const dotClass = (s: string | undefined) => {
+    switch (s) {
+      case 'Running':
+        return 'bg-green-500';
+      case 'Failed':
+        return 'bg-red-500';
+      case 'Terminated':
+      case 'Completed':
+        return 'bg-gray-500';
+      default:
+        return 'bg-yellow-500';
+    }
+  };
+
+  const podStatusVariant = (s: string): BadgeVariant => {
+    switch (s) {
+      case 'Pending':
+      case 'ContainerCreating':
+        return 'warning';
+      case 'Running':
+      case 'Succeeded':
+        return 'success';
+      case 'Failed':
+      case 'CrashLoopBackOff':
+      case 'ImagePullBackOff':
+      case 'ErrImagePull':
+      case 'OOMKilled':
+      case 'Terminating':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const hasPodWarning = (p: PodItem): boolean => {
+    const phase = p.phase ?? 'Unknown';
+    if (['Failed', 'Unknown'].includes(phase)) return true;
+
+    const badStates = [
+      'CrashLoopBackOff',
+      'ErrImagePull',
+      'ImagePullBackOff',
+      'CreateContainerConfigError',
+      'CreateContainerError',
+      'InvalidImageName',
+      'RunContainerError',
+      'OOMKilled',
+      'Error',
+      'ContainerCannotRun',
+      'DeadlineExceeded',
+    ];
+
+    return p.container_states?.some((st) => badStates.includes(st)) ?? false;
+  };
+
+  const columns: ColumnDef<keyof PodItem | 'empty'>[] = [
+    { label: 'Name', key: 'name' },
+    { label: '', key: 'empty', sortable: false },
+    { label: 'Namespace', key: 'namespace' },
+    { label: 'Containers', key: 'containers' },
+    { label: 'CPU', key: 'cpu' },
+    { label: 'Memory', key: 'memory' },
+    { label: 'Restart', key: 'restart' },
+    { label: 'Node', key: 'node' },
+    { label: 'QoS', key: 'qos' },
+    { label: 'Age', key: 'creation_timestamp' },
+    { label: 'Status', key: 'phase' },
+  ];
+
+  const tableHeader = (
+    <TableHeader
+      columns={columns}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
+    />
+  );
+
+  return (
+    <PaneK8sResource
+      items={filtered}
+      loading={loading}
+      error={error ?? ''}
+      query={q}
+      onQueryChange={setQ}
+      namespaceList={namespaceList}
+      selectedNamespaces={selectedNamespaces}
+      onSelectNamespace={setSelectedNamespaces}
+      colSpan={columns.length}
+      tableHeader={tableHeader}
+      renderRow={(f) => (
+        <Tr key={`${f.namespace}/${f.name}`}>
+          <Td className="max-w-truncate">
+            <span className="block truncate" title={f.name}>
+              {f.name}
+            </span>
+          </Td>
+          <Td className="text-center">
+            {hasPodWarning(f) && <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />}
+          </Td>
+          <Td>{f.namespace}</Td>
+          <Td>
+            <div className="flex items-center gap-1">
+              {f.container_states?.length
+                ? f.container_states.map((st, idx) => (
+                    <span
+                      key={idx}
+                      className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass(st)}`}
+                    />
+                  ))
+                : Array.from({ length: f.containers || 0 }).map((_, idx) => (
+                    <span key={idx} className="inline-block h-2.5 w-2.5 rounded-full bg-white/30" />
+                  ))}
+            </div>
+          </Td>
+          <Td>{f.cpu || '-'}</Td>
+          <Td>{f.memory || '-'}</Td>
+          <Td>{f.restart ?? '-'}</Td>
+          <Td>{f.node || '-'}</Td>
+          <Td>{f.qos || '-'}</Td>
+          <AgeCell timestamp={f.creation_timestamp || ''} />
+          <Td>
+            <Badge variant={podStatusVariant(f.phase ?? '')}>{f.phase ?? ''}</Badge>
+          </Td>
+          <Td>
+            <button className="text-white/60 hover:text-white/80">⋮</button>
+          </Td>
+        </Tr>
+      )}
+    />
+  );
+}

@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Activity, Server, Boxes, Network } from 'lucide-react';
-import WorkloadsPane from '@/components/custom/PanePods';
-import PaneNodes from '@/components/custom/PaneNodes';
+import { Activity } from 'lucide-react';
 import { K8sContext } from '@/services/contexts';
 
 interface PlaceholderProps {
@@ -39,23 +37,7 @@ export default function PaneOverview({ context }: PaneOverviewProps) {
             <TabsTrigger value="overview" className="gap-2">
               <Activity className="h-4 w-4" /> Overview
             </TabsTrigger>
-            <TabsTrigger value="nodes" className="gap-2">
-              <Server className="h-4 w-4" /> Nodes
-            </TabsTrigger>
-            <TabsTrigger value="pods" className="gap-2">
-              <Boxes className="h-4 w-4" /> Pods
-            </TabsTrigger>
-            <TabsTrigger value="services" className="gap-2">
-              <Network className="h-4 w-4" /> Services
-            </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="nodes" className="mt-2">
-            <PaneNodes context={context} />
-          </TabsContent>
-          <TabsContent value="pods" className="mt-2">
-            <WorkloadsPane context={context} />
-          </TabsContent>
           <TabsContent value="services" className="mt-2">
             <Placeholder title="Services" />
           </TabsContent>

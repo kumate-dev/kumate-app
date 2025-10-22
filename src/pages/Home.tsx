@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sidebar } from '@/layouts/Sidebar';
 import PaneOverview from '@/components/custom/PaneOverview';
-import WorkloadsPane from '@/components/custom/PanePods';
-import PaneNodes from '@/components/custom/PaneNodes';
-import PaneNamespaces from '@/components/custom/PaneNamespaces';
-import PaneDeployments from '@/components/custom/PaneDeployments';
-import PaneDaemonSets from '@/components/custom/PaneDaemonSets';
-import PaneStatefulSets from '@/components/custom/PaneStatefulSets';
-import PaneReplicaSets from '@/components/custom/PaneReplicaSets';
-import PaneReplicationControllers from '@/components/custom/PaneReplicationControllers';
-import PaneJobs from '@/components/custom/PaneJobs';
-import PaneCronJob from '@/components/custom/PaneCronJob';
+import PaneK8sPod from '@/components/custom/PaneK8sPod';
+import PaneK8sNode from '@/components/custom/PaneK8sNode';
+import PaneK8sNamespace from '@/components/custom/PaneK8sNamespace';
+import PaneK8sDeployment from '@/components/custom/PaneK8sDeployment';
+import PaneK8sDaemonSet from '@/components/custom/PaneK8sDaemonSet';
+import PaneK8sStatefulSet from '@/components/custom/PaneK8sStatefulSet';
+import PaneK8sReplicaSet from '@/components/custom/PaneK8sReplicaSet';
+import PaneK8sReplicationController from '@/components/custom/PaneK8sReplicationController';
+import PaneK8sJob from '@/components/custom/PaneK8sJob';
+import PaneK8sCronJob from '@/components/custom/PaneK8sCronJob';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/services/contexts';
@@ -100,18 +100,18 @@ export default function Home() {
         {/* Container chính - KHÔNG có scroll ngang */}
         <div className="h-full overflow-y-auto p-4">
           {page === 'overview' && <PaneOverview context={selected} />}
-          {page === 'nodes' && <PaneNodes context={selected} />}
+          {page === 'nodes' && <PaneK8sNode context={selected} />}
           {page === 'applications' && <Placeholder title="Applications" />}
 
           {page === 'workloads-overview' && <Placeholder title="Workloads Overview" />}
-          {page === 'deployments' && <PaneDeployments context={selected} />}
-          {page === 'daemonsets' && <PaneDaemonSets context={selected} />}
-          {page === 'statefulsets' && <PaneStatefulSets context={selected} />}
-          {page === 'replicasets' && <PaneReplicaSets context={selected} />}
-          {page === 'replicationcontrollers' && <PaneReplicationControllers context={selected} />}
-          {page === 'jobs' && <PaneJobs context={selected} />}
-          {page === 'cronjobs' && <PaneCronJob context={selected} />}
-          {page === 'pods' && <WorkloadsPane context={selected} />}
+          {page === 'deployments' && <PaneK8sDeployment context={selected} />}
+          {page === 'daemonsets' && <PaneK8sDaemonSet context={selected} />}
+          {page === 'statefulsets' && <PaneK8sStatefulSet context={selected} />}
+          {page === 'replicasets' && <PaneK8sReplicaSet context={selected} />}
+          {page === 'replicationcontrollers' && <PaneK8sReplicationController context={selected} />}
+          {page === 'jobs' && <PaneK8sJob context={selected} />}
+          {page === 'cronjobs' && <PaneK8sCronJob context={selected} />}
+          {page === 'pods' && <PaneK8sPod context={selected} />}
 
           {page === 'services' && <Placeholder title="Services" />}
           {page === 'endpoints' && <Placeholder title="Endpoints" />}
@@ -138,7 +138,7 @@ export default function Home() {
           {page === 'persistentvolumes' && <Placeholder title="Persistent Volumes" />}
           {page === 'storageclasses' && <Placeholder title="Storage Classes" />}
 
-          {page === 'namespaces' && <PaneNamespaces context={selected ?? undefined} />}
+          {page === 'namespaces' && <PaneK8sNamespace context={selected ?? undefined} />}
           {page === 'events' && <Placeholder title="Events" />}
 
           {page === 'helm-charts' && <Placeholder title="Helm Charts" />}
