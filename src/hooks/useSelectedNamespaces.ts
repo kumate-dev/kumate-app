@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { listNamespaces } from '../services/namespaces';
-import { useNamespaceStore } from '../state/namespaceStore';
-import { K8sContext } from '../layouts/Sidebar';
+import { listNamespaces } from '@/services/namespaces';
+import { useNamespaceStore } from '@/state/namespaceStore';
+import { K8sContext } from '@/services/contexts';
 
 export function useSelectedNamespaces(context?: K8sContext | null) {
   const namespaces = useNamespaceStore((s) => s.namespaces);

@@ -1,4 +1,4 @@
-import { ALL_NAMESPACES } from '../constants/k8s';
+import { ALL_NAMESPACES } from '@/constants/k8s';
 
 export type Variant = 'default' | 'success' | 'warning' | 'error' | 'secondary';
 

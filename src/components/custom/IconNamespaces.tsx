@@ -1,4 +1,4 @@
-import { Icon } from '../ui';
+import { Icon } from '@/components/ui/icon';
 
 export function IconNamespaces(props: React.SVGProps<SVGSVGElement>) {
   return (

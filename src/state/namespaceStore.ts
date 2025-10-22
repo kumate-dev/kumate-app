@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { NamespaceItem } from '../services/namespaces';
-import { ALL_NAMESPACES } from '../constants/k8s';
+import { NamespaceItem } from '@/services/namespaces';
+import { ALL_NAMESPACES } from '@/constants/k8s';
 
 interface NamespaceStore {
   selectedNamespaces: string[];

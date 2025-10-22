@@ -1,16 +1,16 @@
 import React from 'react';
-import { IconWorkloads } from '../components/shared/IconWorkloads';
-import { IconConfig } from '../components/shared/IconConfig';
-import { IconNetwork } from '../components/shared/IconNetwork';
-import { IconStorage } from '../components/shared/IconStorage';
-import { IconNamespaces } from '../components/shared/IconNamespaces';
-import { IconEvents } from '../components/shared/IconEvents';
-import { IconHelm } from '../components/shared/IconHelm';
-import { IconAccessControl } from '../components/shared/IconAccessControl';
-import { IconNode } from '../components/shared/IconNode';
-import { IconOverview } from '../components/shared/IconOverview';
-import { PageKey } from '../types/pageKey';
-import { K8sContext } from '../services/contexts';
+import { IconWorkloads } from '@/components/custom/IconWorkloads';
+import { IconConfig } from '@/components/custom/IconConfig';
+import { IconNetwork } from '@/components/custom/IconNetwork';
+import { IconStorage } from '@/components/custom/IconStorage';
+import { IconNamespaces } from '@/components/custom/IconNamespaces';
+import { IconEvents } from '@/components/custom/IconEvents';
+import { IconHelm } from '@/components/custom/IconHelm';
+import { IconAccessControl } from '@/components/custom/IconAccessControl';
+import { IconNode } from '@/components/custom/IconNode';
+import { IconOverview } from '@/components/custom/IconOverview';
+import { PageKey } from '@/types/pageKey';
+import { K8sContext } from '@/services/contexts';
 
 export interface PageItem {
   key?: PageKey;

@@ -1,4 +1,4 @@
-import { relativeAge } from '../../utils/time';
+import { relativeAge } from '@/utils/time';
 import { useEffect, useState } from 'react';
 
 interface RelativeAgeProps {

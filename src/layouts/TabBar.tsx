@@ -1,6 +1,6 @@
 import React from 'react';
-import { Tabs, TabsList, TabsTrigger } from '../components/ui';
-import { IconOverview } from '../components/shared/IconOverview';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { IconOverview } from '@/components/custom/IconOverview';
 
 interface Tab {
   key: string;

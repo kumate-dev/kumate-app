@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { EventHandler, EventType } from '../types/k8sEvent';
+import { EventHandler, EventType } from '@/types/k8sEvent';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
 
 export interface NodeItem {

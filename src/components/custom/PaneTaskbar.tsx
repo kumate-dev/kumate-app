@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { ALL_NAMESPACES } from '../../constants/k8s';
-import { PaneSearch } from './PaneSearch';
+import { ALL_NAMESPACES } from '@/constants/k8s';
+import { PaneSearch } from '@/components/custom/PaneSearch';
 import { Check, ChevronDown } from 'lucide-react';
 
 interface NamespaceOption {
@@ -56,7 +56,7 @@ export function PaneTaskbar({
     : selectedNamespaces.join(', ');
 
   return (
-    <div className="flex items-center gap-2 sticky top-0 z-20">
+    <div className="sticky top-0 z-20 flex items-center gap-2">
       {showNamespace && (
         <div className="relative" ref={ref}>
           <button

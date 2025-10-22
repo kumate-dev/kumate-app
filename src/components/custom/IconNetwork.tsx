@@ -1,4 +1,4 @@
-import { Icon } from '../ui';
+import { Icon } from '@/components/ui/icon';
 
 export function IconNetwork(props: React.SVGProps<SVGSVGElement>) {
   return (

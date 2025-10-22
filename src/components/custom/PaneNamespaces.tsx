@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { useK8sResources } from '../../hooks/useK8sResources';
-import { useFilteredItems } from '../../hooks/useFilteredItems';
-import AgeCell from '../shared/AgeCell';
-import { PaneSearch } from '../shared/PaneSearch';
-import { listNamespaces, NamespaceItem, watchNamespaces } from '../../services/namespaces';
-import { BadgeVariant } from '../../types/variant';
-import { K8sContext } from '../../services/contexts';
-import { ErrorMessage } from '../shared/ErrorMessage';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@/components/ui/table';
+import { useK8sResources } from '@/hooks/useK8sResources';
+import { useFilteredItems } from '@/hooks/useFilteredItems';
+import AgeCell from '@/components/custom/AgeCell';
+import { PaneSearch } from '@/components/custom/PaneSearch';
+import { listNamespaces, NamespaceItem, watchNamespaces } from '@/services/namespaces';
+import { BadgeVariant } from '@/types/variant';
+import { K8sContext } from '@/services/contexts';
+import { ErrorMessage } from '@/components/custom/ErrorMessage';
+import { Badge } from '@/components/ui/badge';
 
 interface PaneNamespacesProps {
   context?: K8sContext | null;

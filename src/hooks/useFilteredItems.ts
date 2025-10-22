@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ALL_NAMESPACES } from '../constants/k8s';
+import { ALL_NAMESPACES } from '@/constants/k8s';
 
 export function useFilteredItems<T extends { name?: string; namespace?: string }>(
   items: T[],

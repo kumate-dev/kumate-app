@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Table, Tbody, Tr, Td, Badge } from '../ui';
-import { readyVariant } from '../../utils/k8s';
-import { useNamespaceStore } from '../../state/namespaceStore';
-import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
-import { useK8sResources } from '../../hooks/useK8sResources';
-import { DeploymentItem, listDeployments, watchDeployments } from '../../services/deployments';
-import { useFilteredItems } from '../../hooks/useFilteredItems';
-import { PaneTaskbar } from '../shared/PaneTaskbar';
-import AgeCell from '../shared/AgeCell';
-import { BadgeVariant } from '../../types/variant';
-import { ColumnDef, TableHeader } from '../shared/TableHeader';
-import { K8sContext } from '../../services/contexts';
-import { ErrorMessage } from '../shared/ErrorMessage';
+import { Table, Tbody, Tr, Td } from '@/components/ui/table';
+import { readyVariant } from '@/utils/k8s';
+import { useNamespaceStore } from '@/state/namespaceStore';
+import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
+import { useK8sResources } from '@/hooks/useK8sResources';
+import { DeploymentItem, listDeployments, watchDeployments } from '@/services/deployments';
+import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { PaneTaskbar } from '@/components/custom/PaneTaskbar';
+import AgeCell from '@/components/custom/AgeCell';
+import { BadgeVariant } from '@/types/variant';
+import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
+import { K8sContext } from '@/services/contexts';
+import { ErrorMessage } from '@/components/custom/ErrorMessage';
+import { Badge } from '@/components/ui/badge';
 
 interface PaneDeploymentsProps {
   context?: K8sContext | null;
@@ -82,7 +83,7 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
 
       <ErrorMessage message={error} />
 
-      <div className="overflow-auto rounded-xl border border-white/10 bg-neutral-900/60 max-h-[600px]">
+      <div className="max-h-[600px] overflow-auto rounded-xl border border-white/10 bg-neutral-900/60">
         <Table>
           <TableHeader
             columns={columns}

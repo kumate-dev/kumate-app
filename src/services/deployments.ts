@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { EventHandler, EventType } from '../types/k8sEvent';
+import { EventHandler, EventType } from '@/types/k8sEvent';
 
 export interface DeploymentItem {
   name: string;

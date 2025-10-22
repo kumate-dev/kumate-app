@@ -1,19 +1,20 @@
 import { useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { readyVariant } from '../../utils/k8s';
-import { useNamespaceStore } from '../../state/namespaceStore';
-import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
-import { useK8sResources } from '../../hooks/useK8sResources';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@/components/ui/table';
+import { readyVariant } from '@/utils/k8s';
+import { useNamespaceStore } from '@/state/namespaceStore';
+import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
+import { useK8sResources } from '@/hooks/useK8sResources';
 import {
   listReplicationControllers,
   ReplicationControllerItem,
   watchReplicationControllers,
-} from '../../services/replicationcontrollers';
-import { useFilteredItems } from '../../hooks/useFilteredItems';
-import { PaneTaskbar } from '../shared/PaneTaskbar';
-import AgeCell from '../shared/AgeCell';
-import { K8sContext } from '../../services/contexts';
-import { ErrorMessage } from '../shared/ErrorMessage';
+} from '@/services/replicationcontrollers';
+import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { PaneTaskbar } from '@/components/custom/PaneTaskbar';
+import AgeCell from '@/components/custom/AgeCell';
+import { K8sContext } from '@/services/contexts';
+import { ErrorMessage } from '@/components/custom/ErrorMessage';
+import { Badge } from '@/components/ui/badge';
 
 interface PaneReplicationControllersProps {
   context?: K8sContext | null;

@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { Sidebar } from '../layouts/Sidebar';
-import PaneOverview from '../components/custom/PaneOverview';
-import WorkloadsPane from '../components/custom/PanePods';
-import PaneNodes from '../components/custom/PaneNodes';
-import PaneNamespaces from '../components/custom/PaneNamespaces';
-import PaneDeployments from '../components/custom/PaneDeployments';
-import PaneDaemonSets from '../components/custom/PaneDaemonSets';
-import PaneStatefulSets from '../components/custom/PaneStatefulSets';
-import PaneReplicaSets from '../components/custom/PaneReplicaSets';
-import PaneReplicationControllers from '../components/custom/PaneReplicationControllers';
-import PaneJobs from '../components/custom/PaneJobs';
-import PaneCronJob from '../components/custom/PaneCronJob';
-import { useNamespaceStore } from '../state/namespaceStore';
-import { PageKey } from '../types/pageKey';
-import { importKubeContexts, K8sContext, listContexts } from '../services/contexts';
-import { ALL_NAMESPACES } from '../constants/k8s';
+import { Sidebar } from '@/layouts/Sidebar';
+import PaneOverview from '@/components/custom/PaneOverview';
+import WorkloadsPane from '@/components/custom/PanePods';
+import PaneNodes from '@/components/custom/PaneNodes';
+import PaneNamespaces from '@/components/custom/PaneNamespaces';
+import PaneDeployments from '@/components/custom/PaneDeployments';
+import PaneDaemonSets from '@/components/custom/PaneDaemonSets';
+import PaneStatefulSets from '@/components/custom/PaneStatefulSets';
+import PaneReplicaSets from '@/components/custom/PaneReplicaSets';
+import PaneReplicationControllers from '@/components/custom/PaneReplicationControllers';
+import PaneJobs from '@/components/custom/PaneJobs';
+import PaneCronJob from '@/components/custom/PaneCronJob';
+import { useNamespaceStore } from '@/state/namespaceStore';
+import { PageKey } from '@/types/pageKey';
+import { importKubeContexts, K8sContext, listContexts } from '@/services/contexts';
+import { ALL_NAMESPACES } from '@/constants/k8s';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
