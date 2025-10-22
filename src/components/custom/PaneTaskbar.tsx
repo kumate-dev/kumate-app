@@ -44,9 +44,9 @@ export function PaneTaskbar({
     : selectedNamespaces.join(', ');
 
   return (
-      <div className="sticky top-0 z-20 flex items-center gap-2 mb-4 py-2">      
+    <div className="sticky top-0 z-20 mb-4 flex items-center gap-2 py-2">
       {showNamespace && (
-        <PaneDropdown trigger={<DropdownTrigger label={displayLabel} width='min-w-80' />}>
+        <PaneDropdown trigger={<DropdownTrigger label={displayLabel} className="w-80" />}>
           {[ALL_NAMESPACES, ...namespaceList.map((ns) => ns.name)].map((ns) => (
             <div
               key={ns}
