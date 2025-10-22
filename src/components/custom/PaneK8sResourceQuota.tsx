@@ -7,7 +7,7 @@ import {
   listResourceQuotas,
   watchResourceQuotas,
   ResourceQuotaItem,
-} from '@/services/resourcequotas';
+} from '@/services/resourceQuotas';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';

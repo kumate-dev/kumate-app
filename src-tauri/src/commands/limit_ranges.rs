@@ -1,6 +1,6 @@
 use crate::{
     commands::common::watch,
-    k8s::limitranges::{K8sLimitRanges, LimitRangeItem},
+    k8s::limit_ranges::{K8sLimitRanges, LimitRangeItem},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

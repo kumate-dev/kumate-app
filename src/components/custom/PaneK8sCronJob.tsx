@@ -3,7 +3,7 @@ import { PaneK8sResource } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listCronJobs, watchCronJobs, CronJobItem } from '@/services/cronjobs';
+import { listCronJobs, watchCronJobs, CronJobItem } from '@/services/cronJobs';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';

@@ -3,7 +3,7 @@ import { PaneK8sResource } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listReplicaSets, watchReplicaSets, ReplicaSetItem } from '@/services/replicasets';
+import { listReplicaSets, watchReplicaSets, ReplicaSetItem } from '@/services/replicaSets';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';

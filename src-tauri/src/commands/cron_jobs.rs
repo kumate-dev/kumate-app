@@ -2,22 +2,22 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::configmaps::{ConfigMapItem, K8sConfigMaps},
+    k8s::cron_jobs::{CronJobItem, K8sCronJobs},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;
 use tauri::AppHandle;
 
 #[tauri::command]
-pub async fn list_configmaps(
+pub async fn list_cronjobs(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<ConfigMapItem>, String> {
-    K8sConfigMaps::list(name, namespaces).await
+) -> Result<Vec<CronJobItem>, String> {
+    K8sCronJobs::list(name, namespaces).await
 }
 
 #[tauri::command]
-pub async fn watch_configmaps(
+pub async fn watch_cronjobs(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -26,10 +26,10 @@ pub async fn watch_configmaps(
     watch(
         app_handle,
         name,
-        "configmaps".to_string(),
+        "cronjobs".to_string(),
         namespaces,
         state,
-        Arc::new(K8sConfigMaps::watch),
+        Arc::new(K8sCronJobs::watch),
     )
     .await
 }

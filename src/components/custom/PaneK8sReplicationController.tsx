@@ -7,7 +7,7 @@ import {
   listReplicationControllers,
   watchReplicationControllers,
   ReplicationControllerItem,
-} from '@/services/replicationcontrollers';
+} from '@/services/replicationControllers';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';

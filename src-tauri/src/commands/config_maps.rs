@@ -2,22 +2,22 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::statefulsets::{K8sStatefulSets, StatefulSetItem},
+    k8s::config_maps::{ConfigMapItem, K8sConfigMaps},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;
 use tauri::AppHandle;
 
 #[tauri::command]
-pub async fn list_statefulsets(
+pub async fn list_configmaps(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<StatefulSetItem>, String> {
-    K8sStatefulSets::list(name, namespaces).await
+) -> Result<Vec<ConfigMapItem>, String> {
+    K8sConfigMaps::list(name, namespaces).await
 }
 
 #[tauri::command]
-pub async fn watch_statefulsets(
+pub async fn watch_configmaps(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -26,10 +26,10 @@ pub async fn watch_statefulsets(
     watch(
         app_handle,
         name,
-        "statefulsets".to_string(),
+        "configmaps".to_string(),
         namespaces,
         state,
-        Arc::new(K8sStatefulSets::watch),
+        Arc::new(K8sConfigMaps::watch),
     )
     .await
 }

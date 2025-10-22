@@ -3,7 +3,7 @@ import { PaneK8sResource } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { DaemonSetItem, listDaemonSets, watchDaemonSets } from '@/services/daemonsets';
+import { DaemonSetItem, listDaemonSets, watchDaemonSets } from '@/services/daemonSets';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';

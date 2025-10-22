@@ -10,21 +10,21 @@ mod types;
 mod utils;
 
 use crate::commands::common;
-use crate::commands::configmaps;
+use crate::commands::config_maps;
 use crate::commands::contexts;
-use crate::commands::cronjobs;
-use crate::commands::daemonsets;
+use crate::commands::cron_jobs;
+use crate::commands::daemon_sets;
 use crate::commands::deployments;
 use crate::commands::jobs;
-use crate::commands::limitranges;
+use crate::commands::limit_ranges;
 use crate::commands::namespaces;
 use crate::commands::nodes;
 use crate::commands::pods;
-use crate::commands::replicasets;
-use crate::commands::replicationcontrollers;
-use crate::commands::resourcequotas;
+use crate::commands::replica_sets;
+use crate::commands::replication_controllers;
+use crate::commands::resource_quotas;
 use crate::commands::secrets;
-use crate::commands::statefulsets;
+use crate::commands::stateful_sets;
 use crate::utils::watcher::WatchManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -66,26 +66,26 @@ pub fn run() {
             pods::watch_pods,
             deployments::list_deployments,
             deployments::watch_deployments,
-            replicasets::list_replicasets,
-            replicasets::watch_replicasets,
-            daemonsets::list_daemonsets,
-            daemonsets::watch_daemonsets,
-            statefulsets::list_statefulsets,
-            statefulsets::watch_statefulsets,
-            replicationcontrollers::list_replicationcontrollers,
-            replicationcontrollers::watch_replicationcontrollers,
+            replica_sets::list_replicasets,
+            replica_sets::watch_replicasets,
+            daemon_sets::list_daemonsets,
+            daemon_sets::watch_daemonsets,
+            stateful_sets::list_statefulsets,
+            stateful_sets::watch_statefulsets,
+            replication_controllers::list_replicationcontrollers,
+            replication_controllers::watch_replicationcontrollers,
             jobs::list_jobs,
             jobs::watch_jobs,
-            cronjobs::list_cronjobs,
-            cronjobs::watch_cronjobs,
-            configmaps::list_configmaps,
-            configmaps::watch_configmaps,
+            cron_jobs::list_cronjobs,
+            cron_jobs::watch_cronjobs,
+            config_maps::list_configmaps,
+            config_maps::watch_configmaps,
             secrets::list_secrets,
             secrets::watch_secrets,
-            resourcequotas::list_resource_quotas,
-            resourcequotas::watch_resource_quotas,
-            limitranges::list_limitranges,
-            limitranges::watch_limitranges,
+            resource_quotas::list_resource_quotas,
+            resource_quotas::watch_resource_quotas,
+            limit_ranges::list_limitranges,
+            limit_ranges::watch_limitranges,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

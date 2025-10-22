@@ -1,24 +1,23 @@
 use std::sync::Arc;
 
+use crate::{
+    commands::common::watch,
+    k8s::replica_sets::{K8sReplicaSets, ReplicaSetItem},
+    utils::watcher::WatchManager,
+};
 use anyhow::Result;
 use tauri::AppHandle;
 
-use crate::{
-    commands::common::watch,
-    k8s::daemonsets::{DaemonSetItem, K8sDaemonSets},
-    utils::watcher::WatchManager,
-};
-
 #[tauri::command]
-pub async fn list_daemonsets(
+pub async fn list_replicasets(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<DaemonSetItem>, String> {
-    K8sDaemonSets::list(name, namespaces).await
+) -> Result<Vec<ReplicaSetItem>, String> {
+    K8sReplicaSets::list(name, namespaces).await
 }
 
 #[tauri::command]
-pub async fn watch_daemonsets(
+pub async fn watch_replicasets(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -27,10 +26,10 @@ pub async fn watch_daemonsets(
     watch(
         app_handle,
         name,
-        "daemonsets".to_string(),
+        "replicasets".to_string(),
         namespaces,
         state,
-        Arc::new(K8sDaemonSets::watch),
+        Arc::new(K8sReplicaSets::watch),
     )
     .await
 }
