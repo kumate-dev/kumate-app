@@ -16,11 +16,14 @@ use crate::commands::cronjobs;
 use crate::commands::daemonsets;
 use crate::commands::deployments;
 use crate::commands::jobs;
+use crate::commands::limitranges;
 use crate::commands::namespaces;
 use crate::commands::nodes;
 use crate::commands::pods;
 use crate::commands::replicasets;
 use crate::commands::replicationcontrollers;
+use crate::commands::resourcequotas;
+use crate::commands::secrets;
 use crate::commands::statefulsets;
 use crate::utils::watcher::WatchManager;
 
@@ -77,6 +80,12 @@ pub fn run() {
             cronjobs::watch_cronjobs,
             configmaps::list_configmaps,
             configmaps::watch_configmaps,
+            secrets::list_secrets,
+            secrets::watch_secrets,
+            resourcequotas::list_resource_quotas,
+            resourcequotas::watch_resource_quotas,
+            limitranges::list_limitranges,
+            limitranges::watch_limitranges,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

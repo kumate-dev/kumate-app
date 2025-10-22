@@ -3,6 +3,7 @@ import { PaneTaskbar } from './PaneTaskbar';
 import { PaneSearch } from './PaneSearch';
 import { Table, Tbody } from '@/components/ui/table';
 import { ErrorMessage } from './ErrorMessage';
+import React from 'react';
 
 interface PaneK8sResourceProps<T> {
   items: T[];
@@ -61,20 +62,23 @@ export function PaneK8sResource<T>({
               {tableHeader}
               <Tbody>
                 {loading && (
-                  <tr>
-                    <td colSpan={colSpan} className="text-white/60">
-                      Loading...
+                  <tr className="text-center">
+                    <td colSpan={colSpan} className="py-4 text-white/60">
+                      Loading…
                     </td>
                   </tr>
                 )}
                 {!loading && items.length === 0 && (
-                  <tr>
-                    <td colSpan={colSpan} className="text-white/60">
+                  <tr className="text-center">
+                    <td colSpan={colSpan} className="py-4 text-white/60">
                       {emptyText}
                     </td>
                   </tr>
                 )}
-                {!loading && items.map((item) => renderRow(item))}
+                {!loading &&
+                  items.map((item, idx) => (
+                    <React.Fragment key={idx}>{renderRow(item)}</React.Fragment>
+                  ))}
               </Tbody>
             </Table>
           </div>

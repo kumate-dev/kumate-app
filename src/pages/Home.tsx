@@ -16,6 +16,9 @@ import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/services/contexts';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 import PaneK8sConfigMap from '@/components/custom/PaneK8sConfigMap';
+import PaneK8sSecret from '@/components/custom/PaneK8sSecret';
+import PaneK8sResourceQuota from '@/components/custom/PaneK8sResourceQuota';
+import PaneK8sLimitRange from '@/components/custom/PaneLimitRange';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -98,7 +101,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Container chính - KHÔNG có scroll ngang */}
         <div className="h-full overflow-y-auto p-4">
           {page === 'overview' && <PaneOverview context={selected} />}
           {page === 'nodes' && <PaneK8sNode context={selected} />}
@@ -115,9 +117,9 @@ export default function Home() {
           {page === 'pods' && <PaneK8sPod context={selected} />}
 
           {page === 'configmaps' && <PaneK8sConfigMap context={selected} />}
-          {page === 'secrets' && <Placeholder title="Secrets" />}
-          {page === 'resourcequotas' && <Placeholder title="Resource Quotas" />}
-          {page === 'limitranges' && <Placeholder title="Limit Ranges" />}
+          {page === 'secrets' && <PaneK8sSecret context={selected} />}
+          {page === 'resourcequotas' && <PaneK8sResourceQuota context={selected} />}
+          {page === 'limitranges' && <PaneK8sLimitRange context={selected} />}
           {page === 'hpas' && <Placeholder title="Horizontal Pod Autoscalers" />}
           {page === 'pdbs' && <Placeholder title="Pod Disruption Budgets" />}
           {page === 'priorityclasses' && <Placeholder title="Priority Classes" />}
