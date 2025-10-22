@@ -54,7 +54,7 @@ impl K8sDeployments {
         .flatten()
         .map(Self::to_item)
         .collect();
-
+        
         Ok(all_deployments)
     }
 

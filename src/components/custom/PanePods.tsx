@@ -8,8 +8,9 @@ import { listPods, PodItem, watchPods } from '../../services/pods';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
-import { AlertTriangle, ChevronUp, ChevronDown } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { BadgeVariant } from '../../types/variant';
+import { ColumnDef, TableHeader } from '../shared/TableHeader';
 
 interface PanePodsProps {
   context?: K8sContext | null;
@@ -34,22 +35,7 @@ export default function PanePods({ context }: PanePodsProps) {
   const [sortBy, setSortBy] = useState<SortKey>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
-
-  const sorted = [...filtered].sort((a, b) => {
-    const aVal = a[sortBy] ?? '';
-    const bVal = b[sortBy] ?? '';
-
-    if (typeof aVal === 'number' && typeof bVal === 'number') {
-      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-    }
-
-    const aStr = String(aVal).toLowerCase();
-    const bStr = String(bVal).toLowerCase();
-    if (aStr < bStr) return sortOrder === 'asc' ? -1 : 1;
-    if (aStr > bStr) return sortOrder === 'asc' ? 1 : -1;
-    return 0;
-  });
+  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace'], sortBy, sortOrder);
 
   const dotClass = (s: string | undefined) => {
     switch (s) {
@@ -111,32 +97,19 @@ export default function PanePods({ context }: PanePodsProps) {
     return false;
   }
 
-  const handleSort = (column: SortKey) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
-    }
-  };
-
-  const renderHeader = (label: string, column: SortKey) => {
-    const isActive = sortBy === column;
-    return (
-      <button
-        className="inline-flex items-center gap-1 text-left font-medium"
-        onClick={() => handleSort(column)}
-      >
-        <span>{label}</span>
-        {isActive &&
-          (sortOrder === 'asc' ? (
-            <ChevronUp className="h-3 w-3" />
-          ) : (
-            <ChevronDown className="h-3 w-3" />
-          ))}
-      </button>
-    );
-  };
+  const columns: ColumnDef<keyof PodItem | 'empty'>[] = [
+    { label: 'Name', key: 'name' },
+    { label: '', key: 'empty', sortable: false },
+    { label: 'Namespace', key: 'namespace' },
+    { label: 'Containers', key: 'containers' },
+    { label: 'CPU', key: 'cpu' },
+    { label: 'Memory', key: 'memory' },
+    { label: 'Restart', key: 'restart' },
+    { label: 'Node', key: 'node' },
+    { label: 'QoS', key: 'qos' },
+    { label: 'Age', key: 'creation_timestamp' },
+    { label: 'Status', key: 'phase' },
+  ];
 
   return (
     <div className="space-y-3">
@@ -156,22 +129,13 @@ export default function PanePods({ context }: PanePodsProps) {
 
       <div className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
         <Table>
-          <Thead>
-            <Tr>
-              <Th>{renderHeader('Name', 'name')}</Th>
-              <Th></Th>
-              <Th>{renderHeader('Namespace', 'namespace')}</Th>
-              <Th>{renderHeader('Containers', 'containers')}</Th>
-              <Th>{renderHeader('CPU', 'cpu')}</Th>
-              <Th>{renderHeader('Memory', 'memory')}</Th>
-              <Th>{renderHeader('Restart', 'restart')}</Th>
-              <Th>{renderHeader('Node', 'node')}</Th>
-              <Th>{renderHeader('QoS', 'qos')}</Th>
-              <Th>{renderHeader('Age', 'creation_timestamp')}</Th>
-              <Th>{renderHeader('Status', 'phase')}</Th>
-              <Th></Th>
-            </Tr>
-          </Thead>
+          <TableHeader
+            columns={columns}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            setSortBy={setSortBy}
+            setSortOrder={setSortOrder}
+          />
           <Tbody>
             {loading && (
               <Tr>
@@ -180,7 +144,7 @@ export default function PanePods({ context }: PanePodsProps) {
                 </Td>
               </Tr>
             )}
-            {!loading && sorted.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <Tr>
                 <Td colSpan={12} className="text-white/60">
                   No pods
@@ -188,7 +152,7 @@ export default function PanePods({ context }: PanePodsProps) {
               </Tr>
             )}
             {!loading &&
-              sorted.map((f) => (
+              filtered.map((f) => (
                 <Tr key={`${f.namespace}/${f.name}`}>
                   <Td className="font-medium">{f.name}</Td>
                   <Td className="text-center">
