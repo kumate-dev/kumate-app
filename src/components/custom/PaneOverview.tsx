@@ -26,7 +26,7 @@ export default function PaneOverview({ context }: PaneOverviewProps) {
   const [tab, setTab] = useState<string>('overview');
 
   return (
-    <div className="space-y-3">
+    <div className="flex h-full flex-col">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="text-xl font-semibold">{context?.name || 'No selection'}</div>

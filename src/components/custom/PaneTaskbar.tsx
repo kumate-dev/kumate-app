@@ -9,23 +9,25 @@ interface NamespaceOption {
 }
 
 interface PaneTaskbarProps {
-  namespaceList: NamespaceOption[];
-  selectedNamespaces: string[];
-  onSelectNamespace: (ns: string[]) => void;
+  namespaceList?: NamespaceOption[];
+  selectedNamespaces?: string[];
+  onSelectNamespace?: (ns: string[]) => void;
   query: string;
   onQueryChange: (q: string) => void;
   showNamespace?: boolean;
 }
 
 export function PaneTaskbar({
-  namespaceList,
-  selectedNamespaces,
+  namespaceList = [],
+  selectedNamespaces = [ALL_NAMESPACES],
   onSelectNamespace,
   query,
   onQueryChange,
   showNamespace = true,
 }: PaneTaskbarProps) {
   const toggleNamespace = (ns: string) => {
+    if (!onSelectNamespace) return;
+
     if (ns === ALL_NAMESPACES) {
       onSelectNamespace([ALL_NAMESPACES]);
     } else {
@@ -44,8 +46,8 @@ export function PaneTaskbar({
     : selectedNamespaces.join(', ');
 
   return (
-    <div className="sticky top-0 z-20 mb-4 flex items-center gap-2 py-2">
-      {showNamespace && (
+    <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 py-2">
+      {showNamespace && onSelectNamespace && (
         <PaneDropdown trigger={<DropdownTrigger label={displayLabel} className="w-80" />}>
           {[ALL_NAMESPACES, ...namespaceList.map((ns) => ns.name)].map((ns) => (
             <div

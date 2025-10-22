@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@/components/ui/table';
+import { Table, Tbody, Tr, Td } from '@/components/ui/table';
 import { readyVariant } from '@/utils/k8s';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
@@ -11,10 +11,13 @@ import AgeCell from '@/components/custom/AgeCell';
 import { K8sContext } from '@/services/contexts';
 import { ErrorMessage } from '@/components/custom/ErrorMessage';
 import { Badge } from '@/components/ui/badge';
+import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
 
 interface PaneReplicaSetsProps {
   context?: K8sContext | null;
 }
+
+type SortKey = keyof ReplicaSetItem;
 
 export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -30,10 +33,27 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
+  const [sortBy, setSortBy] = useState<SortKey>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const filtered = useFilteredItems(
+    items,
+    selectedNamespaces,
+    q,
+    ['name', 'namespace'],
+    sortBy,
+    sortOrder
+  );
+
+  const columns: ColumnDef<keyof ReplicaSetItem | 'empty'>[] = [
+    { label: 'Name', key: 'name' },
+    { label: 'Namespace', key: 'namespace' },
+    { label: 'Ready', key: 'ready' },
+    { label: 'Age', key: 'creation_timestamp' },
+  ];
 
   return (
-    <div className="space-y-3">
+    <div className="flex h-full flex-col">
       <PaneTaskbar
         namespaceList={namespaceList}
         selectedNamespaces={selectedNamespaces}
@@ -44,17 +64,15 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
 
       <ErrorMessage message={error} />
 
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
+      <div className="max-h-[600px] overflow-auto rounded-xl border border-white/10 bg-neutral-900/60">
         <Table>
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th>Namespace</Th>
-              <Th>Ready</Th>
-              <Th>Age</Th>
-              <Th></Th>
-            </Tr>
-          </Thead>
+          <TableHeader
+            columns={columns}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            setSortBy={setSortBy}
+            setSortOrder={setSortOrder}
+          />
           <Tbody>
             {loading && (
               <Tr>
@@ -72,7 +90,7 @@ export default function PaneReplicaSets({ context }: PaneReplicaSetsProps) {
             )}
             {!loading &&
               filtered.map((f: ReplicaSetItem) => (
-                <Tr key={f.name}>
+                <Tr key={`${f.namespace}-${f.name}`}>
                   <Td className="max-w-truncate">
                     <span className="block truncate" title={f.name}>
                       {f.name}

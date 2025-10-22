@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@/components/ui/table';
+import { Table, Tbody, Tr, Td } from '@/components/ui/table';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
@@ -11,10 +11,13 @@ import { BadgeVariant } from '@/types/variant';
 import { K8sContext } from '@/services/contexts';
 import { ErrorMessage } from '@/components/custom/ErrorMessage';
 import { Badge } from '@/components/ui/badge';
+import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
 
 interface PaneCronJobProps {
   context?: K8sContext | null;
 }
+
+type SortKey = keyof CronJobItem;
 
 export default function PaneCronJob({ context }: PaneCronJobProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -30,7 +33,17 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
+  const [sortBy, setSortBy] = useState<SortKey>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const filtered = useFilteredItems(
+    items,
+    selectedNamespaces,
+    q,
+    ['name', 'namespace'],
+    sortBy,
+    sortOrder
+  );
 
   function suspendVariant(suspend: boolean | string): BadgeVariant {
     switch (suspend) {
@@ -45,8 +58,17 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
     }
   }
 
+  const columns: ColumnDef<keyof CronJobItem | 'empty'>[] = [
+    { label: 'Name', key: 'name' },
+    { label: 'Namespace', key: 'namespace' },
+    { label: 'Schedule', key: 'schedule' },
+    { label: 'Suspend', key: 'suspend' },
+    { label: 'Last Schedule', key: 'last_schedule' },
+    { label: 'Age', key: 'creation_timestamp' },
+  ];
+
   return (
-    <div className="space-y-3">
+    <div className="flex h-full flex-col">
       <PaneTaskbar
         namespaceList={namespaceList}
         selectedNamespaces={selectedNamespaces}
@@ -57,56 +79,56 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
 
       <ErrorMessage message={error} />
 
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
-        <Table>
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th>Namespace</Th>
-              <Th>Schedule</Th>
-              <Th>Suspend</Th>
-              <Th>Last Schedule</Th>
-              <Th>Age</Th>
-              <Th></Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {loading && (
-              <Tr>
-                <Td colSpan={7} className="text-white/60">
-                  Loading...
-                </Td>
-              </Tr>
-            )}
-            {!loading && filtered.length === 0 && (
-              <Tr>
-                <Td colSpan={7} className="text-white/60">
-                  No cronjobs
-                </Td>
-              </Tr>
-            )}
-            {!loading &&
-              filtered.map((f) => (
-                <Tr key={`${f.namespace}/${f.name}`}>
-                  <Td className="max-w-truncate">
-                    <span className="block truncate" title={f.name}>
-                      {f.name}
-                    </span>
-                  </Td>
-                  <Td>{f.namespace}</Td>
-                  <Td>{f.schedule}</Td>
-                  <Td>
-                    <Badge variant={suspendVariant(f.suspend)}>{String(f.suspend)}</Badge>
-                  </Td>
-                  <AgeCell timestamp={f.last_schedule || ''} />
-                  <AgeCell timestamp={f.creation_timestamp || ''} />
-                  <Td>
-                    <button className="text-white/60 hover:text-white/80">⋮</button>
-                  </Td>
-                </Tr>
-              ))}
-          </Tbody>
-        </Table>
+      <div className="flex-1 overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
+        <div className="h-full overflow-auto">
+          <div className="min-w-max">
+            <Table>
+              <TableHeader
+                columns={columns}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                setSortBy={setSortBy}
+                setSortOrder={setSortOrder}
+              />
+              <Tbody>
+                {loading && (
+                  <Tr>
+                    <Td colSpan={7} className="text-white/60">
+                      Loading...
+                    </Td>
+                  </Tr>
+                )}
+                {!loading && filtered.length === 0 && (
+                  <Tr>
+                    <Td colSpan={7} className="text-white/60">
+                      No cronjobs
+                    </Td>
+                  </Tr>
+                )}
+                {!loading &&
+                  filtered.map((f) => (
+                    <Tr key={`${f.namespace}/${f.name}`}>
+                      <Td className="max-w-truncate">
+                        <span className="block truncate" title={f.name}>
+                          {f.name}
+                        </span>
+                      </Td>
+                      <Td>{f.namespace}</Td>
+                      <Td>{f.schedule || '-'}</Td>
+                      <Td>
+                        <Badge variant={suspendVariant(f.suspend)}>{String(f.suspend)}</Badge>
+                      </Td>
+                      <AgeCell timestamp={f.last_schedule || ''} />
+                      <AgeCell timestamp={f.creation_timestamp || ''} />
+                      <Td>
+                        <button className="text-white/60 hover:text-white/80">⋮</button>
+                      </Td>
+                    </Tr>
+                  ))}
+              </Tbody>
+            </Table>
+          </div>
+        </div>
       </div>
     </div>
   );

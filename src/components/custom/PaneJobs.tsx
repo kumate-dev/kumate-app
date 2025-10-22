@@ -1,21 +1,23 @@
 import { useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@/components/ui/table';
+import { Table, Tbody, Tr, Td } from '@/components/ui/table';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listJobs } from '@/services/jobs';
+import { listJobs, watchJobs, JobItem } from '@/services/jobs';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { PaneTaskbar } from '@/components/custom/PaneTaskbar';
-import { JobItem, watchJobs } from '@/services/jobs';
 import AgeCell from '@/components/custom/AgeCell';
 import { BadgeVariant } from '@/types/variant';
 import { K8sContext } from '@/services/contexts';
 import { ErrorMessage } from '@/components/custom/ErrorMessage';
 import { Badge } from '@/components/ui/badge';
+import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
 
 interface PaneJobsProps {
   context?: K8sContext | null;
 }
+
+type SortKey = keyof JobItem;
 
 export default function PaneJobs({ context }: PaneJobsProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -31,7 +33,17 @@ export default function PaneJobs({ context }: PaneJobsProps) {
   );
 
   const [q, setQ] = useState('');
-  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace']);
+  const [sortBy, setSortBy] = useState<SortKey>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const filtered = useFilteredItems(
+    items,
+    selectedNamespaces,
+    q,
+    ['name', 'namespace'],
+    sortBy,
+    sortOrder
+  );
 
   function progressVariant(progress: string | number): BadgeVariant {
     try {
@@ -48,8 +60,15 @@ export default function PaneJobs({ context }: PaneJobsProps) {
     }
   }
 
+  const columns: ColumnDef<keyof JobItem | 'empty'>[] = [
+    { label: 'Name', key: 'name' },
+    { label: 'Namespace', key: 'namespace' },
+    { label: 'Progress', key: 'progress' },
+    { label: 'Age', key: 'creation_timestamp' },
+  ];
+
   return (
-    <div className="space-y-3">
+    <div className="flex h-full flex-col">
       <PaneTaskbar
         namespaceList={namespaceList}
         selectedNamespaces={selectedNamespaces}
@@ -60,17 +79,15 @@ export default function PaneJobs({ context }: PaneJobsProps) {
 
       <ErrorMessage message={error} />
 
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
+      <div className="max-h-[600px] overflow-auto rounded-xl border border-white/10 bg-neutral-900/60">
         <Table>
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th>Namespace</Th>
-              <Th>Progress</Th>
-              <Th>Age</Th>
-              <Th></Th>
-            </Tr>
-          </Thead>
+          <TableHeader
+            columns={columns}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            setSortBy={setSortBy}
+            setSortOrder={setSortOrder}
+          />
           <Tbody>
             {loading && (
               <Tr>
@@ -88,7 +105,7 @@ export default function PaneJobs({ context }: PaneJobsProps) {
             )}
             {!loading &&
               filtered.map((f) => (
-                <Tr key={f.name}>
+                <Tr key={`${f.namespace}-${f.name}`}>
                   <Td className="max-w-truncate">
                     <span className="block truncate" title={f.name}>
                       {f.name}
