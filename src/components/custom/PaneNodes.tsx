@@ -85,13 +85,17 @@ export default function PaneNodes({ context }: PaneNodesProps) {
             {!loading &&
               filtered.map((f: NodeItem) => (
                 <Tr key={f.name}>
-                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="max-w-truncate">
+                    <span className="block truncate" title={f.name}>
+                      {f.name}
+                    </span>
+                  </Td>
                   <Td>{f.cpu || '—'}</Td>
                   <Td>{f.memory || '—'}</Td>
                   <Td>{f.disk || '—'}</Td>
-                  <Td className="text-white/70">{f.taints || ''}</Td>
-                  <Td className="text-white/80">{f.roles || ''}</Td>
-                  <Td className="text-white/80">{f.version || ''}</Td>
+                  <Td>{f.taints || ''}</Td>
+                  <Td>{f.roles || ''}</Td>
+                  <Td>{f.version || ''}</Td>
                   <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <Badge variant={conditionVariant(f.condition || 'Unknown')}>

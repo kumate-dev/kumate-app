@@ -75,7 +75,11 @@ export default function PaneNamespaces({ context }: PaneNamespacesProps) {
             {!loading &&
               filtered.map((f: NamespaceItem) => (
                 <Tr key={f.name}>
-                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="max-w-truncate">
+                    <span className="block truncate" title={f.name}>
+                      {f.name}
+                    </span>
+                  </Td>
                   <Td>
                     <Badge variant={statusVariant(f.status || 'Unknown')}>
                       {f.status || 'Unknown'}

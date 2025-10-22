@@ -1,7 +1,6 @@
 @import 'tailwindcss';
-@plugin 'tailwindcss-animate';
 
-/* Custom base styles */
+/* Base styles */
 :root {
   color-scheme: light dark;
 }
@@ -15,4 +14,10 @@ body,
 body {
   background-color: rgb(18, 18, 20);
   color: white;
+}
+
+@layer utilities {
+  .max-w-truncate {
+    max-width: 320px;
+  }
 }

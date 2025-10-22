@@ -1,5 +1,6 @@
 import { Th } from '../ui';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import React from 'react';
 
 export type SortKey = string;
 
@@ -7,6 +8,8 @@ export interface ColumnDef<SortKey extends string> {
   label: string;
   key: SortKey;
   sortable?: boolean;
+  align?: 'left' | 'center' | 'right';
+  width?: string; // optional column width (e.g. w-[200px], w-1/5)
 }
 
 interface TableHeaderProps<SortKey extends string> {
@@ -37,25 +40,33 @@ export const TableHeader = <SortKey extends string>({
   return (
     <thead>
       <tr>
-        {columns.map(({ label, key, sortable = true }) => {
+        {columns.map(({ label, key, sortable = true, align = 'left', width }) => {
           const isActive = sortBy === key;
+          const alignClass =
+            align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+
           return (
-            <Th key={key}>
+            <Th key={key} className={`${alignClass} ${width || ''} select-none`}>
               {sortable && key !== 'empty' ? (
                 <button
-                  className="inline-flex items-center gap-1 text-left font-medium"
+                  className="group inline-flex items-center gap-1 font-medium"
                   onClick={() => handleSort(key, sortable)}
                 >
-                  <span>{label}</span>
-                  {isActive &&
-                    (sortOrder === 'asc' ? (
-                      <ChevronUp className="h-3 w-3" />
+                  <span className="truncate">{label}</span>
+                  <span className="inline-flex h-3 w-3 items-center justify-center">
+                    {isActive ? (
+                      sortOrder === 'asc' ? (
+                        <ChevronUp className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
+                      ) : (
+                        <ChevronDown className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
+                      )
                     ) : (
-                      <ChevronDown className="h-3 w-3" />
-                    ))}
+                      <span className="block h-3 w-3" />
+                    )}
+                  </span>
                 </button>
               ) : (
-                <span className="text-left font-medium">{label}</span>
+                <span className="font-medium">{label}</span>
               )}
             </Th>
           );

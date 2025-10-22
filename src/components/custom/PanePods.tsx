@@ -161,13 +161,17 @@ export default function PanePods({ context }: PanePodsProps) {
             {!loading &&
               filtered.map((f) => (
                 <Tr key={`${f.namespace}/${f.name}`}>
-                  <Td className="font-medium">{f.name}</Td>
+                  <Td className="max-w-truncate">
+                    <span className="block truncate" title={f.name}>
+                      {f.name}
+                    </span>
+                  </Td>
                   <Td className="text-center">
                     {hasPodWarning(f) && (
                       <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
                     )}
                   </Td>
-                  <Td className="text-white/80">{f.namespace}</Td>
+                  <Td>{f.namespace}</Td>
                   <Td>
                     <div className="flex items-center gap-1">
                       {f.container_states?.length
@@ -185,11 +189,11 @@ export default function PanePods({ context }: PanePodsProps) {
                           ))}
                     </div>
                   </Td>
-                  <Td className="text-white/80">{f.cpu || '-'}</Td>
-                  <Td className="text-white/80">{f.memory || '-'}</Td>
-                  <Td className="text-white/80">{f.restart ?? '-'}</Td>
-                  <Td className="text-white/80">{f.node || '-'}</Td>
-                  <Td className="text-white/80">{f.qos || '-'}</Td>
+                  <Td>{f.cpu || '-'}</Td>
+                  <Td>{f.memory || '-'}</Td>
+                  <Td>{f.restart ?? '-'}</Td>
+                  <Td>{f.node || '-'}</Td>
+                  <Td>{f.qos || '-'}</Td>
                   <AgeCell timestamp={f.creation_timestamp || ''} />
                   <Td>
                     <Badge variant={podStatusVariant(f.phase ?? '')}>{f.phase ?? ''}</Badge>

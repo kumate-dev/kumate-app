@@ -78,8 +78,12 @@ export default function PaneReplicationControllers({ context }: PaneReplicationC
             {!loading &&
               filtered.map((f: ReplicationControllerItem) => (
                 <Tr key={f.name}>
-                  <Td className="font-medium">{f.name}</Td>
-                  <Td className="text-white/80">{f.namespace}</Td>
+                  <Td className="max-w-truncate">
+                    <span className="block truncate" title={f.name}>
+                      {f.name}
+                    </span>
+                  </Td>
+                  <Td>{f.namespace}</Td>
                   <Td>
                     <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
                   </Td>
