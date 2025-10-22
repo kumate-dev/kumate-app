@@ -90,14 +90,15 @@ export default function Home() {
         />
       </aside>
 
-      <main className="relative flex-1 overflow-auto">
+      <main className="relative flex-1 overflow-hidden">
         {error && (
           <div className="m-4 rounded border border-red-400/30 bg-red-500/10 p-2 text-red-400">
             {error}
           </div>
         )}
 
-        <div className="min-w-max overflow-x-auto p-4">
+        {/* Container chính - KHÔNG có scroll ngang */}
+        <div className="h-full overflow-y-auto p-4">
           {page === 'overview' && <PaneOverview context={selected} />}
           {page === 'nodes' && <PaneNodes context={selected} />}
           {page === 'applications' && <Placeholder title="Applications" />}

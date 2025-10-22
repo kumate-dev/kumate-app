@@ -120,8 +120,9 @@ export default function PanePods({ context }: PanePodsProps) {
     { label: 'Status', key: 'phase' },
   ];
 
-  return (
-    <div className="space-y-3">
+
+return (
+  <div className="flex flex-col h-full">
       <PaneTaskbar
         namespaceList={namespaceList}
         selectedNamespaces={selectedNamespaces}
@@ -132,78 +133,82 @@ export default function PanePods({ context }: PanePodsProps) {
 
       <ErrorMessage message={error} />
 
-      <div className="max-h-[600px] overflow-auto rounded-xl border border-white/10 bg-neutral-900/60">
-        <Table>
-          <TableHeader
-            columns={columns}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            setSortBy={setSortBy}
-            setSortOrder={setSortOrder}
-          />
-          <Tbody>
-            {loading && (
-              <Tr>
-                <Td colSpan={12} className="text-white/60">
-                  Loading...
-                </Td>
-              </Tr>
-            )}
-            {!loading && filtered.length === 0 && (
-              <Tr>
-                <Td colSpan={12} className="text-white/60">
-                  No pods
-                </Td>
-              </Tr>
-            )}
-            {!loading &&
-              filtered.map((f) => (
-                <Tr key={`${f.namespace}/${f.name}`}>
-                  <Td className="max-w-truncate">
-                    <span className="block truncate" title={f.name}>
-                      {f.name}
-                    </span>
-                  </Td>
-                  <Td className="text-center">
-                    {hasPodWarning(f) && (
-                      <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
-                    )}
-                  </Td>
-                  <Td>{f.namespace}</Td>
-                  <Td>
-                    <div className="flex items-center gap-1">
-                      {f.container_states?.length
-                        ? f.container_states.map((st, idx) => (
-                            <span
-                              key={idx}
-                              className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass(st)}`}
-                            ></span>
-                          ))
-                        : Array.from({ length: f.containers || 0 }).map((_, idx) => (
-                            <span
-                              key={idx}
-                              className="inline-block h-2.5 w-2.5 rounded-full bg-white/30"
-                            ></span>
-                          ))}
-                    </div>
-                  </Td>
-                  <Td>{f.cpu || '-'}</Td>
-                  <Td>{f.memory || '-'}</Td>
-                  <Td>{f.restart ?? '-'}</Td>
-                  <Td>{f.node || '-'}</Td>
-                  <Td>{f.qos || '-'}</Td>
-                  <AgeCell timestamp={f.creation_timestamp || ''} />
-                  <Td>
-                    <Badge variant={podStatusVariant(f.phase ?? '')}>{f.phase ?? ''}</Badge>
-                  </Td>
-                  <Td>
-                    <button className="text-white/60 hover:text-white/80">⋮</button>
+    <div className="flex-1 overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
+      <div className="h-full overflow-auto">
+        <div className="min-w-max">
+          <Table>
+            <TableHeader
+              columns={columns}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              setSortBy={setSortBy}
+              setSortOrder={setSortOrder}
+            />
+            <Tbody>
+              {loading && (
+                <Tr>
+                  <Td colSpan={12} className="text-white/60">
+                    Loading...
                   </Td>
                 </Tr>
-              ))}
-          </Tbody>
-        </Table>
+              )}
+              {!loading && filtered.length === 0 && (
+                <Tr>
+                  <Td colSpan={12} className="text-white/60">
+                    No pods
+                  </Td>
+                </Tr>
+              )}
+              {!loading &&
+                filtered.map((f) => (
+                  <Tr key={`${f.namespace}/${f.name}`}>
+                    <Td className="max-w-truncate">
+                      <span className="block truncate" title={f.name}>
+                        {f.name}
+                      </span>
+                    </Td>
+                    <Td className="text-center">
+                      {hasPodWarning(f) && (
+                        <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
+                      )}
+                    </Td>
+                    <Td>{f.namespace}</Td>
+                    <Td>
+                      <div className="flex items-center gap-1">
+                        {f.container_states?.length
+                          ? f.container_states.map((st, idx) => (
+                              <span
+                                key={idx}
+                                className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass(st)}`}
+                              ></span>
+                            ))
+                          : Array.from({ length: f.containers || 0 }).map((_, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-block h-2.5 w-2.5 rounded-full bg-white/30"
+                              ></span>
+                            ))}
+                      </div>
+                    </Td>
+                    <Td>{f.cpu || '-'}</Td>
+                    <Td>{f.memory || '-'}</Td>
+                    <Td>{f.restart ?? '-'}</Td>
+                    <Td>{f.node || '-'}</Td>
+                    <Td>{f.qos || '-'}</Td>
+                    <AgeCell timestamp={f.creation_timestamp || ''} />
+                    <Td>
+                      <Badge variant={podStatusVariant(f.phase ?? '')}>{f.phase ?? ''}</Badge>
+                    </Td>
+                    <Td>
+                      <button className="text-white/60 hover:text-white/80">⋮</button>
+                    </Td>
+                  </Tr>
+                ))}
+            </Tbody>
+          </Table>
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
