@@ -44,8 +44,6 @@ export default function PaneDeployments({ context }: PaneDeploymentsProps) {
     sortOrder
   );
 
-  console.log(filtered);
-
   function statusVariant(s: string): BadgeVariant {
     switch (s) {
       case 'Available':

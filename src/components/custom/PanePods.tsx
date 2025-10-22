@@ -35,7 +35,14 @@ export default function PanePods({ context }: PanePodsProps) {
   const [sortBy, setSortBy] = useState<SortKey>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const filtered = useFilteredItems(items, selectedNamespaces, q, ['name', 'namespace'], sortBy, sortOrder);
+  const filtered = useFilteredItems(
+    items,
+    selectedNamespaces,
+    q,
+    ['name', 'namespace'],
+    sortBy,
+    sortOrder
+  );
 
   const dotClass = (s: string | undefined) => {
     switch (s) {

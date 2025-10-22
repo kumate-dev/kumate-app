@@ -4,7 +4,7 @@ import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES } from '../constants/k8s';
 import { WatchEvent } from '../types/k8sEvent';
 import { unwatch } from '../services/unwatch';
 
-export function useK8sResources<T>(
+export function useK8sResources<T extends { name: string; namespace?: string }>(
   listFn: (params: { name: string; namespaces?: string[] }) => Promise<T[]>,
   watchFn?: (params: {
     name: string;
@@ -21,7 +21,6 @@ export function useK8sResources<T>(
   useEffect(() => {
     if (!context?.name || !listFn) return;
     const clusterName = context.name;
-
     const nsList = namespaces && !namespaces.includes(ALL_NAMESPACES) ? namespaces : undefined;
 
     let active = true;
@@ -39,6 +38,16 @@ export function useK8sResources<T>(
         });
       });
 
+    function dedupeResources<T extends { name: string; namespace?: string }>(items: T[]): T[] {
+      const seen = new Set<string>();
+      return items.filter((item) => {
+        const key = `${item.namespace || ''}/${item.name}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
     async function list() {
       setLoading(true);
       setError('');
@@ -47,7 +56,7 @@ export function useK8sResources<T>(
           listFn({ name: clusterName, namespaces: nsList }),
           K8S_REQUEST_TIMEOUT
         );
-        if (active) setItems(results || []);
+        if (active) setItems(dedupeResources(results || []));
       } catch (e: any) {
         if (active) setError(e?.message || String(e));
       } finally {
@@ -64,36 +73,22 @@ export function useK8sResources<T>(
             namespaces: nsList,
             onEvent: (evt) => {
               const { type, object } = evt;
+              const key = `${(object as any).namespace || ''}/${(object as any).name}`;
 
               setItems((prev) => {
-                let newList: typeof prev;
+                const map = new Map(prev.map((i: any) => [`${i.namespace || ''}/${i.name}`, i]));
 
                 switch (type) {
                   case 'ADDED':
-                    if (prev.find((f: any) => (f as any).name === (object as any).name)) {
-                      newList = prev.map((f: any) =>
-                        (f as any).name === (object as any).name ? object : f
-                      );
-                    } else {
-                      newList = [...prev, object];
-                    }
-                    break;
-
                   case 'MODIFIED':
-                    newList = prev.map((f: any) =>
-                      (f as any).name === (object as any).name ? object : f
-                    );
+                    map.set(key, object);
                     break;
-
                   case 'DELETED':
-                    newList = prev.filter((f: any) => (f as any).name !== (object as any).name);
+                    map.delete(key);
                     break;
-
-                  default:
-                    newList = prev;
                 }
 
-                return newList;
+                return Array.from(map.values());
               });
             },
           }),

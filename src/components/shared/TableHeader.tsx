@@ -17,7 +17,6 @@ interface TableHeaderProps<SortKey extends string> {
   setSortOrder: React.Dispatch<React.SetStateAction<'asc' | 'desc'>>;
 }
 
-
 export const TableHeader = <SortKey extends string>({
   columns,
   sortBy,
@@ -44,15 +43,19 @@ export const TableHeader = <SortKey extends string>({
             <Th key={key}>
               {sortable && key !== 'empty' ? (
                 <button
-                  className="inline-flex items-center gap-1 font-medium text-left"
+                  className="inline-flex items-center gap-1 text-left font-medium"
                   onClick={() => handleSort(key, sortable)}
                 >
                   <span>{label}</span>
                   {isActive &&
-                    (sortOrder === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                    (sortOrder === 'asc' ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    ))}
                 </button>
               ) : (
-                <span className="font-medium text-left">{label}</span>
+                <span className="text-left font-medium">{label}</span>
               )}
             </Th>
           );

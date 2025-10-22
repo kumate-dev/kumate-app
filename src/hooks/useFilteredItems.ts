@@ -12,20 +12,25 @@ export function useFilteredItems<T extends { name?: string; namespace?: string }
   return useMemo(() => {
     const term = q.trim().toLowerCase();
 
-    const filtered = term || selectedNamespaces.length !== 1 || selectedNamespaces[0] !== ALL_NAMESPACES
-      ? items.filter((item) => {
-          if (item.namespace && !selectedNamespaces.includes(ALL_NAMESPACES) && !selectedNamespaces.includes(item.namespace)) {
-            return false;
-          }
+    const filtered =
+      term || selectedNamespaces.length !== 1 || selectedNamespaces[0] !== ALL_NAMESPACES
+        ? items.filter((item) => {
+            if (
+              item.namespace &&
+              !selectedNamespaces.includes(ALL_NAMESPACES) &&
+              !selectedNamespaces.includes(item.namespace)
+            ) {
+              return false;
+            }
 
-          if (!term) return true;
+            if (!term) return true;
 
-          return keys.some((key) => {
-            const val = item[key];
-            return val != null && String(val).toLowerCase().includes(term);
-          });
-        })
-      : items;
+            return keys.some((key) => {
+              const val = item[key];
+              return val != null && String(val).toLowerCase().includes(term);
+            });
+          })
+        : items;
 
     if (!filtered.length) return filtered;
 
@@ -34,8 +39,14 @@ export function useFilteredItems<T extends { name?: string; namespace?: string }
       const bVal = b[sortBy] ?? '';
 
       return sortOrder === 'asc'
-        ? String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' })
-        : String(bVal).localeCompare(String(aVal), undefined, { numeric: true, sensitivity: 'base' });
+        ? String(aVal).localeCompare(String(bVal), undefined, {
+            numeric: true,
+            sensitivity: 'base',
+          })
+        : String(bVal).localeCompare(String(aVal), undefined, {
+            numeric: true,
+            sensitivity: 'base',
+          });
     });
   }, [items, selectedNamespaces, q, keys, sortBy, sortOrder]);
 }

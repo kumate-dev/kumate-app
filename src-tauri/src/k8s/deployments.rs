@@ -54,7 +54,7 @@ impl K8sDeployments {
         .flatten()
         .map(Self::to_item)
         .collect();
-        
+
         Ok(all_deployments)
     }
 
@@ -127,20 +127,37 @@ impl K8sDeployments {
             return Some("Failed".to_string());
         }
 
+        Self::deployment_status(status)
+    }
+
+    fn deployment_status(status: &DeploymentStatus) -> Option<String> {
+        let conditions: &Vec<DeploymentCondition> = status.conditions.as_ref()?; // lấy Vec<DeploymentCondition>
+
         let available: Option<&DeploymentCondition> =
             conditions.iter().find(|c| c.type_ == "Available");
         let progressing: Option<&DeploymentCondition> =
             conditions.iter().find(|c| c.type_ == "Progressing");
 
-        match (
-            available.map(|c| c.status.as_str()),
-            progressing.map(|c| c.status.as_str()),
-        ) {
-            (Some("True"), Some("True")) => Some("Scaling".to_string()),
-            (Some("True"), _) => Some("Available".to_string()),
-            (Some("False"), Some("True")) => Some("Progressing".to_string()),
+        let available_status: Option<&str> = available.map(|c| c.status.as_str());
+        let progressing_status: Option<&str> = progressing.map(|c| c.status.as_str());
+
+        let replicas: i32 = status.replicas.unwrap_or(0);
+        let ready_replicas: i32 = status.ready_replicas.unwrap_or(0);
+        let updated_replicas: i32 = status.updated_replicas.unwrap_or(0);
+
+        if progressing_status == Some("True")
+            && available_status == Some("False")
+            && (updated_replicas < replicas || ready_replicas < replicas)
+        {
+            return Some("Scaling".to_string());
+        }
+
+        match (available_status, progressing_status) {
+            (Some("True"), Some("True")) => Some("Available".to_string()),
+            (Some("False"), Some("True")) => Some("Scaling".to_string()),
             (Some("False"), Some("False")) => Some("Unavailable".to_string()),
             (_, Some("Unknown")) => Some("Progressing".to_string()),
+            (Some("True"), _) => Some("Available".to_string()),
             _ => Some("Unknown".to_string()),
         }
     }
