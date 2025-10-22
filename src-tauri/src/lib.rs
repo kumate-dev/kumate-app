@@ -10,6 +10,7 @@ mod types;
 mod utils;
 
 use crate::commands::common;
+use crate::commands::configmaps;
 use crate::commands::contexts;
 use crate::commands::cronjobs;
 use crate::commands::daemonsets;
@@ -25,7 +26,6 @@ use crate::utils::watcher::WatchManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Install rustls crypto provider to avoid runtime panic
     let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
 
     tauri::Builder::default()
@@ -75,6 +75,8 @@ pub fn run() {
             jobs::watch_jobs,
             cronjobs::list_cronjobs,
             cronjobs::watch_cronjobs,
+            configmaps::list_configmaps,
+            configmaps::watch_configmaps,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

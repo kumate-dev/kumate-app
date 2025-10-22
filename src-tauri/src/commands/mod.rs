@@ -1,4 +1,5 @@
 pub mod common;
+pub mod configmaps;
 pub mod contexts;
 pub mod cronjobs;
 pub mod daemonsets;

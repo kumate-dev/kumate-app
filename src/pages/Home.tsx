@@ -15,6 +15,7 @@ import { useNamespaceStore } from '@/state/namespaceStore';
 import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/services/contexts';
 import { ALL_NAMESPACES } from '@/constants/k8s';
+import PaneK8sConfigMap from '@/components/custom/PaneK8sConfigMap';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -113,14 +114,7 @@ export default function Home() {
           {page === 'cronjobs' && <PaneK8sCronJob context={selected} />}
           {page === 'pods' && <PaneK8sPod context={selected} />}
 
-          {page === 'services' && <Placeholder title="Services" />}
-          {page === 'endpoints' && <Placeholder title="Endpoints" />}
-          {page === 'ingresses' && <Placeholder title="Ingresses" />}
-          {page === 'ingressclasses' && <Placeholder title="Ingress Classes" />}
-          {page === 'networkpolicies' && <Placeholder title="Network Policies" />}
-          {page === 'portforwarding' && <Placeholder title="Port Forwarding" />}
-
-          {page === 'configmaps' && <Placeholder title="Config Maps" />}
+          {page === 'configmaps' && <PaneK8sConfigMap context={selected} />}
           {page === 'secrets' && <Placeholder title="Secrets" />}
           {page === 'resourcequotas' && <Placeholder title="Resource Quotas" />}
           {page === 'limitranges' && <Placeholder title="Limit Ranges" />}
@@ -133,6 +127,13 @@ export default function Home() {
           {page === 'validatingwebhooks' && (
             <Placeholder title="Validating Webhook Configurations" />
           )}
+
+          {page === 'services' && <Placeholder title="Services" />}
+          {page === 'endpoints' && <Placeholder title="Endpoints" />}
+          {page === 'ingresses' && <Placeholder title="Ingresses" />}
+          {page === 'ingressclasses' && <Placeholder title="Ingress Classes" />}
+          {page === 'networkpolicies' && <Placeholder title="Network Policies" />}
+          {page === 'portforwarding' && <Placeholder title="Port Forwarding" />}
 
           {page === 'persistentvolumeclaims' && <Placeholder title="Persistent Volume Claims" />}
           {page === 'persistentvolumes' && <Placeholder title="Persistent Volumes" />}
