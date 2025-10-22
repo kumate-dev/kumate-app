@@ -13,31 +13,17 @@ import PaneJobs from '../components/custom/PaneJobs';
 import PaneCronJob from '../components/custom/PaneCronJob';
 import { useNamespaceStore } from '../state/namespaceStore';
 import { PageKey } from '../types/pageKey';
-import { importKubeContexts, listContexts } from '../services/contexts';
+import { importKubeContexts, K8sContext, listContexts } from '../services/contexts';
+import { ALL_NAMESPACES } from '../constants/k8s';
 
-interface KubeContext {
-  name: string;
-}
-
-export default function Dashboard() {
-  const [contexts, setContexts] = useState<KubeContext[]>([]);
+export default function Home() {
+  const [contexts, setContexts] = useState<K8sContext[]>([]);
   const [, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [selected, setSelected] = useState<KubeContext | null>(null);
-  const [_, setOpenAdd] = useState(false);
+  const [selected, setSelected] = useState<K8sContext | null>(null);
   const [page, setPage] = useState<PageKey>('overview');
 
-  const ALL_NAMESPACES = 'All Namespaces';
   const resetNsToAll = () => useNamespaceStore.setState({ selectedNamespaces: [ALL_NAMESPACES] });
-
-  function Placeholder({ title }: { title: string }) {
-    return (
-      <div className="rounded-xl border border-white/10 bg-neutral-900/60 p-6">
-        <div className="text-white/80">{title}</div>
-        <div className="mt-2 text-sm text-white/60">Coming soon...</div>
-      </div>
-    );
-  }
 
   const selectedRef = useRef(selected);
 
@@ -46,7 +32,7 @@ export default function Dashboard() {
       setError('');
       setLoading(true);
       try {
-        let list: KubeContext[] = [];
+        let list: K8sContext[] = [];
         try {
           list = (await listContexts()) || [];
         } catch {
@@ -65,7 +51,6 @@ export default function Dashboard() {
         }
         setContexts(list);
 
-        // dùng ref thay vì selected trực tiếp
         if (!selectedRef.current && list.length > 0) setSelected(list[0]);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : String(e));
@@ -81,27 +66,38 @@ export default function Dashboard() {
     if (selected?.name) resetNsToAll();
   }, [selected?.name]);
 
+  function Placeholder({ title }: { title: string }) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-neutral-900/60 p-6">
+        <div className="text-white/80">{title}</div>
+        <div className="mt-2 text-sm text-white/60">Coming soon...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-neutral-950 text-white">
-      <Sidebar
-        contexts={contexts}
-        selected={selected ?? undefined}
-        onSelectContext={(c) => {
-          setSelected(c ?? null);
-          setPage('overview');
-        }}
-        page={page}
-        onSelectPage={(p) => setPage(p as PageKey)}
-      />
+      <aside className="w-64 flex-shrink-0 overflow-y-auto border-r border-white/10">
+        <Sidebar
+          contexts={contexts}
+          selected={selected ?? undefined}
+          onSelectContext={(c) => {
+            setSelected(c ?? null);
+            setPage('overview');
+          }}
+          page={page}
+          onSelectPage={(p) => setPage(p as PageKey)}
+        />
+      </aside>
 
-      <div className="relative flex-1">
+      <main className="relative flex-1 overflow-auto">
         {error && (
           <div className="m-4 rounded border border-red-400/30 bg-red-500/10 p-2 text-red-400">
             {error}
           </div>
         )}
 
-        <div className="h-full overflow-auto p-4">
+        <div className="min-w-max overflow-x-auto p-4">
           {page === 'overview' && <PaneOverview context={selected} />}
           {page === 'nodes' && <PaneNodes context={selected} />}
           {page === 'applications' && <Placeholder title="Applications" />}
@@ -114,7 +110,6 @@ export default function Dashboard() {
           {page === 'replicationcontrollers' && <PaneReplicationControllers context={selected} />}
           {page === 'jobs' && <PaneJobs context={selected} />}
           {page === 'cronjobs' && <PaneCronJob context={selected} />}
-
           {page === 'pods' && <WorkloadsPane context={selected} />}
 
           {page === 'services' && <Placeholder title="Services" />}
@@ -154,15 +149,7 @@ export default function Dashboard() {
           {page === 'clusterrolebindings' && <Placeholder title="Cluster Role Bindings" />}
           {page === 'rolebindings' && <Placeholder title="Role Bindings" />}
         </div>
-
-        <button
-          className="absolute right-4 bottom-4 h-10 w-10 rounded-full border border-white/20 bg-white/10 hover:bg-white/15"
-          onClick={() => setOpenAdd(true)}
-          aria-label="Add"
-        >
-          <span className="text-2xl leading-none">+</span>
-        </button>
-      </div>
+      </main>
     </div>
   );
 }

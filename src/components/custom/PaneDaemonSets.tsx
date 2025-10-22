@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
 import { readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
-import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { DaemonSetItem, listDaemonSets, watchDaemonSets } from '../../services/daemonsets';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
+import { K8sContext } from '../../services/contexts';
 
 interface PaneDaemonSetsProps {
   context?: K8sContext | null;

@@ -1,4 +1,4 @@
-import { K8sContext } from '../../services/k8s';
+import { K8sContext } from '../../services/contexts';
 import PaneOverview from './PaneOverview';
 
 interface OverviewProps {

@@ -10,11 +10,7 @@ import { IconAccessControl } from '../components/shared/IconAccessControl';
 import { IconNode } from '../components/shared/IconNode';
 import { IconOverview } from '../components/shared/IconOverview';
 import { PageKey } from '../types/pageKey';
-
-export interface K8sContext {
-  name: string;
-  [key: string]: any;
-}
+import { K8sContext } from '../services/contexts';
 
 export interface PageItem {
   key?: PageKey;

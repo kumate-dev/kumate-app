@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
+import { Table, Tbody, Tr, Td, Badge } from '../ui';
 import { useNamespaceStore } from '../../state/namespaceStore';
-import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { listPods, PodItem, watchPods } from '../../services/pods';
@@ -11,6 +10,7 @@ import AgeCell from '../shared/AgeCell';
 import { AlertTriangle } from 'lucide-react';
 import { BadgeVariant } from '../../types/variant';
 import { ColumnDef, TableHeader } from '../shared/TableHeader';
+import { K8sContext } from '../../services/contexts';
 
 interface PanePodsProps {
   context?: K8sContext | null;

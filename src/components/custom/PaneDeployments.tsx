@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Table, Tbody, Tr, Td, Badge } from '../ui';
 import { readyVariant } from '../../utils/k8s';
 import { useNamespaceStore } from '../../state/namespaceStore';
-import { K8sContext } from '../../layouts/Sidebar';
 import { useSelectedNamespaces } from '../../hooks/useSelectedNamespaces';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { DeploymentItem, listDeployments, watchDeployments } from '../../services/deployments';
@@ -11,6 +10,7 @@ import { PaneTaskbar } from '../shared/PaneTaskbar';
 import AgeCell from '../shared/AgeCell';
 import { BadgeVariant } from '../../types/variant';
 import { ColumnDef, TableHeader } from '../shared/TableHeader';
+import { K8sContext } from '../../services/contexts';
 
 interface PaneDeploymentsProps {
   context?: K8sContext | null;

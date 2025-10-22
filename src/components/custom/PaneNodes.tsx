@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, Badge } from '../ui';
-import { K8sContext } from '../../layouts/Sidebar';
 import { useK8sResources } from '../../hooks/useK8sResources';
 import { useFilteredItems } from '../../hooks/useFilteredItems';
 import { PaneSearch } from '../shared/PaneSearch';
 import { listNodes, NodeItem, watchNodes } from '../../services/nodes';
 import { BadgeVariant } from '../../types/variant';
 import AgeCell from '../shared/AgeCell';
+import { K8sContext } from '../../services/contexts';
 
 interface PaneNodesProps {
   context?: K8sContext | null;
