@@ -38,40 +38,40 @@ export const TableHeader = <SortKey extends string>({
   };
 
   return (
-    <thead>
-      <tr>
-        {columns.map(({ label, key, sortable = true, align = 'left', width }) => {
-          const isActive = sortBy === key;
-          const alignClass =
-            align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+  <thead className="sticky top-0 z-10 bg-neutral-900">
+    <tr>
+      {columns.map(({ label, key, sortable = true, align = 'left', width }) => {
+        const isActive = sortBy === key;
+        const alignClass =
+          align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
 
-          return (
-            <Th key={key} className={`${alignClass} ${width || ''} select-none`}>
-              {sortable && key !== 'empty' ? (
-                <button
-                  className="group inline-flex items-center gap-1 font-medium"
-                  onClick={() => handleSort(key, sortable)}
-                >
-                  <span className="truncate">{label}</span>
-                  <span className="inline-flex h-3 w-3 items-center justify-center">
-                    {isActive ? (
-                      sortOrder === 'asc' ? (
-                        <ChevronUp className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
-                      ) : (
-                        <ChevronDown className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
-                      )
+        return (
+          <Th key={key} className={`${alignClass} ${width || ''} select-none`}>
+            {sortable && key !== 'empty' ? (
+              <button
+                className="group inline-flex items-center gap-1 font-medium"
+                onClick={() => handleSort(key, sortable)}
+              >
+                <span className="truncate">{label}</span>
+                <span className="inline-flex h-3 w-3 items-center justify-center">
+                  {isActive ? (
+                    sortOrder === 'asc' ? (
+                      <ChevronUp className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
                     ) : (
-                      <span className="block h-3 w-3" />
-                    )}
-                  </span>
-                </button>
-              ) : (
-                <span className="font-medium">{label}</span>
-              )}
-            </Th>
-          );
-        })}
-      </tr>
-    </thead>
-  );
+                      <ChevronDown className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
+                    )
+                  ) : (
+                    <span className="block h-3 w-3" />
+                  )}
+                </span>
+              </button>
+            ) : (
+              <span className="font-medium">{label}</span>
+            )}
+          </Th>
+        );
+      })}
+    </tr>
+  </thead>
+);
 };

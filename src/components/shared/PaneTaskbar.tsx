@@ -56,7 +56,7 @@ export function PaneTaskbar({
     : selectedNamespaces.join(', ');
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 sticky top-0 z-20">
       {showNamespace && (
         <div className="relative" ref={ref}>
           <button
@@ -87,7 +87,12 @@ export function PaneTaskbar({
           )}
         </div>
       )}
-      <PaneSearch query={query} onQueryChange={onQueryChange} className="max-w-xs min-w-0" />
+
+      <PaneSearch
+        query={query}
+        onQueryChange={onQueryChange}
+        className="max-w-xs min-w-0 flex-shrink"
+      />
     </div>
   );
 }

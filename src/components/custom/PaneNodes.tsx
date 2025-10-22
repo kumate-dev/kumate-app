@@ -7,6 +7,7 @@ import { listNodes, NodeItem, watchNodes } from '../../services/nodes';
 import { BadgeVariant } from '../../types/variant';
 import AgeCell from '../shared/AgeCell';
 import { K8sContext } from '../../services/contexts';
+import { ErrorMessage } from '../shared/ErrorMessage';
 
 interface PaneNodesProps {
   context?: K8sContext | null;
@@ -45,11 +46,7 @@ export default function PaneNodes({ context }: PaneNodesProps) {
         <PaneSearch query={q} onQueryChange={setQ} />
       </div>
 
-      {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-200">
-          {error}
-        </div>
-      )}
+      <ErrorMessage message={error} />
 
       <div className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
         <Table>
