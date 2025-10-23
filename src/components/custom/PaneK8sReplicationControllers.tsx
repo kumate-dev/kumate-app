@@ -1,66 +1,49 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listSecrets, watchSecrets, SecretItem } from '@/services/secrets';
+import {
+  listReplicationControllers,
+  watchReplicationControllers,
+  ReplicationControllerItem,
+} from '@/services/replicationControllers';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { K8sContext } from '@/services/contexts';
-import { BadgeVariant } from '@/types/variant';
+import { Badge } from '@/components/ui/badge';
+import { readyVariant } from '@/utils/k8s';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 
-interface PaneSecretProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneK8sSecret({ context }: PaneSecretProps) {
+export default function PaneK8sReplicationControllers({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<SecretItem>(
-    listSecrets,
-    watchSecrets,
+  const { items, loading, error } = useK8sResources<ReplicationControllerItem>(
+    listReplicationControllers,
+    watchReplicationControllers,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof SecretItem>('name');
+  const [sortBy, setSortBy] = useState<keyof ReplicationControllerItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['name', 'namespace', 'type_'],
+    ['name', 'namespace'],
     sortBy,
     sortOrder
   );
 
-  const typeVariant = (type_: string): BadgeVariant => {
-    switch (type_) {
-      case 'Opaque':
-        return 'secondary';
-      case 'kubernetes.io/service-account-token':
-        return 'warning';
-      case 'kubernetes.io/dockerconfigjson':
-        return 'success';
-      case 'kubernetes.io/tls':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
-  const columns: ColumnDef<keyof SecretItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof ReplicationControllerItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
-    { label: 'Type', key: 'type_' },
-    { label: 'Data Keys', key: 'data_keys' },
+    { label: 'Ready', key: 'ready' },
     { label: 'Age', key: 'creation_timestamp' },
   ];
 
@@ -93,14 +76,11 @@ export default function PaneK8sSecret({ context }: PaneSecretProps) {
               {f.name}
             </span>
           </Td>
-          <Td>{f.namespace}</Td>
           <Td>
-            <Badge variant={typeVariant(f.type_)}>{f.type_}</Badge>
+            <Badge>{f.namespace}</Badge>
           </Td>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.data_keys.join(', ')}>
-              {f.data_keys.join(', ')}
-            </span>
+          <Td>
+            <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
           </Td>
           <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>

@@ -21,7 +21,7 @@ export async function listConfigMaps({
   name: string;
   namespaces?: string[];
 }): Promise<ConfigMapItem[]> {
-  return await invoke<ConfigMapItem[]>('list_configmaps', { name, namespaces });
+  return await invoke<ConfigMapItem[]>('list_config_maps', { name, namespaces });
 }
 
 export async function watchConfigMaps({
@@ -33,7 +33,7 @@ export async function watchConfigMaps({
   namespaces?: string[];
   onEvent?: EventHandler<ConfigMapEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_configmaps', { name, namespaces });
+  const eventName = await invoke<string>('watch_config_maps', { name, namespaces });
 
   const unlisten = await listen<ConfigMapEvent>(eventName, (evt) => {
     try {

@@ -20,6 +20,7 @@ use crate::commands::jobs;
 use crate::commands::limit_ranges;
 use crate::commands::namespaces;
 use crate::commands::nodes;
+use crate::commands::pod_disruption_budgets;
 use crate::commands::pods;
 use crate::commands::replica_sets;
 use crate::commands::replication_controllers;
@@ -67,28 +68,30 @@ pub fn run() {
             pods::watch_pods,
             deployments::list_deployments,
             deployments::watch_deployments,
-            replica_sets::list_replicasets,
-            replica_sets::watch_replicasets,
-            daemon_sets::list_daemonsets,
-            daemon_sets::watch_daemonsets,
-            stateful_sets::list_statefulsets,
-            stateful_sets::watch_statefulsets,
-            replication_controllers::list_replicationcontrollers,
-            replication_controllers::watch_replicationcontrollers,
+            replica_sets::list_replica_sets,
+            replica_sets::watch_replica_sets,
+            daemon_sets::list_daemon_sets,
+            daemon_sets::watch_daemon_sets,
+            stateful_sets::list_stateful_sets,
+            stateful_sets::watch_stateful_sets,
+            replication_controllers::list_replication_controllers,
+            replication_controllers::watch_replication_controllers,
             jobs::list_jobs,
             jobs::watch_jobs,
-            cron_jobs::list_cronjobs,
-            cron_jobs::watch_cronjobs,
-            config_maps::list_configmaps,
-            config_maps::watch_configmaps,
+            cron_jobs::list_cron_jobs,
+            cron_jobs::watch_cron_jobs,
+            config_maps::list_config_maps,
+            config_maps::watch_config_maps,
             secrets::list_secrets,
             secrets::watch_secrets,
             resource_quotas::list_resource_quotas,
             resource_quotas::watch_resource_quotas,
-            limit_ranges::list_limitranges,
-            limit_ranges::watch_limitranges,
+            limit_ranges::list_limit_ranges,
+            limit_ranges::watch_limit_ranges,
             horizontal_pod_autoscalers::list_horizontal_pod_autoscalers,
             horizontal_pod_autoscalers::watch_horizontal_pod_autoscalers,
+            pod_disruption_budgets::list_pod_disruption_budgets,
+            pod_disruption_budgets::watch_pod_disruption_budgets,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

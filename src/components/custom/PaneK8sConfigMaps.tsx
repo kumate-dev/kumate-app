@@ -1,37 +1,29 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import {
-  listResourceQuotas,
-  watchResourceQuotas,
-  ResourceQuotaItem,
-} from '@/services/resourceQuotas';
+import { listConfigMaps, watchConfigMaps, ConfigMapItem } from '@/services/configMaps';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';
-import { K8sContext } from '@/services/contexts';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { Badge } from '../ui/badge';
 
-interface PaneResourceQuotaProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneK8sResourceQuota({ context }: PaneResourceQuotaProps) {
+export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<ResourceQuotaItem>(
-    listResourceQuotas,
-    watchResourceQuotas,
+  const { items, loading, error } = useK8sResources<ConfigMapItem>(
+    listConfigMaps,
+    watchConfigMaps,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof ResourceQuotaItem>('name');
+  const [sortBy, setSortBy] = useState<keyof ConfigMapItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(
@@ -43,18 +35,10 @@ export default function PaneK8sResourceQuota({ context }: PaneResourceQuotaProps
     sortOrder
   );
 
-  function renderKeyValue(items?: [string, string][]): { display: string; title: string } {
-    if (!items || items.length === 0) return { display: '-', title: '-' };
-
-    const text = items.map(([k, v]) => `${k}: ${v}`).join(', ');
-    return { display: text, title: text };
-  }
-
-  const columns: ColumnDef<keyof ResourceQuotaItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof ConfigMapItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
-    { label: 'Hard', key: 'hard' },
-    { label: 'Used', key: 'used' },
+    { label: 'Keys', key: 'data_keys' },
     { label: 'Age', key: 'creation_timestamp' },
   ];
 
@@ -87,15 +71,12 @@ export default function PaneK8sResourceQuota({ context }: PaneResourceQuotaProps
               {f.name}
             </span>
           </Td>
-          <Td>{f.namespace}</Td>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={renderKeyValue(f.hard).title}>
-              {renderKeyValue(f.hard).display}
-            </span>
+          <Td>
+            <Badge>{f.namespace}</Badge>
           </Td>
           <Td className="max-w-truncate">
-            <span className="block truncate" title={renderKeyValue(f.used).title}>
-              {renderKeyValue(f.used).display}
+            <span className="block truncate" title={f.data_keys.join(', ')}>
+              {f.data_keys.join(', ')}
             </span>
           </Td>
           <AgeCell timestamp={f.creation_timestamp || ''} />

@@ -83,7 +83,7 @@ impl K8sConfigMaps {
     }
 
     fn to_item(cm: ConfigMap) -> ConfigMapItem {
-        let keys = cm
+        let keys: Vec<String> = cm
             .data
             .as_ref()
             .map(|d| d.keys().cloned().collect())

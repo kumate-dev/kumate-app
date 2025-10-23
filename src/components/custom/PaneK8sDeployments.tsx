@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
@@ -8,16 +8,11 @@ import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { K8sContext } from '@/services/contexts';
 import { BadgeVariant } from '@/types/variant';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { readyVariant } from '@/utils/k8s';
 
-interface PaneK8sDeploymentProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneK8sDeployment({ context }: PaneK8sDeploymentProps) {
+export default function PaneK8sDeployments({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
@@ -97,7 +92,9 @@ export default function PaneK8sDeployment({ context }: PaneK8sDeploymentProps) {
               {f.name}
             </span>
           </Td>
-          <Td>{f.namespace}</Td>
+          <Td>
+            <Badge>{f.namespace}</Badge>
+          </Td>
           <Td>
             <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
           </Td>

@@ -25,7 +25,7 @@ export async function listLimitRanges({
   name: string;
   namespaces?: string[];
 }): Promise<LimitRangeItem[]> {
-  return await invoke<LimitRangeItem[]>('list_limitranges', { name, namespaces });
+  return await invoke<LimitRangeItem[]>('list_limit_ranges', { name, namespaces });
 }
 
 export async function watchLimitRanges({
@@ -37,7 +37,7 @@ export async function watchLimitRanges({
   namespaces?: string[];
   onEvent?: EventHandler<LimitRangeEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_limitranges', { name, namespaces });
+  const eventName = await invoke<string>('watch_limit_ranges', { name, namespaces });
 
   const unlisten = await listen<LimitRangeEvent>(eventName, (evt) => {
     try {

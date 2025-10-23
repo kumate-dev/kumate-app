@@ -1,31 +1,27 @@
 import { useState } from 'react';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listStatefulSets, StatefulSetItem, watchStatefulSets } from '@/services/statefulSets';
+import { DaemonSetItem, listDaemonSets, watchDaemonSets } from '@/services/daemonSets';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import AgeCell from '@/components/custom/AgeCell';
-import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
-import { K8sContext } from '@/services/contexts';
+import { ColumnDef, TableHeader } from './TableHeader';
+import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PaneK8sResource } from '@/components/custom/PaneK8sResource';
+import AgeCell from '@/components/custom/AgeCell';
 import { readyVariant } from '@/utils/k8s';
+import { BadgeVariant } from '@/types/variant';
 
-interface PaneK8sStatefulSetProps {
-  context?: K8sContext | null;
-}
+type SortKey = keyof DaemonSetItem;
 
-type SortKey = keyof StatefulSetItem;
-
-export default function PaneK8sStatefulSet({ context }: PaneK8sStatefulSetProps) {
+export default function PaneK8sDaemonSets({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<StatefulSetItem>(
-    listStatefulSets,
-    watchStatefulSets,
+  const { items, loading, error } = useK8sResources<DaemonSetItem>(
+    listDaemonSets,
+    watchDaemonSets,
     context,
     selectedNamespaces
   );
@@ -43,7 +39,7 @@ export default function PaneK8sStatefulSet({ context }: PaneK8sStatefulSetProps)
     sortOrder
   );
 
-  const columns: ColumnDef<keyof StatefulSetItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof DaemonSetItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Ready', key: 'ready' },
@@ -73,21 +69,23 @@ export default function PaneK8sStatefulSet({ context }: PaneK8sStatefulSetProps)
       colSpan={columns.length}
       tableHeader={tableHeader}
       renderRow={(f) => (
-        <tr key={`${f.namespace}/${f.name}`}>
-          <td className="max-w-truncate">
+        <Tr key={`${f.namespace}/${f.name}`}>
+          <Td className="max-w-truncate">
             <span className="block truncate" title={f.name}>
               {f.name}
             </span>
-          </td>
-          <td>{f.namespace}</td>
-          <td>
-            <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
-          </td>
+          </Td>
+          <Td>
+            <Badge>{f.namespace}</Badge>
+          </Td>
+          <Td>
+            <Badge variant={readyVariant(f.ready) as BadgeVariant}>{f.ready}</Badge>
+          </Td>
           <AgeCell timestamp={f.creation_timestamp || ''} />
-          <td>
+          <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>
-          </td>
-        </tr>
+          </Td>
+        </Tr>
       )}
     />
   );

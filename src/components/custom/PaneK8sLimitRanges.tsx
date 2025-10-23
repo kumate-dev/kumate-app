@@ -1,35 +1,29 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listJobs, watchJobs, JobItem } from '@/services/jobs';
+import { listLimitRanges, watchLimitRanges, LimitRangeItem } from '@/services/limitRanges';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { K8sContext } from '@/services/contexts';
-import { BadgeVariant } from '@/types/variant';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { Badge } from '../ui/badge';
 
-interface PaneK8sJobProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneK8sJob({ context }: PaneK8sJobProps) {
+export default function PaneK8sLimitRanges({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<JobItem>(
-    listJobs,
-    watchJobs,
+  const { items, loading, error } = useK8sResources<LimitRangeItem>(
+    listLimitRanges,
+    watchLimitRanges,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof JobItem>('name');
+  const [sortBy, setSortBy] = useState<keyof LimitRangeItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(
@@ -41,26 +35,23 @@ export default function PaneK8sJob({ context }: PaneK8sJobProps) {
     sortOrder
   );
 
-  const progressVariant = (progress: string | number): BadgeVariant => {
-    try {
-      const [succ, comp] = String(progress)
-        .split('/')
-        .map((x) => parseInt(x, 10));
-      if (!isNaN(succ) && !isNaN(comp) && comp > 0) {
-        return succ >= comp ? 'success' : 'warning';
-      }
-      return 'default';
-    } catch {
-      return 'default';
-    }
-  };
+  function renderLimitMap(map?: Record<string, string>): { display: string; title: string } {
+    if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
+    const text = Object.entries(map)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+    return { display: text, title: text };
+  }
 
-  const columns: ColumnDef<keyof JobItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof LimitRangeItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
-    { label: 'Progress', key: 'progress' },
+    { label: 'Type', key: 'type_' },
+    { label: 'Min', key: 'min' },
+    { label: 'Max', key: 'max' },
+    { label: 'Default', key: 'default' },
+    { label: 'Default Request', key: 'defaultRequest' },
     { label: 'Age', key: 'creation_timestamp' },
-    { label: '', key: 'empty', sortable: false },
   ];
 
   const tableHeader = (
@@ -87,14 +78,18 @@ export default function PaneK8sJob({ context }: PaneK8sJobProps) {
       tableHeader={tableHeader}
       renderRow={(f) => (
         <Tr key={`${f.namespace}/${f.name}`}>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.name}>
-              {f.name}
-            </span>
+          <Td className="max-w-truncate" title={f.name}>
+            {f.name}
           </Td>
-          <Td>{f.namespace}</Td>
           <Td>
-            <Badge variant={progressVariant(f.progress)}>{f.progress}</Badge>
+            <Badge>{f.namespace}</Badge>
+          </Td>
+          <Td>{f.type_ || '-'}</Td>
+          <Td title={renderLimitMap(f.min).title}>{renderLimitMap(f.min).display}</Td>
+          <Td title={renderLimitMap(f.max).title}>{renderLimitMap(f.max).display}</Td>
+          <Td title={renderLimitMap(f.default).title}>{renderLimitMap(f.default).display}</Td>
+          <Td title={renderLimitMap(f.defaultRequest).title}>
+            {renderLimitMap(f.defaultRequest).display}
           </Td>
           <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>

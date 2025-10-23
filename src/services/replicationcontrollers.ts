@@ -21,7 +21,7 @@ export async function listReplicationControllers({
   name: string;
   namespaces?: string[];
 }): Promise<ReplicationControllerItem[]> {
-  return await invoke<ReplicationControllerItem[]>('list_replicationcontrollers', {
+  return await invoke<ReplicationControllerItem[]>('list_replication_controllers', {
     name,
     namespaces,
   });
@@ -36,7 +36,7 @@ export async function watchReplicationControllers({
   namespaces?: string[];
   onEvent?: EventHandler<ReplicationControllerEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_replicationcontrollers', { name, namespaces });
+  const eventName = await invoke<string>('watch_replication_controllers', { name, namespaces });
 
   const unlisten = await listen<ReplicationControllerEvent>(eventName, (evt) => {
     try {

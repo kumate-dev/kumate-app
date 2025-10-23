@@ -1,74 +1,61 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import {
-  listHorizontalPodAutoscalers,
-  watchHorizontalPodAutoscalers,
-  HorizontalPodAutoscalerItem,
-} from '@/services/horizontalPodAutoscalers';
+import { listSecrets, watchSecrets, SecretItem } from '@/services/secrets';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { K8sContext } from '@/services/contexts';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { Badge } from '../ui/badge';
 import { BadgeVariant } from '@/types/variant';
+import { useFilteredItems } from '@/hooks/useFilteredItems';
 
-interface PaneK8sHorizontalPodAutoscalersProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneK8sHorizontalPodAutoscalers({
-  context,
-}: PaneK8sHorizontalPodAutoscalersProps) {
+export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<HorizontalPodAutoscalerItem>(
-    listHorizontalPodAutoscalers,
-    watchHorizontalPodAutoscalers,
+  const { items, loading, error } = useK8sResources<SecretItem>(
+    listSecrets,
+    watchSecrets,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof HorizontalPodAutoscalerItem>('name');
+  const [sortBy, setSortBy] = useState<keyof SecretItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['name', 'namespace', 'target_ref'],
+    ['name', 'namespace', 'type_'],
     sortBy,
     sortOrder
   );
 
-  const statusVariant = (status: string): BadgeVariant => {
-    switch (status) {
-      case 'Active':
-      case 'AbleToScale':
+  const typeVariant = (type_: string): BadgeVariant => {
+    switch (type_) {
+      case 'Opaque':
+        return 'secondary';
+      case 'kubernetes.io/service-account-token':
+        return 'warning';
+      case 'kubernetes.io/dockerconfigjson':
         return 'success';
-      case 'Error':
-      case 'Failed':
+      case 'kubernetes.io/tls':
         return 'error';
-      case 'Unknown':
       default:
         return 'default';
     }
   };
 
-  const columns: ColumnDef<keyof HorizontalPodAutoscalerItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof SecretItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
-    { label: 'Target', key: 'target_ref' },
-    { label: 'Min', key: 'min_replicas' },
-    { label: 'Max', key: 'max_replicas' },
-    { label: 'Current', key: 'current_replicas' },
-    { label: 'Desired', key: 'desired_replicas' },
+    { label: 'Type', key: 'type_' },
+    { label: 'Data Keys', key: 'data_keys' },
     { label: 'Age', key: 'creation_timestamp' },
   ];
 
@@ -96,19 +83,23 @@ export default function PaneK8sHorizontalPodAutoscalers({
       tableHeader={tableHeader}
       renderRow={(f) => (
         <Tr key={`${f.namespace}/${f.name}`}>
-          <Td className="max-w-truncate" title={f.name}>
-            <span className="block truncate">{f.name}</span>
+          <Td className="max-w-truncate">
+            <span className="block truncate" title={f.name}>
+              {f.name}
+            </span>
           </Td>
-          <Td>{f.namespace}</Td>
-          <Td>{f.target_ref}</Td>
-          <Td>{f.min_replicas ?? '-'}</Td>
-          <Td>{f.max_replicas}</Td>
-          <Td>{f.current_replicas ?? '-'}</Td>
-          <Td>{f.desired_replicas ?? '-'}</Td>
-          <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>
-            <Badge variant={statusVariant(f.status)}>{f.status}</Badge>
+            <Badge>{f.namespace}</Badge>
           </Td>
+          <Td>
+            <Badge variant={typeVariant(f.type_)}>{f.type_}</Badge>
+          </Td>
+          <Td className="max-w-truncate">
+            <span className="block truncate" title={f.data_keys.join(', ')}>
+              {f.data_keys.join(', ')}
+            </span>
+          </Td>
+          <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>
           </Td>

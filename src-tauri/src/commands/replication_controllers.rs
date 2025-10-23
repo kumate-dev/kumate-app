@@ -9,7 +9,7 @@ use anyhow::Result;
 use tauri::AppHandle;
 
 #[tauri::command]
-pub async fn list_replicationcontrollers(
+pub async fn list_replication_controllers(
     name: String,
     namespaces: Option<Vec<String>>,
 ) -> Result<Vec<ReplicationControllerItem>, String> {
@@ -17,7 +17,7 @@ pub async fn list_replicationcontrollers(
 }
 
 #[tauri::command]
-pub async fn watch_replicationcontrollers(
+pub async fn watch_replication_controllers(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -26,7 +26,7 @@ pub async fn watch_replicationcontrollers(
     watch(
         app_handle,
         name,
-        "replicationcontrollers".to_string(),
+        "replication_controllers".to_string(),
         namespaces,
         state,
         Arc::new(K8sReplicationControllers::watch),

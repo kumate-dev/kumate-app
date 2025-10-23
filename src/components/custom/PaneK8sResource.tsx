@@ -4,6 +4,11 @@ import { PaneSearch } from './PaneSearch';
 import { Table, Tbody } from '@/components/ui/table';
 import { ErrorMessage } from './ErrorMessage';
 import React from 'react';
+import { K8sContext } from '@/services/contexts';
+
+export interface PaneK8sResourceContextProps {
+  context?: K8sContext | null;
+}
 
 interface PaneK8sResourceProps<T> {
   items: T[];

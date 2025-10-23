@@ -21,7 +21,7 @@ export async function listStatefulSets({
   name: string;
   namespaces?: string[];
 }): Promise<StatefulSetItem[]> {
-  return await invoke<StatefulSetItem[]>('list_statefulsets', { name, namespaces });
+  return await invoke<StatefulSetItem[]>('list_stateful_sets', { name, namespaces });
 }
 
 export async function watchStatefulSets({
@@ -33,7 +33,7 @@ export async function watchStatefulSets({
   namespaces?: string[];
   onEvent?: EventHandler<StatefulSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_statefulsets', { name, namespaces });
+  const eventName = await invoke<string>('watch_stateful_sets', { name, namespaces });
 
   const unlisten = await listen<StatefulSetEvent>(eventName, (evt) => {
     try {

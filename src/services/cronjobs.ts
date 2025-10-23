@@ -23,7 +23,7 @@ export async function listCronJobs({
   name: string;
   namespaces?: string[];
 }): Promise<CronJobItem[]> {
-  return await invoke<CronJobItem[]>('list_cronjobs', { name, namespaces });
+  return await invoke<CronJobItem[]>('list_cron_jobs', { name, namespaces });
 }
 
 export async function watchCronJobs({
@@ -35,7 +35,7 @@ export async function watchCronJobs({
   namespaces?: string[];
   onEvent?: EventHandler<CronJobEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_cronjobs', { name, namespaces });
+  const eventName = await invoke<string>('watch_cron_jobs', { name, namespaces });
 
   const unlisten = await listen<CronJobEvent>(eventName, (evt) => {
     try {

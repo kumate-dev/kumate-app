@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[tauri::command]
-pub async fn list_daemonsets(
+pub async fn list_daemon_sets(
     name: String,
     namespaces: Option<Vec<String>>,
 ) -> Result<Vec<DaemonSetItem>, String> {
@@ -18,7 +18,7 @@ pub async fn list_daemonsets(
 }
 
 #[tauri::command]
-pub async fn watch_daemonsets(
+pub async fn watch_daemon_sets(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -27,7 +27,7 @@ pub async fn watch_daemonsets(
     watch(
         app_handle,
         name,
-        "daemonsets".to_string(),
+        "daemon_sets".to_string(),
         namespaces,
         state,
         Arc::new(K8sDaemonSets::watch),

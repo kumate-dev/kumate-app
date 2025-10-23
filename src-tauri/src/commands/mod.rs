@@ -9,6 +9,7 @@ pub mod jobs;
 pub mod limit_ranges;
 pub mod namespaces;
 pub mod nodes;
+pub mod pod_disruption_budgets;
 pub mod pods;
 pub mod replica_sets;
 pub mod replication_controllers;

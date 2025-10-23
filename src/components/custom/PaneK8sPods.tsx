@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
@@ -9,15 +9,10 @@ import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
 import { AlertTriangle } from 'lucide-react';
-import { K8sContext } from '@/services/contexts';
 import { BadgeVariant } from '@/types/variant';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 
-interface PanePodsProps {
-  context?: K8sContext | null;
-}
-
-export default function PanePods({ context }: PanePodsProps) {
+export default function PanePods({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
@@ -143,7 +138,9 @@ export default function PanePods({ context }: PanePodsProps) {
           <Td className="text-center">
             {hasPodWarning(f) && <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />}
           </Td>
-          <Td>{f.namespace}</Td>
+          <Td>
+            <Badge>{f.namespace}</Badge>
+          </Td>
           <Td>
             <div className="flex items-center gap-1">
               {f.container_states?.length

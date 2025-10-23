@@ -1,35 +1,30 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listCronJobs, watchCronJobs, CronJobItem } from '@/services/cronJobs';
+import { listJobs, watchJobs, JobItem } from '@/services/jobs';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { K8sContext } from '@/services/contexts';
 import { BadgeVariant } from '@/types/variant';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 
-interface PaneCronJobProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneCronJob({ context }: PaneCronJobProps) {
+export default function PaneK8sJobs({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<CronJobItem>(
-    listCronJobs,
-    watchCronJobs,
+  const { items, loading, error } = useK8sResources<JobItem>(
+    listJobs,
+    watchJobs,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof CronJobItem>('name');
+  const [sortBy, setSortBy] = useState<keyof JobItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(
@@ -41,26 +36,26 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
     sortOrder
   );
 
-  const suspendVariant = (suspend: boolean | string): BadgeVariant => {
-    switch (suspend) {
-      case true:
-      case 'true':
-        return 'warning';
-      case false:
-      case 'false':
-        return 'success';
-      default:
-        return 'default';
+  const progressVariant = (progress: string | number): BadgeVariant => {
+    try {
+      const [succ, comp] = String(progress)
+        .split('/')
+        .map((x) => parseInt(x, 10));
+      if (!isNaN(succ) && !isNaN(comp) && comp > 0) {
+        return succ >= comp ? 'success' : 'warning';
+      }
+      return 'default';
+    } catch {
+      return 'default';
     }
   };
 
-  const columns: ColumnDef<keyof CronJobItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof JobItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
-    { label: 'Schedule', key: 'schedule' },
-    { label: 'Suspend', key: 'suspend' },
-    { label: 'Last Schedule', key: 'last_schedule' },
+    { label: 'Progress', key: 'progress' },
     { label: 'Age', key: 'creation_timestamp' },
+    { label: '', key: 'empty', sortable: false },
   ];
 
   const tableHeader = (
@@ -92,12 +87,12 @@ export default function PaneCronJob({ context }: PaneCronJobProps) {
               {f.name}
             </span>
           </Td>
-          <Td>{f.namespace}</Td>
-          <Td>{f.schedule || '-'}</Td>
           <Td>
-            <Badge variant={suspendVariant(f.suspend)}>{String(f.suspend)}</Badge>
+            <Badge>{f.namespace}</Badge>
           </Td>
-          <AgeCell timestamp={f.last_schedule || ''} />
+          <Td>
+            <Badge variant={progressVariant(f.progress)}>{f.progress}</Badge>
+          </Td>
           <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>

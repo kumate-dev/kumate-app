@@ -21,7 +21,7 @@ export async function listReplicaSets({
   name: string;
   namespaces?: string[];
 }): Promise<ReplicaSetItem[]> {
-  return await invoke<ReplicaSetItem[]>('list_replicasets', { name, namespaces });
+  return await invoke<ReplicaSetItem[]>('list_replica_sets', { name, namespaces });
 }
 
 export async function watchReplicaSets({
@@ -33,7 +33,7 @@ export async function watchReplicaSets({
   namespaces?: string[];
   onEvent?: EventHandler<ReplicaSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_replicasets', { name, namespaces });
+  const eventName = await invoke<string>('watch_replica_sets', { name, namespaces });
 
   const unlisten = await listen<ReplicaSetEvent>(eventName, (evt) => {
     try {

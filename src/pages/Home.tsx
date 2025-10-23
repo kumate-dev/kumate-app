@@ -1,25 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sidebar } from '@/layouts/Sidebar';
 import PaneOverview from '@/components/custom/PaneOverview';
-import PaneK8sPod from '@/components/custom/PaneK8sPod';
-import PaneK8sNode from '@/components/custom/PaneK8sNode';
-import PaneK8sNamespace from '@/components/custom/PaneK8sNamespace';
-import PaneK8sDeployment from '@/components/custom/PaneK8sDeployment';
-import PaneK8sDaemonSet from '@/components/custom/PaneK8sDaemonSet';
-import PaneK8sStatefulSet from '@/components/custom/PaneK8sStatefulSet';
-import PaneK8sReplicaSet from '@/components/custom/PaneK8sReplicaSet';
-import PaneK8sReplicationController from '@/components/custom/PaneK8sReplicationController';
-import PaneK8sJob from '@/components/custom/PaneK8sJob';
-import PaneK8sCronJob from '@/components/custom/PaneK8sCronJob';
+import PaneK8sPod from '@/components/custom/PaneK8sPods';
+import PaneK8sNode from '@/components/custom/PaneK8sNodes';
+import PaneK8sNamespace from '@/components/custom/PaneK8sNamespaces';
+import PaneK8sDeployment from '@/components/custom/PaneK8sDeployments';
+import PaneK8sDaemonSet from '@/components/custom/PaneK8sDaemonSets';
+import PaneK8sStatefulSet from '@/components/custom/PaneK8sStatefulSets';
+import PaneK8sReplicaSet from '@/components/custom/PaneK8sReplicaSets';
+import PaneK8sReplicationController from '@/components/custom/PaneK8sReplicationControllers';
+import PaneK8sJob from '@/components/custom/PaneK8sJobs';
+import PaneK8sCronJob from '@/components/custom/PaneK8sCronJobs';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/services/contexts';
 import { ALL_NAMESPACES } from '@/constants/k8s';
-import PaneK8sConfigMap from '@/components/custom/PaneK8sConfigMap';
-import PaneK8sSecret from '@/components/custom/PaneK8sSecret';
-import PaneK8sResourceQuota from '@/components/custom/PaneK8sResourceQuota';
-import PaneK8sLimitRange from '@/components/custom/PaneLimitRange';
-import PaneK8sHorizontalPodAutoscaler from '@/components/custom/PaneK8sHorizontalPodAutoscaler';
+import PaneK8sConfigMap from '@/components/custom/PaneK8sConfigMaps';
+import PaneK8sSecret from '@/components/custom/PaneK8sSecrets';
+import PaneK8sResourceQuota from '@/components/custom/PaneK8sResourceQuotas';
+import PaneK8sLimitRanges from '@/components/custom/PaneK8sLimitRanges';
+import PaneK8sHorizontalPodAutoscalers from '@/components/custom/PaneK8sHorizontalPodAutoscalers';
+import PaneK8sPodDisruptionBudgets from '@/components/custom/PaneK8sPodDisruptionBudgets';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -107,52 +108,56 @@ export default function Home() {
           {page === 'nodes' && <PaneK8sNode context={selected} />}
           {page === 'applications' && <Placeholder title="Applications" />}
 
-          {page === 'workloads-overview' && <Placeholder title="Workloads Overview" />}
+          {page === 'workloads_overview' && <Placeholder title="Workloads Overview" />}
           {page === 'deployments' && <PaneK8sDeployment context={selected} />}
-          {page === 'daemonsets' && <PaneK8sDaemonSet context={selected} />}
-          {page === 'statefulsets' && <PaneK8sStatefulSet context={selected} />}
-          {page === 'replicasets' && <PaneK8sReplicaSet context={selected} />}
-          {page === 'replicationcontrollers' && <PaneK8sReplicationController context={selected} />}
+          {page === 'daemon_sets' && <PaneK8sDaemonSet context={selected} />}
+          {page === 'stateful_sets' && <PaneK8sStatefulSet context={selected} />}
+          {page === 'replica_sets' && <PaneK8sReplicaSet context={selected} />}
+          {page === 'replication_controllers' && (
+            <PaneK8sReplicationController context={selected} />
+          )}
           {page === 'jobs' && <PaneK8sJob context={selected} />}
-          {page === 'cronjobs' && <PaneK8sCronJob context={selected} />}
+          {page === 'cron_jobs' && <PaneK8sCronJob context={selected} />}
           {page === 'pods' && <PaneK8sPod context={selected} />}
 
-          {page === 'configmaps' && <PaneK8sConfigMap context={selected} />}
+          {page === 'config_maps' && <PaneK8sConfigMap context={selected} />}
           {page === 'secrets' && <PaneK8sSecret context={selected} />}
-          {page === 'resourcequotas' && <PaneK8sResourceQuota context={selected} />}
-          {page === 'limitranges' && <PaneK8sLimitRange context={selected} />}
-          {page === 'hpas' && <PaneK8sHorizontalPodAutoscaler context={selected} />}
-          {page === 'pdbs' && <Placeholder title="Pod Disruption Budgets" />}
-          {page === 'priorityclasses' && <Placeholder title="Priority Classes" />}
-          {page === 'runtimeclasses' && <Placeholder title="Runtime Classes" />}
+          {page === 'resource_quotas' && <PaneK8sResourceQuota context={selected} />}
+          {page === 'limit_ranges' && <PaneK8sLimitRanges context={selected} />}
+          {page === 'horizontal_pod_autoscalers' && (
+            <PaneK8sHorizontalPodAutoscalers context={selected} />
+          )}
+          {page === 'pod_disruption_budgets' && <PaneK8sPodDisruptionBudgets context={selected} />}
+          {page === 'priority_classes' && <Placeholder title="Priority Classes" />}
+          {page === 'runtime_classes' && <Placeholder title="Runtime Classes" />}
           {page === 'leases' && <Placeholder title="Leases" />}
-          {page === 'mutatingwebhooks' && <Placeholder title="Mutating Webhook Configurations" />}
-          {page === 'validatingwebhooks' && (
+          {page === 'mutating_webhooks' && <Placeholder title="Mutating Webhook Configurations" />}
+          {page === 'validating_webhooks' && (
             <Placeholder title="Validating Webhook Configurations" />
           )}
 
           {page === 'services' && <Placeholder title="Services" />}
           {page === 'endpoints' && <Placeholder title="Endpoints" />}
           {page === 'ingresses' && <Placeholder title="Ingresses" />}
-          {page === 'ingressclasses' && <Placeholder title="Ingress Classes" />}
-          {page === 'networkpolicies' && <Placeholder title="Network Policies" />}
-          {page === 'portforwarding' && <Placeholder title="Port Forwarding" />}
+          {page === 'ingress_classes' && <Placeholder title="Ingress Classes" />}
+          {page === 'network_policies' && <Placeholder title="Network Policies" />}
+          {page === 'port_forwarding' && <Placeholder title="Port Forwarding" />}
 
-          {page === 'persistentvolumeclaims' && <Placeholder title="Persistent Volume Claims" />}
-          {page === 'persistentvolumes' && <Placeholder title="Persistent Volumes" />}
-          {page === 'storageclasses' && <Placeholder title="Storage Classes" />}
+          {page === 'persistent_volume_claims' && <Placeholder title="Persistent Volume Claims" />}
+          {page === 'persistent_volumes' && <Placeholder title="Persistent Volumes" />}
+          {page === 'storage_classes' && <Placeholder title="Storage Classes" />}
 
           {page === 'namespaces' && <PaneK8sNamespace context={selected ?? undefined} />}
           {page === 'events' && <Placeholder title="Events" />}
 
-          {page === 'helm-charts' && <Placeholder title="Helm Charts" />}
-          {page === 'helm-releases' && <Placeholder title="Helm Releases" />}
+          {page === 'helm_charts' && <Placeholder title="Helm Charts" />}
+          {page === 'helm_releases' && <Placeholder title="Helm Releases" />}
 
-          {page === 'serviceaccounts' && <Placeholder title="Service Accounts" />}
-          {page === 'clusterroles' && <Placeholder title="Cluster Roles" />}
+          {page === 'service_accounts' && <Placeholder title="Service Accounts" />}
+          {page === 'cluster_roles' && <Placeholder title="Cluster Roles" />}
           {page === 'roles' && <Placeholder title="Roles" />}
-          {page === 'clusterrolebindings' && <Placeholder title="Cluster Role Bindings" />}
-          {page === 'rolebindings' && <Placeholder title="Role Bindings" />}
+          {page === 'cluster_role_bindings' && <Placeholder title="Cluster Role Bindings" />}
+          {page === 'role_bindings' && <Placeholder title="Role Bindings" />}
         </div>
       </main>
     </div>

@@ -24,7 +24,7 @@ pub async fn watch_resource_quotas(
     watch(
         app_handle,
         name,
-        "resourcequotas".to_string(),
+        "resource_quotas".to_string(),
         namespaces,
         state,
         Arc::new(K8sResourceQuotas::watch),

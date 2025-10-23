@@ -1,41 +1,30 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import {
-  listReplicationControllers,
-  watchReplicationControllers,
-  ReplicationControllerItem,
-} from '@/services/replicationControllers';
-import { ColumnDef, TableHeader } from './TableHeader';
-import { Td, Tr } from '@/components/ui/table';
-import AgeCell from '@/components/custom/AgeCell';
-import { Badge } from '@/components/ui/badge';
-import { K8sContext } from '@/services/contexts';
-import { readyVariant } from '@/utils/k8s';
+import { listStatefulSets, StatefulSetItem, watchStatefulSets } from '@/services/statefulSets';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
+import AgeCell from '@/components/custom/AgeCell';
+import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
+import { Badge } from '@/components/ui/badge';
+import { PaneK8sResource, PaneK8sResourceContextProps } from '@/components/custom/PaneK8sResource';
+import { readyVariant } from '@/utils/k8s';
 
-interface PaneK8sReplicationControllerProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneK8sReplicationController({
-  context,
-}: PaneK8sReplicationControllerProps) {
+export default function PaneK8sStatefulSets({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
+
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<ReplicationControllerItem>(
-    listReplicationControllers,
-    watchReplicationControllers,
+  const { items, loading, error } = useK8sResources<StatefulSetItem>(
+    listStatefulSets,
+    watchStatefulSets,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof ReplicationControllerItem>('name');
+  const [sortBy, setSortBy] = useState<keyof StatefulSetItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(
@@ -47,7 +36,7 @@ export default function PaneK8sReplicationController({
     sortOrder
   );
 
-  const columns: ColumnDef<keyof ReplicationControllerItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof StatefulSetItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Ready', key: 'ready' },
@@ -77,21 +66,21 @@ export default function PaneK8sReplicationController({
       colSpan={columns.length}
       tableHeader={tableHeader}
       renderRow={(f) => (
-        <Tr key={`${f.namespace}/${f.name}`}>
-          <Td className="max-w-truncate">
+        <tr key={`${f.namespace}/${f.name}`}>
+          <td className="max-w-truncate">
             <span className="block truncate" title={f.name}>
               {f.name}
             </span>
-          </Td>
-          <Td>{f.namespace}</Td>
-          <Td>
+          </td>
+          <td>{f.namespace}</td>
+          <td>
             <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
-          </Td>
+          </td>
           <AgeCell timestamp={f.creation_timestamp || ''} />
-          <Td>
+          <td>
             <button className="text-white/60 hover:text-white/80">⋮</button>
-          </Td>
-        </Tr>
+          </td>
+        </tr>
       )}
     />
   );

@@ -2,49 +2,40 @@ import { useState } from 'react';
 import { Td, Tr } from '@/components/ui/table';
 import { useK8sResources } from '@/hooks/useK8sResources';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { listNodes, NodeItem, watchNodes } from '@/services/nodes';
+import { listNamespaces, NamespaceItem, watchNamespaces } from '@/services/namespaces';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
-import { K8sContext } from '@/services/contexts';
-import { PaneK8sResource } from '@/components/custom/PaneK8sResource';
+import { ColumnDef, TableHeader } from './TableHeader';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 
-type SortKey = keyof NodeItem;
-
-export default function PaneK8sNode({ context }: { context?: K8sContext | null }) {
-  const { items, loading, error } = useK8sResources<NodeItem>(
-    listNodes as (params: { name: string }) => Promise<NodeItem[]>,
-    watchNodes,
+export default function PaneK8sNamespaces({ context }: PaneK8sResourceContextProps) {
+  const { items, loading, error } = useK8sResources<NamespaceItem>(
+    listNamespaces,
+    watchNamespaces,
     context
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<SortKey>('name');
+  const [sortBy, setSortBy] = useState<keyof NamespaceItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(items, [], q, ['name'], sortBy, sortOrder);
 
-  function conditionVariant(cond: string) {
-    switch (cond) {
-      case 'Ready':
+  function statusVariant(status: string) {
+    switch (status) {
+      case 'Active':
         return 'success';
-      case 'Unknown':
+      case 'Terminating':
         return 'warning';
       default:
-        return 'error';
+        return 'secondary';
     }
   }
 
-  const columns: ColumnDef<keyof NodeItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof NamespaceItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
-    { label: 'CPU', key: 'cpu' },
-    { label: 'Memory', key: 'memory' },
-    { label: 'Disk', key: 'disk' },
-    { label: 'Taint', key: 'taints' },
-    { label: 'Roles', key: 'roles' },
-    { label: 'Version', key: 'version' },
+    { label: 'Status', key: 'status' },
     { label: 'Age', key: 'creation_timestamp' },
-    { label: 'Conditions', key: 'condition' },
   ];
 
   const tableHeader = (
@@ -74,18 +65,10 @@ export default function PaneK8sNode({ context }: { context?: K8sContext | null }
               {f.name}
             </span>
           </Td>
-          <Td>{f.cpu || '—'}</Td>
-          <Td>{f.memory || '—'}</Td>
-          <Td>{f.disk || '—'}</Td>
-          <Td>{f.taints || ''}</Td>
-          <Td>{f.roles || ''}</Td>
-          <Td>{f.version || ''}</Td>
-          <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>
-            <Badge variant={conditionVariant(f.condition || 'Unknown')}>
-              {f.condition || 'Unknown'}
-            </Badge>
+            <Badge variant={statusVariant(f.status || 'Unknown')}>{f.status || 'Unknown'}</Badge>
           </Td>
+          <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>
           </Td>

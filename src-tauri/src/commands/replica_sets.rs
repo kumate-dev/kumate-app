@@ -9,7 +9,7 @@ use anyhow::Result;
 use tauri::AppHandle;
 
 #[tauri::command]
-pub async fn list_replicasets(
+pub async fn list_replica_sets(
     name: String,
     namespaces: Option<Vec<String>>,
 ) -> Result<Vec<ReplicaSetItem>, String> {
@@ -17,7 +17,7 @@ pub async fn list_replicasets(
 }
 
 #[tauri::command]
-pub async fn watch_replicasets(
+pub async fn watch_replica_sets(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -26,7 +26,7 @@ pub async fn watch_replicasets(
     watch(
         app_handle,
         name,
-        "replicasets".to_string(),
+        "replica_sets".to_string(),
         namespaces,
         state,
         Arc::new(K8sReplicaSets::watch),

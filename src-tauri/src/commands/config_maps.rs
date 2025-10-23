@@ -9,7 +9,7 @@ use anyhow::Result;
 use tauri::AppHandle;
 
 #[tauri::command]
-pub async fn list_configmaps(
+pub async fn list_config_maps(
     name: String,
     namespaces: Option<Vec<String>>,
 ) -> Result<Vec<ConfigMapItem>, String> {
@@ -17,7 +17,7 @@ pub async fn list_configmaps(
 }
 
 #[tauri::command]
-pub async fn watch_configmaps(
+pub async fn watch_config_maps(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -26,7 +26,7 @@ pub async fn watch_configmaps(
     watch(
         app_handle,
         name,
-        "configmaps".to_string(),
+        "config_maps".to_string(),
         namespaces,
         state,
         Arc::new(K8sConfigMaps::watch),

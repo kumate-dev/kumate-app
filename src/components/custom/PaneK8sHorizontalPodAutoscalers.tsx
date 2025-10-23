@@ -1,60 +1,67 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listLimitRanges, watchLimitRanges, LimitRangeItem } from '@/services/limitRanges';
+import {
+  listHorizontalPodAutoscalers,
+  watchHorizontalPodAutoscalers,
+  HorizontalPodAutoscalerItem,
+} from '@/services/horizontalPodAutoscalers';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';
-import { K8sContext } from '@/services/contexts';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { Badge } from '../ui/badge';
+import { BadgeVariant } from '@/types/variant';
 
-function renderLimitMap(map?: Record<string, string>): { display: string; title: string } {
-  if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
-  const text = Object.entries(map)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join(', ');
-  return { display: text, title: text };
-}
-
-interface PaneLimitRangeProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneK8sLimitRange({ context }: PaneLimitRangeProps) {
+export default function PaneK8sHorizontalPodAutoscalers({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<LimitRangeItem>(
-    listLimitRanges,
-    watchLimitRanges,
+  const { items, loading, error } = useK8sResources<HorizontalPodAutoscalerItem>(
+    listHorizontalPodAutoscalers,
+    watchHorizontalPodAutoscalers,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof LimitRangeItem>('name');
+  const [sortBy, setSortBy] = useState<keyof HorizontalPodAutoscalerItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['name', 'namespace'],
+    ['name', 'namespace', 'target_ref'],
     sortBy,
     sortOrder
   );
 
-  const columns: ColumnDef<keyof LimitRangeItem | 'empty'>[] = [
+  const statusVariant = (status: string): BadgeVariant => {
+    switch (status) {
+      case 'Active':
+      case 'AbleToScale':
+        return 'success';
+      case 'Error':
+      case 'Failed':
+        return 'error';
+      case 'Unknown':
+      default:
+        return 'default';
+    }
+  };
+
+  const columns: ColumnDef<keyof HorizontalPodAutoscalerItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
-    { label: 'Type', key: 'type_' },
-    { label: 'Min', key: 'min' },
-    { label: 'Max', key: 'max' },
-    { label: 'Default', key: 'default' },
-    { label: 'Default Request', key: 'defaultRequest' },
+    { label: 'Target', key: 'target_ref' },
+    { label: 'Min', key: 'min_replicas' },
+    { label: 'Max', key: 'max_replicas' },
+    { label: 'Current', key: 'current_replicas' },
+    { label: 'Desired', key: 'desired_replicas' },
     { label: 'Age', key: 'creation_timestamp' },
   ];
 
@@ -83,17 +90,20 @@ export default function PaneK8sLimitRange({ context }: PaneLimitRangeProps) {
       renderRow={(f) => (
         <Tr key={`${f.namespace}/${f.name}`}>
           <Td className="max-w-truncate" title={f.name}>
-            {f.name}
+            <span className="block truncate">{f.name}</span>
           </Td>
-          <Td>{f.namespace}</Td>
-          <Td>{f.type_ || '-'}</Td>
-          <Td title={renderLimitMap(f.min).title}>{renderLimitMap(f.min).display}</Td>
-          <Td title={renderLimitMap(f.max).title}>{renderLimitMap(f.max).display}</Td>
-          <Td title={renderLimitMap(f.default).title}>{renderLimitMap(f.default).display}</Td>
-          <Td title={renderLimitMap(f.defaultRequest).title}>
-            {renderLimitMap(f.defaultRequest).display}
+          <Td>
+            <Badge>{f.namespace}</Badge>
           </Td>
+          <Td>{f.target_ref}</Td>
+          <Td>{f.min_replicas ?? '-'}</Td>
+          <Td>{f.max_replicas}</Td>
+          <Td>{f.current_replicas ?? '-'}</Td>
+          <Td>{f.desired_replicas ?? '-'}</Td>
           <AgeCell timestamp={f.creation_timestamp || ''} />
+          <Td>
+            <Badge variant={statusVariant(f.status)}>{f.status}</Badge>
+          </Td>
           <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>
           </Td>

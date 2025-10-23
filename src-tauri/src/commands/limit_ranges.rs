@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tauri::AppHandle;
 
 #[tauri::command]
-pub async fn list_limitranges(
+pub async fn list_limit_ranges(
     name: String,
     namespaces: Option<Vec<String>>,
 ) -> Result<Vec<LimitRangeItem>, String> {
@@ -16,7 +16,7 @@ pub async fn list_limitranges(
 }
 
 #[tauri::command]
-pub async fn watch_limitranges(
+pub async fn watch_limit_ranges(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -25,7 +25,7 @@ pub async fn watch_limitranges(
     watch(
         app_handle,
         name,
-        "limitranges".to_string(),
+        "limit_ranges".to_string(),
         namespaces,
         state,
         Arc::new(K8sLimitRanges::watch),

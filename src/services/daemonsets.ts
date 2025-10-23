@@ -21,7 +21,7 @@ export async function listDaemonSets({
   name: string;
   namespaces?: string[];
 }): Promise<DaemonSetItem[]> {
-  return await invoke<DaemonSetItem[]>('list_daemonsets', { name, namespaces });
+  return await invoke<DaemonSetItem[]>('list_daemon_sets', { name, namespaces });
 }
 
 export async function watchDaemonSets({
@@ -33,7 +33,7 @@ export async function watchDaemonSets({
   namespaces?: string[];
   onEvent?: EventHandler<DaemonSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_daemonsets', { name, namespaces });
+  const eventName = await invoke<string>('watch_daemon_sets', { name, namespaces });
 
   const unlisten = await listen<DaemonSetEvent>(eventName, (evt) => {
     try {

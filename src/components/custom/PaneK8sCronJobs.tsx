@@ -1,33 +1,30 @@
 import { useState } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listConfigMaps, watchConfigMaps, ConfigMapItem } from '@/services/configMaps';
+import { listCronJobs, watchCronJobs, CronJobItem } from '@/services/cronJobs';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
+import { BadgeVariant } from '@/types/variant';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { K8sContext } from '@/services/contexts';
 
-interface PaneConfigMapProps {
-  context?: K8sContext | null;
-}
-
-export default function PaneConfigMap({ context }: PaneConfigMapProps) {
+export default function PaneK8sCronJobs({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<ConfigMapItem>(
-    listConfigMaps,
-    watchConfigMaps,
+  const { items, loading, error } = useK8sResources<CronJobItem>(
+    listCronJobs,
+    watchCronJobs,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof ConfigMapItem>('name');
+  const [sortBy, setSortBy] = useState<keyof CronJobItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filtered = useFilteredItems(
@@ -39,10 +36,25 @@ export default function PaneConfigMap({ context }: PaneConfigMapProps) {
     sortOrder
   );
 
-  const columns: ColumnDef<keyof ConfigMapItem | 'empty'>[] = [
+  const suspendVariant = (suspend: boolean | string): BadgeVariant => {
+    switch (suspend) {
+      case true:
+      case 'true':
+        return 'warning';
+      case false:
+      case 'false':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
+  const columns: ColumnDef<keyof CronJobItem | 'empty'>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
-    { label: 'Keys', key: 'data_keys' },
+    { label: 'Schedule', key: 'schedule' },
+    { label: 'Suspend', key: 'suspend' },
+    { label: 'Last Schedule', key: 'last_schedule' },
     { label: 'Age', key: 'creation_timestamp' },
   ];
 
@@ -75,12 +87,14 @@ export default function PaneConfigMap({ context }: PaneConfigMapProps) {
               {f.name}
             </span>
           </Td>
-          <Td>{f.namespace}</Td>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.data_keys.join(', ')}>
-              {f.data_keys.join(', ')}
-            </span>
+          <Td>
+            <Badge>{f.namespace}</Badge>
           </Td>
+          <Td>{f.schedule || '-'}</Td>
+          <Td>
+            <Badge variant={suspendVariant(f.suspend)}>{String(f.suspend)}</Badge>
+          </Td>
+          <AgeCell timestamp={f.last_schedule || ''} />
           <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>

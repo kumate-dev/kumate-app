@@ -9,7 +9,7 @@ use anyhow::Result;
 use tauri::AppHandle;
 
 #[tauri::command]
-pub async fn list_cronjobs(
+pub async fn list_cron_jobs(
     name: String,
     namespaces: Option<Vec<String>>,
 ) -> Result<Vec<CronJobItem>, String> {
@@ -17,7 +17,7 @@ pub async fn list_cronjobs(
 }
 
 #[tauri::command]
-pub async fn watch_cronjobs(
+pub async fn watch_cron_jobs(
     app_handle: AppHandle,
     name: String,
     namespaces: Option<Vec<String>>,
@@ -26,7 +26,7 @@ pub async fn watch_cronjobs(
     watch(
         app_handle,
         name,
-        "cronjobs".to_string(),
+        "cron_jobs".to_string(),
         namespaces,
         state,
         Arc::new(K8sCronJobs::watch),
