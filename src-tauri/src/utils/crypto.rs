@@ -112,7 +112,7 @@ pub fn secrets_get(name: &str) -> Result<String> {
     Ok(s.trim().to_string())
 }
 
-pub fn secrets_delete(name: &str) -> Result<()> {
+pub fn _secrets_delete(name: &str) -> Result<()> {
     let p = secret_path(name);
     if p.exists() {
         fs::remove_file(p)?;

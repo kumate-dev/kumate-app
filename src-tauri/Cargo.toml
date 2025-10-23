@@ -26,7 +26,6 @@ anyhow = "1"
 thiserror = "1"
 rand = "0.8"
 dirs = "5"
-sqlx = { version = "0.8", features = ["sqlite", "macros", "runtime-tokio-rustls", "chrono"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs"] }
 base64 = "0.22"
 serde_yaml = "0.9"
@@ -36,3 +35,6 @@ rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs"] 
 futures-util = "0.3"
 ring = "0.17.14"
 tokio-stream = "0.1.17"
+sled = "0.34"
+bincode = { version = "2", features = ["serde"] }
+uuid = { version = "1", features = ["v4"] }

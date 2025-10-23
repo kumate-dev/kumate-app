@@ -1,9 +1,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use dirs::data_dir;
+use dirs::home_dir;
 use std::path::PathBuf;
 use tauri::Manager;
 
 mod commands;
+mod databases;
 mod k8s;
 mod state;
 mod types;
@@ -35,17 +38,14 @@ pub fn run() {
 
     tauri::Builder::default()
         .setup(|app| {
-            let app_handle = app.handle();
+            let app_handle: &tauri::AppHandle = app.handle();
 
-            // Use home dir to avoid permission issues in dev
-            let data_dir = dirs::home_dir()
-                .unwrap_or_else(|| PathBuf::from("."))
-                .join(".kumate");
-            // Ensure subdir for our app
-            let db_path = data_dir.join("kumate.db");
+            let data_dir: PathBuf = data_dir()
+                .unwrap_or_else(|| home_dir().unwrap_or_else(|| PathBuf::from(".")))
+                .join("Kumate");
 
             tauri::async_runtime::block_on(async move {
-                let st = state::AppState::init(db_path).await.expect("init db");
+                let st: state::AppState = state::AppState::init(data_dir).await.expect("init db");
                 app_handle.manage(st);
             });
 
@@ -54,11 +54,8 @@ pub fn run() {
         .manage(WatchManager::default())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            contexts::add_context,
-            contexts::list_contexts,
-            contexts::get_context_secrets,
-            contexts::delete_context,
             contexts::import_kube_contexts,
+            contexts::list_contexts,
             common::unwatch,
             nodes::list_nodes,
             nodes::watch_nodes,
