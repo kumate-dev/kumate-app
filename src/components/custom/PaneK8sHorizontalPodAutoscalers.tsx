@@ -55,7 +55,7 @@ export default function PaneK8sHorizontalPodAutoscalers({ context }: PaneK8sReso
     }
   };
 
-  const columns: ColumnDef<keyof HorizontalPodAutoscalerItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof HorizontalPodAutoscalerItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Target', key: 'target_ref' },
@@ -93,7 +93,7 @@ export default function PaneK8sHorizontalPodAutoscalers({ context }: PaneK8sReso
           <Td className="max-w-truncate" title={f.name}>
             <span className="block truncate">{f.name}</span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>{f.target_ref}</Td>
           <Td>{f.min_replicas ?? '-'}</Td>
           <Td>{f.max_replicas}</Td>

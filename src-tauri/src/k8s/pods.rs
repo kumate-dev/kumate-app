@@ -86,6 +86,20 @@ impl K8sPods {
         Ok(())
     }
 
+    pub async fn delete(
+        name: String,
+        namespace: Option<String>,
+        pod_names: Vec<String>,
+    ) -> Result<Vec<String>, String> {
+        K8sCommon::delete_resources::<Pod, _, _>(
+            &name,
+            namespace,
+            pod_names,
+            |client: kube::Client, ns: Option<String>| Box::pin(K8sClient::api::<Pod>(client, ns)),
+        )
+        .await
+    }
+
     fn emit_event(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, p: Pod) {
         K8sCommon::emit_event::<Pod, PodItem>(app_handle, event_name, kind, p);
     }

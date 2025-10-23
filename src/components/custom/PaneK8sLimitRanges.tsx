@@ -43,7 +43,7 @@ export default function PaneK8sLimitRanges({ context }: PaneK8sResourceContextPr
     return { display: text, title: text };
   }
 
-  const columns: ColumnDef<keyof LimitRangeItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof LimitRangeItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Type', key: 'type_' },
@@ -81,7 +81,7 @@ export default function PaneK8sLimitRanges({ context }: PaneK8sResourceContextPr
           <Td className="max-w-truncate" title={f.name}>
             {f.name}
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>{f.type_ || '-'}</Td>
           <Td title={renderLimitMap(f.min).title}>{renderLimitMap(f.min).display}</Td>
           <Td title={renderLimitMap(f.max).title}>{renderLimitMap(f.max).display}</Td>

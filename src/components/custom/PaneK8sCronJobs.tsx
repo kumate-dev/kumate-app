@@ -50,7 +50,7 @@ export default function PaneK8sCronJobs({ context }: PaneK8sResourceContextProps
     }
   };
 
-  const columns: ColumnDef<keyof CronJobItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof CronJobItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Schedule', key: 'schedule' },
@@ -88,7 +88,7 @@ export default function PaneK8sCronJobs({ context }: PaneK8sResourceContextProps
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>{f.schedule || '-'}</Td>
           <Td>
             <Badge variant={suspendVariant(f.suspend)}>{String(f.suspend)}</Badge>

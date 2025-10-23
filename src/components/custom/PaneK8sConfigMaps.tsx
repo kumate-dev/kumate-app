@@ -35,7 +35,7 @@ export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextPro
     sortOrder
   );
 
-  const columns: ColumnDef<keyof ConfigMapItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof ConfigMapItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Keys', key: 'data_keys' },
@@ -71,7 +71,7 @@ export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextPro
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td className="max-w-truncate">
             <span className="block truncate" title={f.data_keys.join(', ')}>
               {f.data_keys.join(', ')}

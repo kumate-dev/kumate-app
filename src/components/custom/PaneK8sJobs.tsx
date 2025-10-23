@@ -51,12 +51,12 @@ export default function PaneK8sJobs({ context }: PaneK8sResourceContextProps) {
     }
   };
 
-  const columns: ColumnDef<keyof JobItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof JobItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Progress', key: 'progress' },
     { label: 'Age', key: 'creation_timestamp' },
-    { label: '', key: 'empty', sortable: false },
+    { label: '', key: '', sortable: false },
   ];
 
   const tableHeader = (
@@ -88,7 +88,7 @@ export default function PaneK8sJobs({ context }: PaneK8sResourceContextProps) {
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>
             <Badge variant={progressVariant(f.progress)}>{f.progress}</Badge>
           </Td>

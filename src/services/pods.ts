@@ -52,3 +52,15 @@ export async function watchPods({
 
   return { eventName, unlisten };
 }
+
+export async function deletePods({
+  name,
+  namespaces,
+  pod_names,
+}: {
+  name: string;
+  namespaces?: string[];
+  pod_names: string[];
+}): Promise<PodItem[]> {
+  return await invoke<PodItem[]>('delete_pods', { name, namespaces, pod_names });
+}

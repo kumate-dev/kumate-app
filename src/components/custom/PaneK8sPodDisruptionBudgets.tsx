@@ -54,7 +54,7 @@ export default function PaneK8sPodDisruptionBudgets({ context }: PaneK8sResource
     }
   };
 
-  const columns: ColumnDef<keyof PodDisruptionBudgetItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof PodDisruptionBudgetItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Min Available', key: 'min_available' },
@@ -95,7 +95,7 @@ export default function PaneK8sPodDisruptionBudgets({ context }: PaneK8sResource
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>{f.min_available || '-'}</Td>
           <Td>{f.max_unavailable || '-'}</Td>
           <Td>{f.current_healthy ?? '-'}</Td>

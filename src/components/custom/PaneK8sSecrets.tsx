@@ -52,7 +52,7 @@ export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps)
     }
   };
 
-  const columns: ColumnDef<keyof SecretItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof SecretItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Type', key: 'type_' },
@@ -89,7 +89,7 @@ export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps)
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>
             <Badge variant={typeVariant(f.type_)}>{f.type_}</Badge>
           </Td>

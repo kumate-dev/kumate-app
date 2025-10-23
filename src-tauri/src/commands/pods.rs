@@ -33,3 +33,21 @@ pub async fn watch_pods(
     )
     .await
 }
+
+#[tauri::command]
+pub async fn delete_pods(
+    name: String,
+    namespace: Option<String>,
+    pod_names: Vec<String>,
+) -> Result<Vec<PodItem>, String> {
+    let pods: Vec<PodItem> =
+        K8sPods::list(name.clone(), namespace.clone().map(|n| vec![n.clone()]))
+            .await?
+            .into_iter()
+            .filter(|p| pod_names.contains(&p.name))
+            .collect();
+
+    let _deleted_names: Vec<String> = K8sPods::delete(name.clone(), namespace, pod_names).await?;
+
+    Ok(pods)
+}

@@ -41,7 +41,7 @@ export default function PaneK8sReplicationControllers({ context }: PaneK8sResour
     sortOrder
   );
 
-  const columns: ColumnDef<keyof ReplicationControllerItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof ReplicationControllerItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Ready', key: 'ready' },
@@ -77,7 +77,7 @@ export default function PaneK8sReplicationControllers({ context }: PaneK8sResour
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>
             <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
           </Td>

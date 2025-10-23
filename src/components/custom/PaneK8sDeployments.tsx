@@ -55,13 +55,13 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
     }
   };
 
-  const columns: ColumnDef<keyof DeploymentItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof DeploymentItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Ready', key: 'ready' },
     { label: 'Age', key: 'creation_timestamp' },
     { label: 'Status', key: 'status' },
-    { label: '', key: 'empty', sortable: false },
+    { label: '', key: '', sortable: false },
   ];
 
   const tableHeader = (
@@ -93,7 +93,7 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>
             <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
           </Td>

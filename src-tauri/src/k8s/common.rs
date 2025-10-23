@@ -87,6 +87,48 @@ impl K8sCommon {
         Ok(resources.into_iter().map(map_fn).collect())
     }
 
+    pub async fn delete_resources<R, F, Fut>(
+        context_name: &str,
+        namespace: Option<String>,
+        names: Vec<String>,
+        api_fn: F,
+    ) -> Result<Vec<String>, String>
+    where
+        R: Resource + Clone + Send + Sync + 'static + DeserializeOwned + Debug,
+        F: Fn(Client, Option<String>) -> Fut + Send + Sync + Copy,
+        Fut: Future<Output = Api<R>> + Send,
+    {
+        let client: Client = K8sClient::for_context(context_name)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let futures = names.into_iter().map(|name| {
+            let client = client.clone();
+            let namespace = namespace.clone();
+            let api_fn = api_fn;
+            async move {
+                let api: Api<R> = api_fn(client, namespace).await;
+                let dp = kube::api::DeleteParams::default();
+                api.delete(&name, &dp)
+                    .await
+                    .map(|_| name.clone())
+                    .map_err(|e| e.to_string())
+            }
+        });
+
+        let results: Vec<Result<String, String>> = join_all(futures).await;
+
+        let mut deleted: Vec<String> = Vec::new();
+        for res in results {
+            match res {
+                Ok(name) => deleted.push(name),
+                Err(e) => return Err(e),
+            }
+        }
+
+        Ok(deleted)
+    }
+
     pub fn event_spawn_watch<R, F>(
         app_handle: AppHandle,
         event_name: String,

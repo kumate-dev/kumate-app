@@ -40,7 +40,7 @@ export default function PaneK8sDaemonSets({ context }: PaneK8sResourceContextPro
     sortOrder
   );
 
-  const columns: ColumnDef<keyof DaemonSetItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof DaemonSetItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Ready', key: 'ready' },
@@ -76,7 +76,7 @@ export default function PaneK8sDaemonSets({ context }: PaneK8sResourceContextPro
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>
             <Badge variant={readyVariant(f.ready) as BadgeVariant}>{f.ready}</Badge>
           </Td>

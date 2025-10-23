@@ -46,7 +46,7 @@ export default function PaneK8sResourceQuotas({ context }: PaneK8sResourceContex
     return { display: text, title: text };
   }
 
-  const columns: ColumnDef<keyof ResourceQuotaItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof ResourceQuotaItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Hard', key: 'hard' },
@@ -83,7 +83,7 @@ export default function PaneK8sResourceQuotas({ context }: PaneK8sResourceContex
               {f.name}
             </span>
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td className="max-w-truncate">
             <span className="block truncate" title={renderKeyValue(f.hard).title}>
               {renderKeyValue(f.hard).display}

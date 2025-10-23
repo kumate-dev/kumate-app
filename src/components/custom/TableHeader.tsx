@@ -13,7 +13,7 @@ export interface ColumnDef<SortKey extends string> {
 }
 
 interface TableHeaderProps<SortKey extends string> {
-  columns: ColumnDef<SortKey | 'empty'>[];
+  columns: ColumnDef<SortKey | ''>[];
   sortBy: SortKey;
   sortOrder: 'asc' | 'desc';
   setSortBy: React.Dispatch<React.SetStateAction<SortKey>>;
@@ -27,8 +27,8 @@ export const TableHeader = <SortKey extends string>({
   setSortBy,
   setSortOrder,
 }: TableHeaderProps<SortKey>) => {
-  const handleSort = (column: SortKey | 'empty', sortable?: boolean) => {
-    if (!sortable || column === 'empty') return;
+  const handleSort = (column: SortKey | '', sortable?: boolean) => {
+    if (!sortable || column === '') return;
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -47,7 +47,7 @@ export const TableHeader = <SortKey extends string>({
 
           return (
             <Th key={key} className={`${alignClass} ${width || ''} select-none`}>
-              {sortable && key !== 'empty' ? (
+              {sortable && key !== '' ? (
                 <button
                   className="group inline-flex items-center gap-1 font-medium"
                   onClick={() => handleSort(key, sortable)}

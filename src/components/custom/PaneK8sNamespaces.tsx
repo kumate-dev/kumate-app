@@ -32,7 +32,7 @@ export default function PaneK8sNamespaces({ context }: PaneK8sResourceContextPro
     }
   }
 
-  const columns: ColumnDef<keyof NamespaceItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof NamespaceItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'Status', key: 'status' },
     { label: 'Age', key: 'creation_timestamp' },

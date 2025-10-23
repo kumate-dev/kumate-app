@@ -3,12 +3,12 @@ import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource'
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useK8sResources } from '@/hooks/useK8sResources';
-import { listPods, watchPods, PodItem } from '@/services/pods';
+import { listPods, watchPods, PodItem, deletePods } from '@/services/pods';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, X } from 'lucide-react';
 import { BadgeVariant } from '@/types/variant';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
@@ -93,9 +93,21 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
     return p.container_states?.some((st) => badStates.includes(st)) ?? false;
   };
 
-  const columns: ColumnDef<keyof PodItem | 'empty'>[] = [
+  const handleDeletePod = async (pod: PodItem) => {
+    try {
+      await deletePods({
+        name: context?.name!,
+        namespaces: [pod.namespace],
+        pod_names: [pod.name],
+      });
+    } catch (err) {
+      console.error('Failed to delete pod', err);
+    }
+  };
+
+  const columns: ColumnDef<keyof PodItem | ''>[] = [
     { label: 'Name', key: 'name' },
-    { label: '', key: 'empty', sortable: false },
+    { label: '', key: '', sortable: false },
     { label: 'Namespace', key: 'namespace' },
     { label: 'Containers', key: 'containers' },
     { label: 'CPU', key: 'cpu' },
@@ -105,6 +117,7 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
     { label: 'QoS', key: 'qos' },
     { label: 'Age', key: 'creation_timestamp' },
     { label: 'Status', key: 'phase' },
+    { label: '', key: '', sortable: false },
   ];
 
   const tableHeader = (
@@ -139,7 +152,7 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
           <Td className="text-center">
             {hasPodWarning(f) && <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />}
           </Td>
-          <BadgeK8sNamespaces name={f.namespace}/>
+          <BadgeK8sNamespaces name={f.namespace} />
           <Td>
             <div className="flex items-center gap-1">
               {f.container_states?.length
@@ -164,7 +177,13 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
             <Badge variant={podStatusVariant(f.phase ?? '')}>{f.phase ?? ''}</Badge>
           </Td>
           <Td>
-            <button className="text-white/60 hover:text-white/80">⋮</button>
+            <button
+              className="text-red/60 hover:text-red-500"
+              onClick={() => handleDeletePod(f)}
+              title="Delete Pod"
+            >
+              <X className="inline-block h-4 w-4" />
+            </button>
           </Td>
         </Tr>
       )}

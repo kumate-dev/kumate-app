@@ -32,7 +32,7 @@ export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
     }
   }
 
-  const columns: ColumnDef<keyof NodeItem | 'empty'>[] = [
+  const columns: ColumnDef<keyof NodeItem | ''>[] = [
     { label: 'Name', key: 'name' },
     { label: 'CPU', key: 'cpu' },
     { label: 'Memory', key: 'memory' },
