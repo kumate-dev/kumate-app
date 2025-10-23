@@ -12,4 +12,3 @@ pub static APP_DATA_DIR: Lazy<PathBuf> = Lazy::new(|| {
 
 pub static APP_SECRETS_DIR: Lazy<PathBuf> = Lazy::new(|| APP_DATA_DIR.join("secrets"));
 pub static APP_KEY_PATH: Lazy<PathBuf> = Lazy::new(|| APP_DATA_DIR.join("kumate.key"));
-

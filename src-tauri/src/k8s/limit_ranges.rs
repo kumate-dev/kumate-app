@@ -129,7 +129,7 @@ impl K8sLimitRanges {
     ) -> Option<BTreeMap<String, String>> {
         map.as_ref().map(|m| {
             m.iter()
-                .map(|(k, v)| (k.clone(), v.0.clone())) // Quantity.0 là String
+                .map(|(k, v)| (k.clone(), v.0.clone()))
                 .collect::<BTreeMap<_, _>>()
         })
     }

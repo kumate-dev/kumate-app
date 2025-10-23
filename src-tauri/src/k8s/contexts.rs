@@ -86,10 +86,7 @@ impl K8sContexts {
         kc_key: &str,
         token_key: &str,
     ) -> Result<Option<(String, String)>, String> {
-        match (
-            crate::utils::crypto::secrets_get(kc_key),
-            crate::utils::crypto::secrets_get(token_key),
-        ) {
+        match (crypto.secrets_get(kc_key), crypto.secrets_get(token_key)) {
             (Ok(kc_b64), Ok(token_b64)) => {
                 let kc_bytes = STANDARD.decode(kc_b64).map_err(|e| e.to_string())?;
                 let token_bytes = STANDARD.decode(token_b64).map_err(|e| e.to_string())?;
@@ -201,11 +198,11 @@ impl K8sContexts {
     fn persist_secrets(crypto: &Crypto, kc_key: &str, token_key: &str, kc: &str, token: &str) {
         if let Ok(kc_enc) = crypto.encrypt(kc.as_bytes()) {
             let kc_b64 = STANDARD.encode(kc_enc);
-            let _ = crate::utils::crypto::secrets_set(kc_key, &kc_b64);
+            let _ = crypto.secrets_set(kc_key, &kc_b64);
         }
         if let Ok(token_enc) = crypto.encrypt(token.as_bytes()) {
             let token_b64 = STANDARD.encode(token_enc);
-            let _ = crate::utils::crypto::secrets_set(token_key, &token_b64);
+            let _ = crypto.secrets_set(token_key, &token_b64);
         }
     }
 
@@ -301,17 +298,11 @@ impl K8sContexts {
                 if let Some(crypto) = &crypto {
                     if let Ok(kc_enc) = crypto.encrypt(yaml.as_bytes()) {
                         let kc_b64 = STANDARD.encode(kc_enc);
-                        let _ = crate::utils::crypto::secrets_set(
-                            &format!("ctx:{}:kubeconfig", name),
-                            &kc_b64,
-                        );
+                        let _ = crypto.secrets_set(&format!("ctx:{}:kubeconfig", name), &kc_b64);
                     }
                     if let Ok(token_enc) = crypto.encrypt("".as_bytes()) {
                         let token_b64 = STANDARD.encode(token_enc);
-                        let _ = crate::utils::crypto::secrets_set(
-                            &format!("ctx:{}:token", name),
-                            &token_b64,
-                        );
+                        let _ = crypto.secrets_set(&format!("ctx:{}:token", name), &token_b64);
                     }
                 }
 

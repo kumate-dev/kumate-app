@@ -131,7 +131,7 @@ impl K8sDeployments {
     }
 
     fn deployment_status(status: &DeploymentStatus) -> Option<String> {
-        let conditions: &Vec<DeploymentCondition> = status.conditions.as_ref()?; // lấy Vec<DeploymentCondition>
+        let conditions: &Vec<DeploymentCondition> = status.conditions.as_ref()?;
 
         let available: Option<&DeploymentCondition> =
             conditions.iter().find(|c| c.type_ == "Available");

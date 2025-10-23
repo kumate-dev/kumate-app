@@ -86,7 +86,7 @@ impl K8sSecrets {
     fn to_item(secret: Secret) -> SecretItem {
         let keys: Vec<String> = secret
             .data
-            .as_ref() // <-- borrow thay vì move
+            .as_ref()
             .map(|m| m.keys().cloned().collect())
             .unwrap_or_default();
 
