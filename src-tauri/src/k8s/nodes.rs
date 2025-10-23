@@ -13,10 +13,9 @@ use tauri::Emitter;
 
 use crate::types::event::EventType;
 use crate::utils::bytes::Bytes;
-use crate::utils::k8s::to_creation_timestamp;
 use crate::{
     k8s::client::K8sClient,
-    utils::k8s::{event_spawn_watch, watch_stream},
+    k8s::common::K8sCommon,
 };
 
 #[derive(Serialize, Debug, Clone)]
@@ -55,10 +54,10 @@ impl K8sNodes {
         let client: Client = K8sClient::for_context(&name).await?;
         let api: Api<Node> = Api::all(client);
 
-        event_spawn_watch(
+        K8sCommon::event_spawn_watch(
             app_handle,
             event_name,
-            watch_stream(&api).await?,
+            K8sCommon::watch_stream(&api).await?,
             Self::emit,
         );
 
@@ -84,7 +83,7 @@ impl K8sNodes {
             taints: Self::extract_taints(n.spec.clone()),
             roles: Self::extract_roles(n.metadata.clone()),
             version: Self::extract_version(n.status.clone()),
-            creation_timestamp: to_creation_timestamp(n.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(n.metadata.clone()),
             condition: Self::extract_condition(n.status.clone()),
         }
     }

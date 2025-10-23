@@ -1,4 +1,5 @@
 pub mod client;
+pub mod common;
 pub mod config_maps;
 pub mod contexts;
 pub mod cron_jobs;

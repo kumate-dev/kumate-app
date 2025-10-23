@@ -5,10 +5,8 @@ use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
+use crate::k8s::common::K8sCommon;
 use crate::types::event::EventType;
-use crate::utils::k8s::{
-    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace, watch_stream,
-};
 
 use super::client::K8sClient;
 
@@ -34,7 +32,7 @@ impl K8sConfigMaps {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<ConfigMapItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_configmaps: Vec<ConfigMapItem> = join_all(
             target_namespaces
@@ -59,15 +57,15 @@ impl K8sConfigMaps {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<ConfigMap> = K8sClient::api::<ConfigMap>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(   
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -91,9 +89,9 @@ impl K8sConfigMaps {
 
         ConfigMapItem {
             name: cm.name_any(),
-            namespace: to_namespace(cm.namespace()),
+            namespace: K8sCommon::to_namespace(cm.namespace()),
             data_keys: keys,
-            creation_timestamp: to_creation_timestamp(cm.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(cm.metadata.clone()),
         }
     }
 

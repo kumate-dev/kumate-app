@@ -5,11 +5,8 @@ use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 use tauri::Emitter;
 
+use crate::k8s::common::K8sCommon;
 use crate::types::event::EventType;
-use crate::utils::k8s::{
-    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace,
-    to_replicas_ready, watch_stream,
-};
 
 use super::client::K8sClient;
 
@@ -35,7 +32,7 @@ impl K8sDaemonSets {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<DaemonSetItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_daemonsets: Vec<DaemonSetItem> = join_all(
             target_namespaces
@@ -60,15 +57,15 @@ impl K8sDaemonSets {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<DaemonSet> = K8sClient::api::<DaemonSet>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -89,9 +86,9 @@ impl K8sDaemonSets {
     fn to_item(d: DaemonSet) -> DaemonSetItem {
         DaemonSetItem {
             name: d.name_any(),
-            namespace: to_namespace(d.namespace()),
+            namespace: K8sCommon::to_namespace(d.namespace()),
             ready: Self::extract_ready(&d),
-            creation_timestamp: to_creation_timestamp(d.metadata),
+            creation_timestamp: K8sCommon::to_creation_timestamp(d.metadata),
         }
     }
 
@@ -106,7 +103,7 @@ impl K8sDaemonSets {
             .as_ref()
             .map(|s: &DaemonSetStatus| s.number_ready)
             .unwrap_or(0);
-        to_replicas_ready(desired, ready)
+        K8sCommon::to_replicas_ready(desired, ready)
     }
 
     fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, ds: DaemonSet) {

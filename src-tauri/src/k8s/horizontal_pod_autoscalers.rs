@@ -8,9 +8,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::types::event::EventType;
-use crate::utils::k8s::{
-    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace, watch_stream,
-};
+use crate::k8s::common::K8sCommon;
 
 use super::client::K8sClient;
 
@@ -41,7 +39,7 @@ impl K8sHorizontalPodAutoscalers {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<HorizontalPodAutoscalerItem>, String> {
         let client = K8sClient::for_context(&name).await?;
-        let target_namespaces = get_target_namespaces(namespaces);
+        let target_namespaces = K8sCommon::get_target_namespaces(namespaces);
 
         let all_hpas: Vec<HorizontalPodAutoscalerItem> = join_all(
             target_namespaces
@@ -66,15 +64,15 @@ impl K8sHorizontalPodAutoscalers {
         event_name: String,
     ) -> Result<(), String> {
         let client = K8sClient::for_context(&name).await?;
-        let target_namespaces = get_target_namespaces(namespaces);
+        let target_namespaces = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<HorizontalPodAutoscaler> =
                 K8sClient::api::<HorizontalPodAutoscaler>(client.clone(), ns).await;
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -100,7 +98,7 @@ impl K8sHorizontalPodAutoscalers {
 
         HorizontalPodAutoscalerItem {
             name: hpa.name_any(),
-            namespace: to_namespace(hpa.namespace()),
+            namespace: K8sCommon::to_namespace(hpa.namespace()),
             min_replicas: spec.and_then(|s| s.min_replicas),
             max_replicas: spec.map(|s| s.max_replicas).unwrap_or_default(),
             current_replicas: status.map(|st| st.current_replicas.unwrap_or_default()),
@@ -109,7 +107,7 @@ impl K8sHorizontalPodAutoscalers {
                 .and_then(|s| Some(s.scale_target_ref.name.clone()))
                 .unwrap_or_default(),
             status: Self::extract_status(status),
-            creation_timestamp: to_creation_timestamp(hpa.metadata),
+            creation_timestamp: K8sCommon::to_creation_timestamp(hpa.metadata),
         }
     }
 

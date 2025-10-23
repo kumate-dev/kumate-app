@@ -7,14 +7,13 @@ use serde::Serialize;
 use tauri::Emitter;
 
 use crate::{
-    k8s::client::K8sClient,
+    k8s::{client::K8sClient, common::K8sCommon},
     types::event::EventType,
-    utils::k8s::{event_spawn_watch, to_creation_timestamp, watch_stream},
 };
 
 #[derive(Serialize, Debug, Clone)]
 pub struct NamespaceItem {
-    pub name: String,
+    pub name: String,   
     pub status: Option<String>,
     pub creation_timestamp: Option<String>,
 }
@@ -42,10 +41,10 @@ impl K8sNamespaces {
         let client: Client = K8sClient::for_context(&name).await?;
         let api: Api<Namespace> = Api::all(client);
 
-        event_spawn_watch(
+        K8sCommon::event_spawn_watch(
             app_handle,
             event_name,
-            watch_stream(&api).await?,
+            K8sCommon::watch_stream(&api).await?,
             Self::emit,
         );
 
@@ -63,7 +62,7 @@ impl K8sNamespaces {
         NamespaceItem {
             name: n.metadata.clone().name.unwrap_or_default(),
             status: n.status.and_then(|s: NamespaceStatus| s.phase),
-            creation_timestamp: to_creation_timestamp(n.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(n.metadata.clone()),
         }
     }
 

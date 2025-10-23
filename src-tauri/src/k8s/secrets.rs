@@ -5,10 +5,8 @@ use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
+use crate::k8s::common::K8sCommon;
 use crate::types::event::EventType;
-use crate::utils::k8s::{
-    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace, watch_stream,
-};
 
 use super::client::K8sClient;
 
@@ -35,7 +33,7 @@ impl K8sSecrets {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<SecretItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_items: Vec<SecretItem> = join_all(
             target_namespaces
@@ -60,15 +58,15 @@ impl K8sSecrets {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<Secret> = K8sClient::api::<Secret>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -92,10 +90,10 @@ impl K8sSecrets {
 
         SecretItem {
             name: secret.name_any(),
-            namespace: to_namespace(secret.namespace()),
+            namespace: K8sCommon::to_namespace(secret.namespace()),
             type_: secret.type_.unwrap_or_default().to_string(),
             data_keys: keys,
-            creation_timestamp: to_creation_timestamp(secret.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(secret.metadata.clone()),
         }
     }
 

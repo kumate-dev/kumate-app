@@ -8,11 +8,9 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use super::client::K8sClient;
+use crate::k8s::common::K8sCommon;
 use crate::types::event::EventType;
 use crate::utils::converts::int_or_string_to_string;
-use crate::utils::k8s::{
-    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace, watch_stream,
-};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct PodDisruptionBudgetItem {
@@ -41,7 +39,7 @@ impl K8sPodDisruptionBudgets {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<PodDisruptionBudgetItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_pdbs: Vec<PodDisruptionBudgetItem> = join_all(
             target_namespaces
@@ -66,16 +64,16 @@ impl K8sPodDisruptionBudgets {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<PodDisruptionBudget> =
                 K8sClient::api::<PodDisruptionBudget>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -101,7 +99,7 @@ impl K8sPodDisruptionBudgets {
 
         PodDisruptionBudgetItem {
             name: pdb.name_any(),
-            namespace: to_namespace(pdb.namespace()),
+            namespace: K8sCommon::to_namespace(pdb.namespace()),
             min_available: spec
                 .as_ref()
                 .and_then(|s| int_or_string_to_string(&s.min_available)),
@@ -112,7 +110,7 @@ impl K8sPodDisruptionBudgets {
             desired_healthy: status.as_ref().map_or(0, |s| s.desired_healthy),
             disruptions_allowed: status.as_ref().map_or(0, |s| s.disruptions_allowed),
             status: Self::extract_status(status),
-            creation_timestamp: to_creation_timestamp(pdb.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(pdb.metadata.clone()),
         }
     }
 

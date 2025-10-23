@@ -10,10 +10,8 @@ use kube::{
 use serde::Serialize;
 use tauri::Emitter;
 
-use crate::utils::k8s::{to_creation_timestamp, to_namespace, to_replicas_ready};
 use crate::{
-    types::event::EventType,
-    utils::k8s::{event_spawn_watch, get_target_namespaces, watch_stream},
+    k8s::common::K8sCommon, types::event::EventType
 };
 
 use super::client::K8sClient;
@@ -40,7 +38,7 @@ impl K8sReplicationControllers {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<ReplicationControllerItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_replicationcontrollers: Vec<ReplicationControllerItem> = join_all(
             target_namespaces
@@ -65,16 +63,16 @@ impl K8sReplicationControllers {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<ReplicationController> =
                 K8sClient::api::<ReplicationController>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -99,9 +97,9 @@ impl K8sReplicationControllers {
     fn to_item(r: ReplicationController) -> ReplicationControllerItem {
         ReplicationControllerItem {
             name: r.name_any(),
-            namespace: to_namespace(r.namespace()),
+            namespace: K8sCommon::to_namespace(r.namespace()),
             ready: Self::extract_ready(&r),
-            creation_timestamp: to_creation_timestamp(r.metadata),
+            creation_timestamp: K8sCommon::to_creation_timestamp(r.metadata),
         }
     }
 
@@ -116,7 +114,7 @@ impl K8sReplicationControllers {
             .as_ref()
             .and_then(|s: &ReplicationControllerStatus| s.ready_replicas)
             .unwrap_or(0);
-        to_replicas_ready(replicas, ready)
+        K8sCommon::to_replicas_ready(replicas, ready)
     }
 
     fn emit(

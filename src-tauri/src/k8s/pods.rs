@@ -9,14 +9,7 @@ use tauri::Emitter;
 
 use super::client::K8sClient;
 use crate::{
-    types::event::EventType,
-    utils::{
-        bytes::Bytes,
-        k8s::{
-            event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace,
-            watch_stream,
-        },
-    },
+    k8s::common::K8sCommon, types::event::EventType, utils::bytes::Bytes
 };
 
 #[derive(Serialize, Debug, Clone)]
@@ -48,7 +41,7 @@ impl K8sPods {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<PodItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_pods: Vec<PodItem> = join_all(
             target_namespaces
@@ -73,20 +66,20 @@ impl K8sPods {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<Pod> = K8sClient::api::<Pod>(client.clone(), ns).await;
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
         Ok(())
     }
-
+    
     async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<Pod>, String> {
         let api: Api<Pod> = K8sClient::api::<Pod>(client, namespace).await;
         let lp: ListParams = ListParams::default();
@@ -100,9 +93,9 @@ impl K8sPods {
     pub fn to_item(p: Pod) -> PodItem {
         PodItem {
             name: p.name_any(),
-            namespace: to_namespace(p.namespace()),
+            namespace: K8sCommon::to_namespace(p.namespace()),
             phase: p.status.as_ref().and_then(|s: &PodStatus| s.phase.clone()),
-            creation_timestamp: to_creation_timestamp(p.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(p.metadata.clone()),
             containers: p
                 .spec
                 .as_ref()
@@ -293,7 +286,6 @@ impl K8sPods {
             let num: &str = &s[..s.len() - 1];
             num.parse::<f64>().ok().map(|u| u / 1000.0)
         } else {
-            // assume cores, convert to milli-cores
             s.parse::<f64>().ok().map(|cores| cores * 1000.0)
         }
     }

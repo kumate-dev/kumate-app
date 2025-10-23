@@ -6,10 +6,8 @@ use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
+use crate::k8s::common::K8sCommon;
 use crate::types::event::EventType;
-use crate::utils::k8s::{
-    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace, watch_stream,
-};
 
 use super::client::K8sClient;
 
@@ -37,7 +35,7 @@ impl K8sCronJobs {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<CronJobItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_cronjobs: Vec<CronJobItem> = join_all(
             target_namespaces
@@ -62,15 +60,15 @@ impl K8sCronJobs {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<CronJob> = K8sClient::api::<CronJob>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -103,11 +101,11 @@ impl K8sCronJobs {
             .map(|t: &Time| t.0.to_rfc3339());
         CronJobItem {
             name: cj.name_any(),
-            namespace: to_namespace(cj.namespace()),
+            namespace: K8sCommon::to_namespace(cj.namespace()),
             schedule: schedule,
             suspend: suspend,
             last_schedule: last,
-            creation_timestamp: to_creation_timestamp(cj.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(cj.metadata.clone()),
         }
     }
 

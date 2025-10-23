@@ -7,11 +7,7 @@ use kube::{
 use serde::Serialize;
 use tauri::Emitter;
 
-use crate::utils::k8s::{to_creation_timestamp, to_namespace};
-use crate::{
-    types::event::EventType,
-    utils::k8s::{event_spawn_watch, get_target_namespaces, watch_stream},
-};
+use crate::{k8s::common::K8sCommon, types::event::EventType};
 
 use super::client::K8sClient;
 
@@ -37,7 +33,7 @@ impl K8sJobs {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<JobItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_jobs: Vec<JobItem> = join_all(
             target_namespaces
@@ -62,15 +58,15 @@ impl K8sJobs {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<Job> = K8sClient::api::<Job>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -101,9 +97,9 @@ impl K8sJobs {
             .unwrap_or(0);
         JobItem {
             name: j.name_any(),
-            namespace: to_namespace(j.namespace()),
+            namespace: K8sCommon::to_namespace(j.namespace()),
             progress: format!("{}/{}", completions, desired),
-            creation_timestamp: to_creation_timestamp(j.metadata),
+            creation_timestamp: K8sCommon::to_creation_timestamp(j.metadata),
         }
     }
 

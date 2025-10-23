@@ -9,11 +9,8 @@ use kube::{
 use serde::Serialize;
 use tauri::Emitter;
 
-use crate::utils::k8s::{to_creation_timestamp, to_namespace, to_replicas_ready};
-use crate::{
-    types::event::EventType,
-    utils::k8s::{event_spawn_watch, get_target_namespaces, watch_stream},
-};
+use crate::k8s::common::K8sCommon;
+use crate::types::event::EventType;
 
 use super::client::K8sClient;
 
@@ -40,7 +37,7 @@ impl K8sDeployments {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<DeploymentItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_deployments: Vec<DeploymentItem> = join_all(
             target_namespaces
@@ -65,15 +62,15 @@ impl K8sDeployments {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<Deployment> = K8sClient::api::<Deployment>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -91,10 +88,10 @@ impl K8sDeployments {
     fn to_item(d: Deployment) -> DeploymentItem {
         DeploymentItem {
             name: d.name_any(),
-            namespace: to_namespace(d.namespace()),
+            namespace: K8sCommon::to_namespace(d.namespace()),
             ready: Self::extract_ready(&d),
             status: Self::extract_status(&d),
-            creation_timestamp: to_creation_timestamp(d.metadata),
+            creation_timestamp: K8sCommon::to_creation_timestamp(d.metadata),
         }
     }
 
@@ -109,7 +106,7 @@ impl K8sDeployments {
             .as_ref()
             .and_then(|s: &DeploymentStatus| s.ready_replicas)
             .unwrap_or(0);
-        to_replicas_ready(replicas, ready)
+        K8sCommon::to_replicas_ready(replicas, ready)
     }
 
     fn extract_status(d: &Deployment) -> Option<String> {

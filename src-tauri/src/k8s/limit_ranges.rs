@@ -8,10 +8,8 @@ use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
+use crate::k8s::common::K8sCommon;
 use crate::types::event::EventType;
-use crate::utils::k8s::{
-    event_spawn_watch, get_target_namespaces, to_creation_timestamp, to_namespace, watch_stream,
-};
 
 use super::client::K8sClient;
 
@@ -41,7 +39,7 @@ impl K8sLimitRanges {
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<LimitRangeItem>, String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         let all_items: Vec<LimitRangeItem> = join_all(
             target_namespaces
@@ -66,15 +64,15 @@ impl K8sLimitRanges {
         event_name: String,
     ) -> Result<(), String> {
         let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = get_target_namespaces(namespaces);
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<LimitRange> = K8sClient::api::<LimitRange>(client.clone(), ns).await;
 
-            event_spawn_watch(
+            K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
-                watch_stream(&api).await?,
+                K8sCommon::watch_stream(&api).await?,
                 Self::emit,
             );
         }
@@ -114,13 +112,13 @@ impl K8sLimitRanges {
 
         LimitRangeItem {
             name: lr.name_any(),
-            namespace: to_namespace(lr.namespace()),
+            namespace: K8sCommon::to_namespace(lr.namespace()),
             type_,
             min,
             max,
             default,
             default_request,
-            creation_timestamp: to_creation_timestamp(lr.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(lr.metadata.clone()),
         }
     }
 
