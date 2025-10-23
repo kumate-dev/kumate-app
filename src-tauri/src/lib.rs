@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use tauri::Manager;
 
 mod commands;
+mod constants;
 mod databases;
 mod k8s;
 mod state;

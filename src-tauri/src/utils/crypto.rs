@@ -5,15 +5,8 @@ use ring::aead::{self, Aad, LessSafeKey, Nonce, UnboundKey};
 use std::fs;
 use std::path::PathBuf;
 
-const SERVICE_DIR: &str = ".kumate";
-const MAIN_KEY_FILE: &str = "main.key";
-const SECRETS_DIR: &str = "secrets";
+use crate::constants::app::{APP_KEY_PATH, APP_SECRETS_DIR};
 
-fn app_data_dir() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join(SERVICE_DIR)
-}
 
 fn ensure_dir(p: &PathBuf) -> Result<()> {
     fs::create_dir_all(p)?;
@@ -30,8 +23,7 @@ fn sanitize_name(name: &str) -> String {
 }
 
 fn secret_path(name: &str) -> PathBuf {
-    let base = app_data_dir().join(SECRETS_DIR);
-    base.join(format!("{}.txt", sanitize_name(name)))
+    APP_SECRETS_DIR.join(format!("{}.txt", sanitize_name(name)))
 }
 
 pub struct Crypto {
@@ -40,12 +32,10 @@ pub struct Crypto {
 
 impl Crypto {
     pub fn init() -> Result<Self> {
-        let data_dir: PathBuf = app_data_dir();
-        ensure_dir(&data_dir)?;
-
-        let key_path: PathBuf = data_dir.join(MAIN_KEY_FILE);
+        ensure_dir(&*APP_SECRETS_DIR)?;
+        let key_path: &PathBuf = &*APP_KEY_PATH;
         let key_bytes: Vec<u8> = if key_path.exists() {
-            let s: String = fs::read_to_string(&key_path)?;
+            let s: String = fs::read_to_string(key_path)?;
             let s_trim: &str = s.trim();
             STANDARD
                 .decode(s_trim)
@@ -54,7 +44,7 @@ impl Crypto {
             let mut kb: [u8; 32] = [0u8; 32];
             rand::thread_rng().fill_bytes(&mut kb);
             let encoded: String = STANDARD.encode(kb);
-            fs::write(&key_path, encoded)?;
+            fs::write(key_path, encoded)?;
             kb.to_vec()
         };
 

@@ -2162,6 +2162,7 @@ dependencies = [
  "futures-util",
  "k8s-openapi",
  "kube",
+ "once_cell",
  "rand 0.8.5",
  "ring",
  "rustls",
