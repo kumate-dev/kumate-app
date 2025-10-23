@@ -1,21 +1,11 @@
-use std::collections::BTreeMap;
-
-use k8s_openapi::{
-    api::core::v1::{Node, NodeCondition, NodeSpec, NodeStatus, NodeSystemInfo, Taint},
-    apimachinery::pkg::api::resource::Quantity,
-};
-use kube::{
-    api::{ListParams, ObjectList, ObjectMeta},
-    Api, Client,
-};
+use k8s_openapi::api::core::v1::{Node, NodeSpec, NodeStatus};
+use kube::{api::ObjectMeta, Api, Client, ResourceExt};
 use serde::Serialize;
-use tauri::Emitter;
 
-use crate::types::event::EventType;
-use crate::utils::bytes::Bytes;
 use crate::{
-    k8s::client::K8sClient,
-    k8s::common::K8sCommon,
+    k8s::{client::K8sClient, common::K8sCommon},
+    types::event::EventType,
+    utils::bytes::Bytes,
 };
 
 #[derive(Serialize, Debug, Clone)]
@@ -27,23 +17,49 @@ pub struct NodeItem {
     pub taints: Option<String>,
     pub roles: Option<String>,
     pub version: Option<String>,
-    pub creation_timestamp: Option<String>,
     pub condition: Option<String>,
+    pub creation_timestamp: Option<String>,
 }
 
-#[derive(Serialize, Clone)]
-struct NodeEvent {
-    r#type: EventType,
-    object: NodeItem,
+impl From<Node> for NodeItem {
+    fn from(n: Node) -> Self {
+        let status: Option<NodeStatus> = n.status.clone();
+        let spec: Option<NodeSpec> = n.spec.clone();
+        let metadata: ObjectMeta = n.metadata.clone();
+
+        Self {
+            name: n.name_any(),
+            cpu: K8sNodes::extract_cpu(status.clone()),
+            memory: K8sNodes::extract_memory(status.clone()),
+            disk: K8sNodes::extract_disk(status.clone()),
+            taints: K8sNodes::extract_taints(spec.clone()),
+            roles: K8sNodes::extract_roles(metadata.clone()),
+            version: K8sNodes::extract_version(status.clone()),
+            condition: K8sNodes::extract_condition(status.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(metadata),
+        }
+    }
 }
 
 pub struct K8sNodes;
 
 impl K8sNodes {
     pub async fn list(name: String) -> Result<Vec<NodeItem>, String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let nodes: Vec<Node> = Self::fetch(client).await?;
-        Ok(nodes.into_iter().map(Self::to_item).collect())
+        K8sCommon::list_cluster_resources::<Node, _, _, _>(
+            &name,
+            |client| {
+                Box::pin(async move {
+                    let api: Api<Node> = Api::all(client);
+                    let list = api
+                        .list(&Default::default())
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    Ok(list.items)
+                })
+            },
+            |n| n.into(),
+        )
+        .await
     }
 
     pub async fn watch(
@@ -58,129 +74,90 @@ impl K8sNodes {
             app_handle,
             event_name,
             K8sCommon::watch_stream(&api).await?,
-            Self::emit,
+            Self::emit_event,
         );
 
         Ok(())
     }
 
-    async fn fetch(client: Client) -> Result<Vec<Node>, String> {
-        let api: Api<Node> = Api::all(client);
-        let lp: ListParams = ListParams::default();
-        let list: ObjectList<Node> = api
-            .list(&lp)
-            .await
-            .map_err(|e: kube::Error| e.to_string())?;
-        Ok(list.items)
-    }
-
-    fn to_item(n: Node) -> NodeItem {
-        NodeItem {
-            name: n.metadata.name.clone().unwrap_or_default(),
-            cpu: Self::extract_cpu(n.status.clone()),
-            memory: Self::extract_memory(n.status.clone()),
-            disk: Self::extract_disk(n.status.clone()),
-            taints: Self::extract_taints(n.spec.clone()),
-            roles: Self::extract_roles(n.metadata.clone()),
-            version: Self::extract_version(n.status.clone()),
-            creation_timestamp: K8sCommon::to_creation_timestamp(n.metadata.clone()),
-            condition: Self::extract_condition(n.status.clone()),
-        }
+    fn emit_event(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, n: Node) {
+        K8sCommon::emit_event::<Node, NodeItem>(app_handle, event_name, kind, n);
     }
 
     fn extract_version(status: Option<NodeStatus>) -> Option<String> {
         status
             .as_ref()
-            .and_then(|s: &NodeStatus| s.node_info.as_ref())
-            .map(|ni: &NodeSystemInfo| ni.kubelet_version.clone())
+            .and_then(|s| s.node_info.as_ref())
+            .map(|info| info.kubelet_version.clone())
     }
 
     fn extract_condition(status: Option<NodeStatus>) -> Option<String> {
         status
             .as_ref()
-            .and_then(|s: &NodeStatus| s.conditions.as_ref())
-            .and_then(|cs: &Vec<NodeCondition>| {
-                cs.iter()
-                    .find(|c: &&NodeCondition| c.type_ == "Ready")
-                    .map(|c: &NodeCondition| {
-                        if c.status == "True" {
-                            "Ready".to_string()
-                        } else if c.status == "Unknown" {
-                            "Unknown".to_string()
-                        } else {
-                            "NotReady".to_string()
-                        }
+            .and_then(|s| s.conditions.as_ref())
+            .and_then(|conds| {
+                conds
+                    .iter()
+                    .find(|c| c.type_ == "Ready")
+                    .map(|c| match c.status.as_str() {
+                        "True" => "Ready".to_string(),
+                        "Unknown" => "Unknown".to_string(),
+                        _ => "NotReady".to_string(),
                     })
             })
     }
 
     fn extract_taints(spec: Option<NodeSpec>) -> Option<String> {
         spec.as_ref()
-            .and_then(|sp: &NodeSpec| sp.taints.as_ref())
-            .map(|ts: &Vec<Taint>| {
-                ts.iter()
-                    .map(|t: &Taint| {
-                        let val: String = t
+            .and_then(|sp| sp.taints.as_ref())
+            .map(|taints| {
+                taints
+                    .iter()
+                    .map(|t| {
+                        let val = t
                             .value
                             .as_ref()
-                            .map(|v: &String| format!("={}", v))
+                            .map(|v| format!("={}", v))
                             .unwrap_or_default();
-                        let eff: String = t.effect.clone();
-                        format!("{}{}:{}", t.key, val, eff)
+                        format!("{}{}:{}", t.key, val, t.effect)
                     })
                     .collect::<Vec<_>>()
                     .join(", ")
             })
     }
 
-    fn extract_roles(metadata: ObjectMeta) -> Option<String> {
-        metadata
-            .labels
-            .as_ref()
-            .map(|labels: &BTreeMap<String, String>| {
-                labels
-                    .iter()
-                    .filter(|(k, v)| {
-                        k.starts_with("node-role.kubernetes.io/") && v.as_str() == "true"
-                    })
-                    .map(|(k, _)| k.trim_start_matches("node-role.kubernetes.io/").to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            })
+    fn extract_roles(metadata: kube::api::ObjectMeta) -> Option<String> {
+        metadata.labels.as_ref().map(|labels| {
+            labels
+                .iter()
+                .filter(|(k, v)| k.starts_with("node-role.kubernetes.io/") && v.as_str() == "true")
+                .map(|(k, _)| k.trim_start_matches("node-role.kubernetes.io/").to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
     }
 
     fn extract_cpu(status: Option<NodeStatus>) -> Option<String> {
         status
             .as_ref()
-            .and_then(|s: &NodeStatus| s.capacity.as_ref())
-            .and_then(|c: &BTreeMap<String, Quantity>| c.get("cpu"))
-            .map(|q: &Quantity| q.0.clone())
+            .and_then(|s| s.capacity.as_ref())
+            .and_then(|cap| cap.get("cpu"))
+            .map(|q| q.0.clone())
     }
 
     fn extract_memory(status: Option<NodeStatus>) -> Option<String> {
         status
             .as_ref()
-            .and_then(|s: &NodeStatus| s.capacity.as_ref())
-            .and_then(|c: &BTreeMap<String, Quantity>| c.get("memory"))
-            .map(|q: &Quantity| Bytes::pretty_size(&q.0))
+            .and_then(|s| s.capacity.as_ref())
+            .and_then(|cap| cap.get("memory"))
+            .map(|q| Bytes::pretty_size(&q.0))
     }
 
     fn extract_disk(status: Option<NodeStatus>) -> Option<String> {
         status
             .as_ref()
-            .and_then(|s: &NodeStatus| s.capacity.as_ref())
-            .and_then(|c: &BTreeMap<String, Quantity>| c.get("ephemeral-storage"))
-            .map(|q: &Quantity| Bytes::pretty_size(&q.0))
-    }
-
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, r: Node) {
-        if r.metadata.name.is_some() {
-            let item: NodeItem = Self::to_item(r);
-            let event: NodeEvent = NodeEvent {
-                r#type: kind,
-                object: item,
-            };
-            let _ = app_handle.emit(event_name, event);
-        }
+            .and_then(|s| s.capacity.as_ref())
+            .and_then(|cap| cap.get("ephemeral-storage"))
+            .map(|q| Bytes::pretty_size(&q.0))
     }
 }

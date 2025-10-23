@@ -1,10 +1,7 @@
-use futures_util::future::join_all;
-use k8s_openapi::api::batch::v1::{CronJob, CronJobSpec, CronJobStatus};
-use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
-use kube::api::{ListParams, ObjectList};
+use k8s_openapi::api::batch::v1::CronJob;
 use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 use crate::k8s::common::K8sCommon;
 use crate::types::event::EventType;
@@ -21,10 +18,31 @@ pub struct CronJobItem {
     pub creation_timestamp: Option<String>,
 }
 
-#[derive(Serialize, Clone)]
-struct CronJobEvent {
-    r#type: EventType,
-    object: CronJobItem,
+impl From<CronJob> for CronJobItem {
+    fn from(cj: CronJob) -> Self {
+        (&cj).into()
+    }
+}
+
+impl From<&CronJob> for CronJobItem {
+    fn from(cj: &CronJob) -> Self {
+        Self {
+            name: cj.name_any(),
+            namespace: K8sCommon::to_namespace(cj.namespace()),
+            schedule: cj
+                .spec
+                .as_ref()
+                .map(|s| s.schedule.clone())
+                .unwrap_or_default(),
+            suspend: cj.spec.as_ref().and_then(|s| s.suspend).unwrap_or(false),
+            last_schedule: cj
+                .status
+                .as_ref()
+                .and_then(|st| st.last_schedule_time.as_ref())
+                .map(|t| t.0.to_rfc3339()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(cj.metadata.clone()),
+        }
+    }
 }
 
 pub struct K8sCronJobs;
@@ -34,89 +52,42 @@ impl K8sCronJobs {
         name: String,
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<CronJobItem>, String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
-
-        let all_cronjobs: Vec<CronJobItem> = join_all(
-            target_namespaces
-                .into_iter()
-                .map(|ns| Self::fetch(client.clone(), ns)),
-        )
+        K8sCommon::list_resources::<CronJob, _, CronJobItem>(&name, namespaces, |client, ns| {
+            Box::pin(async move {
+                let api: Api<CronJob> = K8sClient::api::<CronJob>(client, ns).await;
+                let list = api
+                    .list(&Default::default())
+                    .await
+                    .map_err(|e| e.to_string())?;
+                Ok(list.items)
+            })
+        })
         .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .map(Self::to_item)
-        .collect();
-
-        Ok(all_cronjobs)
     }
 
     pub async fn watch(
         app_handle: AppHandle,
-        name: String,
+        context_name: String,
         namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
-        let client: Client = K8sClient::for_context(&name).await?;
+        let client: Client = K8sClient::for_context(&context_name).await?;
         let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<CronJob> = K8sClient::api::<CronJob>(client.clone(), ns).await;
-
             K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
                 K8sCommon::watch_stream(&api).await?,
-                Self::emit,
+                Self::emit_event,
             );
         }
 
         Ok(())
     }
 
-    async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<CronJob>, String> {
-        let api: Api<CronJob> = K8sClient::api::<CronJob>(client, namespace).await;
-        let lp: ListParams = ListParams::default();
-        let list: ObjectList<CronJob> = api.list(&lp).await.map_err(|e| e.to_string())?;
-        Ok(list.items)
-    }
-
-    fn to_item(cj: CronJob) -> CronJobItem {
-        let schedule: String = cj
-            .spec
-            .as_ref()
-            .map(|s: &CronJobSpec| s.schedule.clone())
-            .unwrap_or_default();
-        let suspend: bool = cj
-            .spec
-            .as_ref()
-            .and_then(|s: &CronJobSpec| s.suspend)
-            .unwrap_or(false);
-        let last: Option<String> = cj
-            .status
-            .as_ref()
-            .and_then(|st: &CronJobStatus| st.last_schedule_time.as_ref())
-            .map(|t: &Time| t.0.to_rfc3339());
-        CronJobItem {
-            name: cj.name_any(),
-            namespace: K8sCommon::to_namespace(cj.namespace()),
-            schedule: schedule,
-            suspend: suspend,
-            last_schedule: last,
-            creation_timestamp: K8sCommon::to_creation_timestamp(cj.metadata.clone()),
-        }
-    }
-
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, cj: CronJob) {
-        if cj.metadata.name.is_some() {
-            let item: CronJobItem = Self::to_item(cj);
-            let event: CronJobEvent = CronJobEvent {
-                r#type: kind,
-                object: item,
-            };
-            let _ = app_handle.emit(event_name, event);
-        }
+    fn emit_event(app_handle: &AppHandle, event_name: &str, kind: EventType, cj: CronJob) {
+        K8sCommon::emit_event::<CronJob, CronJobItem>(app_handle, event_name, kind, cj);
     }
 }

@@ -1,16 +1,11 @@
-use futures_util::future::join_all;
-use k8s_openapi::api::policy::v1::{
-    PodDisruptionBudget, PodDisruptionBudgetSpec, PodDisruptionBudgetStatus,
-};
-use kube::api::{ListParams, ObjectList};
-use kube::{Api, Client, ResourceExt};
+use kube::{api::ObjectList, Api, Client, ResourceExt};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 use super::client::K8sClient;
-use crate::k8s::common::K8sCommon;
-use crate::types::event::EventType;
 use crate::utils::converts::int_or_string_to_string;
+use crate::{k8s::common::K8sCommon, types::event::EventType};
+use k8s_openapi::api::policy::v1::{PodDisruptionBudget, PodDisruptionBudgetStatus};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct PodDisruptionBudgetItem {
@@ -25,122 +20,96 @@ pub struct PodDisruptionBudgetItem {
     pub creation_timestamp: Option<String>,
 }
 
-#[derive(Serialize, Clone)]
-struct PodDisruptionBudgetEvent {
-    r#type: EventType,
-    object: PodDisruptionBudgetItem,
+impl From<PodDisruptionBudget> for PodDisruptionBudgetItem {
+    fn from(pdb: PodDisruptionBudget) -> Self {
+        (&pdb).into()
+    }
+}
+
+impl From<&PodDisruptionBudget> for PodDisruptionBudgetItem {
+    fn from(pdb: &PodDisruptionBudget) -> Self {
+        let spec = pdb.spec.as_ref();
+        let status = pdb.status.as_ref();
+
+        Self {
+            name: pdb.name_any(),
+            namespace: K8sCommon::to_namespace(pdb.namespace()),
+            min_available: spec.and_then(|s| int_or_string_to_string(&s.min_available)),
+            max_unavailable: spec.and_then(|s| int_or_string_to_string(&s.max_unavailable)),
+            current_healthy: status.map_or(0, |s| s.current_healthy),
+            desired_healthy: status.map_or(0, |s| s.desired_healthy),
+            disruptions_allowed: status.map_or(0, |s| s.disruptions_allowed),
+            status: K8sPodDisruptionBudgets::extract_status(status),
+            creation_timestamp: K8sCommon::to_creation_timestamp(pdb.metadata.clone()),
+        }
+    }
 }
 
 pub struct K8sPodDisruptionBudgets;
 
 impl K8sPodDisruptionBudgets {
     pub async fn list(
-        name: String,
+        context_name: String,
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<PodDisruptionBudgetItem>, String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
-
-        let all_pdbs: Vec<PodDisruptionBudgetItem> = join_all(
-            target_namespaces
-                .into_iter()
-                .map(|ns| Self::fetch(client.clone(), ns)),
+        K8sCommon::list_resources::<PodDisruptionBudget, _, PodDisruptionBudgetItem>(
+            &context_name,
+            namespaces,
+            |client, ns| {
+                Box::pin(async move {
+                    let api: Api<PodDisruptionBudget> =
+                        K8sClient::api::<PodDisruptionBudget>(client, ns).await;
+                    let list: ObjectList<PodDisruptionBudget> = api
+                        .list(&Default::default())
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    Ok(list.items)
+                })
+            },
         )
         .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .map(Self::to_item)
-        .collect();
-
-        Ok(all_pdbs)
     }
 
     pub async fn watch(
         app_handle: AppHandle,
-        name: String,
+        context_name: String,
         namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
-        let client: Client = K8sClient::for_context(&name).await?;
+        let client: Client = K8sClient::for_context(&context_name).await?;
         let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<PodDisruptionBudget> =
                 K8sClient::api::<PodDisruptionBudget>(client.clone(), ns).await;
-
             K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
                 K8sCommon::watch_stream(&api).await?,
-                Self::emit,
+                Self::emit_event,
             );
         }
 
         Ok(())
     }
 
-    async fn fetch(
-        client: Client,
-        namespace: Option<String>,
-    ) -> Result<Vec<PodDisruptionBudget>, String> {
-        let api: Api<PodDisruptionBudget> =
-            K8sClient::api::<PodDisruptionBudget>(client, namespace).await;
-        let lp = ListParams::default();
-        let list: ObjectList<PodDisruptionBudget> =
-            api.list(&lp).await.map_err(|e| e.to_string())?;
-        Ok(list.items)
-    }
-
-    fn to_item(pdb: PodDisruptionBudget) -> PodDisruptionBudgetItem {
-        let spec: Option<&PodDisruptionBudgetSpec> = pdb.spec.as_ref();
-        let status: Option<&PodDisruptionBudgetStatus> = pdb.status.as_ref();
-
-        PodDisruptionBudgetItem {
-            name: pdb.name_any(),
-            namespace: K8sCommon::to_namespace(pdb.namespace()),
-            min_available: spec
-                .as_ref()
-                .and_then(|s| int_or_string_to_string(&s.min_available)),
-            max_unavailable: spec
-                .as_ref()
-                .and_then(|s| int_or_string_to_string(&s.max_unavailable)),
-            current_healthy: status.as_ref().map_or(0, |s| s.current_healthy),
-            desired_healthy: status.as_ref().map_or(0, |s| s.desired_healthy),
-            disruptions_allowed: status.as_ref().map_or(0, |s| s.disruptions_allowed),
-            status: Self::extract_status(status),
-            creation_timestamp: K8sCommon::to_creation_timestamp(pdb.metadata.clone()),
-        }
-    }
-
-    fn extract_status(status: Option<&PodDisruptionBudgetStatus>) -> String {
-        if let Some(st) = status {
-            if st.disruptions_allowed > 0 {
-                "Healthy".to_string()
-            } else if st.current_healthy < st.desired_healthy {
-                "Degraded".to_string()
-            } else {
-                "Blocked".to_string()
-            }
-        } else {
-            "Unknown".to_string()
-        }
-    }
-
-    fn emit(
-        app_handle: &tauri::AppHandle,
+    fn emit_event(
+        app_handle: &AppHandle,
         event_name: &str,
         kind: EventType,
         pdb: PodDisruptionBudget,
     ) {
-        if pdb.metadata.name.is_some() {
-            let item = Self::to_item(pdb);
-            let event = PodDisruptionBudgetEvent {
-                r#type: kind,
-                object: item,
-            };
-            let _ = app_handle.emit(event_name, event);
+        K8sCommon::emit_event::<PodDisruptionBudget, PodDisruptionBudgetItem>(
+            app_handle, event_name, kind, pdb,
+        );
+    }
+
+    fn extract_status(status: Option<&PodDisruptionBudgetStatus>) -> String {
+        match status {
+            Some(st) if st.disruptions_allowed > 0 => "Healthy".to_string(),
+            Some(st) if st.current_healthy < st.desired_healthy => "Degraded".to_string(),
+            Some(_) => "Blocked".to_string(),
+            None => "Unknown".to_string(),
         }
     }
 }

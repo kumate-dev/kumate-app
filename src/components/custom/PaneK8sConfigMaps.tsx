@@ -8,7 +8,7 @@ import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { Badge } from '../ui/badge';
+import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 
 export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -71,9 +71,7 @@ export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextPro
               {f.name}
             </span>
           </Td>
-          <Td>
-            <Badge>{f.namespace}</Badge>
-          </Td>
+          <BadgeK8sNamespaces name={f.namespace}/>
           <Td className="max-w-truncate">
             <span className="block truncate" title={f.data_keys.join(', ')}>
               {f.data_keys.join(', ')}

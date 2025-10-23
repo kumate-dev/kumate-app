@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeVariant } from '@/types/variant';
+import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 
 export default function PaneK8sPodDisruptionBudgets({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -94,9 +95,7 @@ export default function PaneK8sPodDisruptionBudgets({ context }: PaneK8sResource
               {f.name}
             </span>
           </Td>
-          <Td>
-            <Badge>{f.namespace}</Badge>
-          </Td>
+          <BadgeK8sNamespaces name={f.namespace}/>
           <Td>{f.min_available || '-'}</Td>
           <Td>{f.max_unavailable || '-'}</Td>
           <Td>{f.current_healthy ?? '-'}</Td>

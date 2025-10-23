@@ -1,16 +1,9 @@
-use futures_util::future::join_all;
 use k8s_openapi::api::core::v1::{Container, Pod, PodSpec, PodStatus};
-use kube::{
-    api::{ListParams, ObjectList},
-    Api, Client, ResourceExt,
-};
+use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
-use tauri::Emitter;
 
 use super::client::K8sClient;
-use crate::{
-    k8s::common::K8sCommon, types::event::EventType, utils::bytes::Bytes
-};
+use crate::{k8s::common::K8sCommon, types::event::EventType, utils::bytes::Bytes};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct PodItem {
@@ -27,10 +20,28 @@ pub struct PodItem {
     pub qos: Option<String>,
 }
 
-#[derive(Serialize, Clone)]
-struct PodEvent {
-    r#type: EventType,
-    object: PodItem,
+impl From<Pod> for PodItem {
+    fn from(p: Pod) -> Self {
+        (&p).into()
+    }
+}
+
+impl From<&Pod> for PodItem {
+    fn from(p: &Pod) -> Self {
+        Self {
+            name: p.name_any(),
+            namespace: K8sCommon::to_namespace(p.namespace()),
+            phase: p.status.as_ref().and_then(|s| s.phase.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(p.metadata.clone()),
+            containers: p.spec.as_ref().map(|s| s.containers.len()).unwrap_or(0),
+            container_states: K8sPods::extract_container_states(p.status.clone()),
+            cpu: K8sPods::aggregate_cpu(p.spec.clone()),
+            memory: K8sPods::aggregate_memory(p.spec.clone()),
+            restart: K8sPods::sum_restarts(p.status.clone()),
+            node: p.spec.as_ref().and_then(|s| s.node_name.clone()),
+            qos: p.status.as_ref().and_then(|s| s.qos_class.clone()),
+        }
+    }
 }
 
 pub struct K8sPods;
@@ -40,32 +51,26 @@ impl K8sPods {
         name: String,
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<PodItem>, String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
-
-        let all_pods: Vec<PodItem> = join_all(
-            target_namespaces
-                .into_iter()
-                .map(|ns| Self::fetch(client.clone(), ns)),
-        )
+        K8sCommon::list_resources::<Pod, _, PodItem>(&name, namespaces, |client, namespace| {
+            Box::pin(async move {
+                let api: Api<Pod> = K8sClient::api::<Pod>(client, namespace).await;
+                let list = api
+                    .list(&Default::default())
+                    .await
+                    .map_err(|e| e.to_string())?;
+                Ok(list.items)
+            })
+        })
         .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .map(Self::to_item)
-        .collect();
-
-        Ok(all_pods)
     }
 
     pub async fn watch(
         app_handle: tauri::AppHandle,
-        name: String,
+        context_name: String,
         namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
-        let client: Client = K8sClient::for_context(&name).await?;
+        let client: Client = K8sClient::for_context(&context_name).await?;
         let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
@@ -74,54 +79,15 @@ impl K8sPods {
                 app_handle.clone(),
                 event_name.clone(),
                 K8sCommon::watch_stream(&api).await?,
-                Self::emit,
+                Self::emit_event,
             );
         }
+
         Ok(())
     }
-    
-    async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<Pod>, String> {
-        let api: Api<Pod> = K8sClient::api::<Pod>(client, namespace).await;
-        let lp: ListParams = ListParams::default();
-        let list: ObjectList<Pod> = api
-            .list(&lp)
-            .await
-            .map_err(|e: kube::Error| e.to_string())?;
-        Ok(list.items)
-    }
 
-    pub fn to_item(p: Pod) -> PodItem {
-        PodItem {
-            name: p.name_any(),
-            namespace: K8sCommon::to_namespace(p.namespace()),
-            phase: p.status.as_ref().and_then(|s: &PodStatus| s.phase.clone()),
-            creation_timestamp: K8sCommon::to_creation_timestamp(p.metadata.clone()),
-            containers: p
-                .spec
-                .as_ref()
-                .map(|s: &PodSpec| s.containers.len())
-                .unwrap_or(0),
-            container_states: Self::extract_container_states(p.status.clone()),
-            cpu: Self::aggregate_cpu(p.spec.clone()),
-            memory: Self::aggregate_memory(p.spec.clone()),
-            restart: Self::sum_restarts(p.status.clone()),
-            node: p.spec.as_ref().and_then(|s: &PodSpec| s.node_name.clone()),
-            qos: p
-                .status
-                .as_ref()
-                .and_then(|s: &PodStatus| s.qos_class.clone()),
-        }
-    }
-
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, p: Pod) {
-        if p.metadata.name.is_some() {
-            let item: PodItem = Self::to_item(p);
-            let event: PodEvent = PodEvent {
-                r#type: kind,
-                object: item,
-            };
-            let _ = app_handle.emit(event_name, event);
-        }
+    fn emit_event(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, p: Pod) {
+        K8sCommon::emit_event::<Pod, PodItem>(app_handle, event_name, kind, p);
     }
 
     fn extract_container_states(status: Option<PodStatus>) -> Option<Vec<String>> {

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
 import { readyVariant } from '@/utils/k8s';
 import { BadgeVariant } from '@/types/variant';
+import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 
 type SortKey = keyof DaemonSetItem;
 
@@ -75,9 +76,7 @@ export default function PaneK8sDaemonSets({ context }: PaneK8sResourceContextPro
               {f.name}
             </span>
           </Td>
-          <Td>
-            <Badge>{f.namespace}</Badge>
-          </Td>
+          <BadgeK8sNamespaces name={f.namespace}/>
           <Td>
             <Badge variant={readyVariant(f.ready) as BadgeVariant}>{f.ready}</Badge>
           </Td>

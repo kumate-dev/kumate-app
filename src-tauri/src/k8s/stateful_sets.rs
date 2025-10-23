@@ -1,14 +1,11 @@
-use futures_util::future::join_all;
-use k8s_openapi::api::apps::v1::{StatefulSet, StatefulSetSpec, StatefulSetStatus};
-use kube::api::ObjectList;
-use kube::{api::ListParams, Api, Client, ResourceExt};
+use kube::api::{ListParams, ObjectList};
+use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
-use tauri::Emitter;
-
-use crate::k8s::common::K8sCommon;
-use crate::types::event::EventType;
+use tauri::AppHandle;
 
 use super::client::K8sClient;
+use crate::{k8s::common::K8sCommon, types::event::EventType};
+use k8s_openapi::api::apps::v1::StatefulSet;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct StatefulSetItem {
@@ -18,102 +15,77 @@ pub struct StatefulSetItem {
     pub creation_timestamp: Option<String>,
 }
 
-#[derive(Serialize, Clone)]
-struct StatefulSetEvent {
-    r#type: EventType,
-    object: StatefulSetItem,
+impl From<StatefulSet> for StatefulSetItem {
+    fn from(rc: StatefulSet) -> Self {
+        (&rc).into()
+    }
+}
+
+impl From<&StatefulSet> for StatefulSetItem {
+    fn from(s: &StatefulSet) -> Self {
+        let replicas: i32 = s.spec.as_ref().and_then(|sp| sp.replicas).unwrap_or(0);
+        let ready: i32 = s
+            .status
+            .as_ref()
+            .and_then(|st| st.ready_replicas)
+            .unwrap_or(0);
+
+        StatefulSetItem {
+            name: s.name_any(),
+            namespace: K8sCommon::to_namespace(s.namespace()),
+            ready: K8sCommon::to_replicas_ready(replicas, ready),
+            creation_timestamp: K8sCommon::to_creation_timestamp(s.metadata.clone()),
+        }
+    }
 }
 
 pub struct K8sStatefulSets;
 
 impl K8sStatefulSets {
     pub async fn list(
-        name: String,
+        context_name: String,
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<StatefulSetItem>, String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
-
-        let all_statefulsets: Vec<StatefulSetItem> = join_all(
-            target_namespaces
-                .into_iter()
-                .map(|ns| Self::fetch(client.clone(), ns)),
+        K8sCommon::list_resources::<StatefulSet, _, StatefulSetItem>(
+            &context_name,
+            namespaces,
+            |client, ns| {
+                Box::pin(async move {
+                    let api: Api<StatefulSet> = K8sClient::api::<StatefulSet>(client, ns).await;
+                    let list: ObjectList<StatefulSet> = api
+                        .list(&ListParams::default())
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    Ok(list.items)
+                })
+            },
         )
         .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .map(Self::to_item)
-        .collect();
-
-        Ok(all_statefulsets)
     }
 
     pub async fn watch(
-        app_handle: tauri::AppHandle,
-        name: String,
+        app_handle: AppHandle,
+        context_name: String,
         namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
-        let client: Client = K8sClient::for_context(&name).await?;
+        let client: Client = K8sClient::for_context(&context_name).await?;
         let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<StatefulSet> = K8sClient::api::<StatefulSet>(client.clone(), ns).await;
-
             K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
                 K8sCommon::watch_stream(&api).await?,
-                Self::emit,
+                Self::emit_event,
             );
         }
 
         Ok(())
     }
 
-    async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<StatefulSet>, String> {
-        let api: Api<StatefulSet> = K8sClient::api::<StatefulSet>(client, namespace).await;
-        let lp: ListParams = ListParams::default();
-        let list: ObjectList<StatefulSet> = api
-            .list(&lp)
-            .await
-            .map_err(|e: kube::Error| e.to_string())?;
-        Ok(list.items)
-    }
-
-    fn to_item(s: StatefulSet) -> StatefulSetItem {
-        StatefulSetItem {
-            name: s.name_any(),
-            namespace: K8sCommon::to_namespace(s.namespace()),
-            ready: Self::extract_ready(&s),
-            creation_timestamp: K8sCommon::to_creation_timestamp(s.metadata),
-        }
-    }
-
-    fn extract_ready(d: &StatefulSet) -> String {
-        let replicas: i32 = d
-            .spec
-            .as_ref()
-            .and_then(|s: &StatefulSetSpec| s.replicas)
-            .unwrap_or(0);
-        let ready: i32 = d
-            .status
-            .as_ref()
-            .and_then(|s: &StatefulSetStatus| s.ready_replicas)
-            .unwrap_or(0);
-        K8sCommon::to_replicas_ready(replicas, ready)
-    }
-
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, r: StatefulSet) {
-        if r.metadata.name.is_some() {
-            let item: StatefulSetItem = Self::to_item(r);
-            let event: StatefulSetEvent = StatefulSetEvent {
-                r#type: kind,
-                object: item,
-            };
-            let _ = app_handle.emit(event_name, event);
-        }
+    fn emit_event(app_handle: &AppHandle, event_name: &str, kind: EventType, s: StatefulSet) {
+        K8sCommon::emit_event::<StatefulSet, StatefulSetItem>(app_handle, event_name, kind, s);
     }
 }

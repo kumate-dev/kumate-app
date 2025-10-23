@@ -11,6 +11,7 @@ import AgeCell from '@/components/custom/AgeCell';
 import { AlertTriangle } from 'lucide-react';
 import { BadgeVariant } from '@/types/variant';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 
 export default function PanePods({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -138,9 +139,7 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
           <Td className="text-center">
             {hasPodWarning(f) && <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />}
           </Td>
-          <Td>
-            <Badge>{f.namespace}</Badge>
-          </Td>
+          <BadgeK8sNamespaces name={f.namespace}/>
           <Td>
             <div className="flex items-center gap-1">
               {f.container_states?.length

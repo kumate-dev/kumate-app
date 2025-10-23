@@ -14,6 +14,7 @@ import AgeCell from '@/components/custom/AgeCell';
 import { Badge } from '@/components/ui/badge';
 import { readyVariant } from '@/utils/k8s';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 
 export default function PaneK8sReplicationControllers({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -76,9 +77,7 @@ export default function PaneK8sReplicationControllers({ context }: PaneK8sResour
               {f.name}
             </span>
           </Td>
-          <Td>
-            <Badge>{f.namespace}</Badge>
-          </Td>
+          <BadgeK8sNamespaces name={f.namespace}/>
           <Td>
             <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
           </Td>

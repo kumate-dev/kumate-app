@@ -1,18 +1,13 @@
-use futures_util::future::join_all;
+use kube::{Api, Client, ResourceExt};
+use serde::Serialize;
+use tauri::AppHandle;
+
+use super::client::K8sClient;
+use crate::k8s::common::K8sCommon;
+use crate::types::event::EventType;
 use k8s_openapi::api::apps::v1::{
     Deployment, DeploymentCondition, DeploymentSpec, DeploymentStatus,
 };
-use kube::{
-    api::{ListParams, ObjectList},
-    Api, Client, ResourceExt,
-};
-use serde::Serialize;
-use tauri::Emitter;
-
-use crate::k8s::common::K8sCommon;
-use crate::types::event::EventType;
-
-use super::client::K8sClient;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct DeploymentItem {
@@ -23,76 +18,72 @@ pub struct DeploymentItem {
     pub status: Option<String>,
 }
 
-#[derive(Serialize, Clone)]
-struct DeploymentEvent {
-    r#type: EventType,
-    object: DeploymentItem,
+impl From<Deployment> for DeploymentItem {
+    fn from(d: Deployment) -> Self {
+        (&d).into()
+    }
+}
+
+impl From<&Deployment> for DeploymentItem {
+    fn from(d: &Deployment) -> Self {
+        Self {
+            name: d.name_any(),
+            namespace: K8sCommon::to_namespace(d.namespace()),
+            ready: K8sDeployments::extract_ready(d),
+            status: K8sDeployments::extract_status(d),
+            creation_timestamp: K8sCommon::to_creation_timestamp(d.metadata.clone()),
+        }
+    }
 }
 
 pub struct K8sDeployments;
 
 impl K8sDeployments {
     pub async fn list(
-        name: String,
+        context_name: String,
         namespaces: Option<Vec<String>>,
     ) -> Result<Vec<DeploymentItem>, String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
-
-        let all_deployments: Vec<DeploymentItem> = join_all(
-            target_namespaces
-                .into_iter()
-                .map(|ns| Self::fetch(client.clone(), ns)),
+        K8sCommon::list_resources::<Deployment, _, DeploymentItem>(
+            &context_name,
+            namespaces,
+            |client, ns| {
+                Box::pin(async move {
+                    let api: Api<Deployment> = K8sClient::api::<Deployment>(client, ns).await;
+                    let list = api
+                        .list(&Default::default())
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    Ok(list.items)
+                })
+            },
         )
         .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .map(Self::to_item)
-        .collect();
-
-        Ok(all_deployments)
     }
 
     pub async fn watch(
-        app_handle: tauri::AppHandle,
-        name: String,
+        app_handle: AppHandle,
+        context_name: String,
         namespaces: Option<Vec<String>>,
         event_name: String,
     ) -> Result<(), String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
+        let client: Client = K8sClient::for_context(&context_name).await?;
+        let target_namespaces = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
             let api: Api<Deployment> = K8sClient::api::<Deployment>(client.clone(), ns).await;
-
             K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
                 K8sCommon::watch_stream(&api).await?,
-                Self::emit,
+                Self::emit_event,
             );
         }
 
         Ok(())
     }
 
-    async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<Deployment>, String> {
-        let api: Api<Deployment> = K8sClient::api::<Deployment>(client, namespace).await;
-        let lp: ListParams = ListParams::default();
-        let list: ObjectList<Deployment> = api.list(&lp).await.map_err(|e| e.to_string())?;
-        Ok(list.items)
-    }
-
-    fn to_item(d: Deployment) -> DeploymentItem {
-        DeploymentItem {
-            name: d.name_any(),
-            namespace: K8sCommon::to_namespace(d.namespace()),
-            ready: Self::extract_ready(&d),
-            status: Self::extract_status(&d),
-            creation_timestamp: K8sCommon::to_creation_timestamp(d.metadata),
-        }
+    fn emit_event(app_handle: &AppHandle, event_name: &str, kind: EventType, d: Deployment) {
+        K8sCommon::emit_event::<Deployment, DeploymentItem>(app_handle, event_name, kind, d);
     }
 
     fn extract_ready(d: &Deployment) -> String {
@@ -130,17 +121,15 @@ impl K8sDeployments {
     fn deployment_status(status: &DeploymentStatus) -> Option<String> {
         let conditions: &Vec<DeploymentCondition> = status.conditions.as_ref()?;
 
-        let available: Option<&DeploymentCondition> =
-            conditions.iter().find(|c| c.type_ == "Available");
-        let progressing: Option<&DeploymentCondition> =
-            conditions.iter().find(|c| c.type_ == "Progressing");
+        let available = conditions.iter().find(|c| c.type_ == "Available");
+        let progressing = conditions.iter().find(|c| c.type_ == "Progressing");
 
-        let available_status: Option<&str> = available.map(|c| c.status.as_str());
-        let progressing_status: Option<&str> = progressing.map(|c| c.status.as_str());
+        let available_status = available.map(|c| c.status.as_str());
+        let progressing_status = progressing.map(|c| c.status.as_str());
 
-        let replicas: i32 = status.replicas.unwrap_or(0);
-        let ready_replicas: i32 = status.ready_replicas.unwrap_or(0);
-        let updated_replicas: i32 = status.updated_replicas.unwrap_or(0);
+        let replicas = status.replicas.unwrap_or(0);
+        let ready_replicas = status.ready_replicas.unwrap_or(0);
+        let updated_replicas = status.updated_replicas.unwrap_or(0);
 
         if progressing_status == Some("True")
             && available_status == Some("False")
@@ -156,17 +145,6 @@ impl K8sDeployments {
             (_, Some("Unknown")) => Some("Progressing".to_string()),
             (Some("True"), _) => Some("Available".to_string()),
             _ => Some("Unknown".to_string()),
-        }
-    }
-
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, d: Deployment) {
-        if d.metadata.name.is_some() {
-            let item: DeploymentItem = Self::to_item(d);
-            let event: DeploymentEvent = DeploymentEvent {
-                r#type: kind,
-                object: item,
-            };
-            let _ = app_handle.emit(event_name, event);
         }
     }
 }

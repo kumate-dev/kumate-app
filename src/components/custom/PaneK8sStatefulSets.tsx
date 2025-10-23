@@ -9,6 +9,8 @@ import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
 import { Badge } from '@/components/ui/badge';
 import { PaneK8sResource, PaneK8sResourceContextProps } from '@/components/custom/PaneK8sResource';
 import { readyVariant } from '@/utils/k8s';
+import { Td, Tr } from '../ui/table';
+import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 
 export default function PaneK8sStatefulSets({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -66,21 +68,21 @@ export default function PaneK8sStatefulSets({ context }: PaneK8sResourceContextP
       colSpan={columns.length}
       tableHeader={tableHeader}
       renderRow={(f) => (
-        <tr key={`${f.namespace}/${f.name}`}>
-          <td className="max-w-truncate">
+        <Tr key={`${f.namespace}/${f.name}`}>
+          <Td className="max-w-truncate">
             <span className="block truncate" title={f.name}>
               {f.name}
             </span>
-          </td>
-          <td>{f.namespace}</td>
-          <td>
+          </Td>
+          <BadgeK8sNamespaces name={f.namespace}/>
+          <Td>
             <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
-          </td>
+          </Td>
           <AgeCell timestamp={f.creation_timestamp || ''} />
-          <td>
+          <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>
-          </td>
-        </tr>
+          </Td>
+        </Tr>
       )}
     />
   );

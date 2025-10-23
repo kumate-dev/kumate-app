@@ -1,17 +1,13 @@
 use std::collections::BTreeMap;
 
-use futures_util::future::join_all;
-use k8s_openapi::api::core::v1::LimitRange;
-use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
-use kube::api::{ListParams, ObjectList};
 use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
-
-use crate::k8s::common::K8sCommon;
-use crate::types::event::EventType;
+use tauri::AppHandle;
 
 use super::client::K8sClient;
+use crate::{k8s::common::K8sCommon, types::event::EventType};
+use k8s_openapi::api::core::v1::LimitRange;
+use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct LimitRangeItem {
@@ -25,70 +21,15 @@ pub struct LimitRangeItem {
     pub creation_timestamp: Option<String>,
 }
 
-#[derive(Serialize, Clone)]
-struct LimitRangeEvent {
-    r#type: EventType,
-    object: LimitRangeItem,
+impl From<LimitRange> for LimitRangeItem {
+    fn from(lr: LimitRange) -> Self {
+        (&lr).into()
+    }
 }
 
-pub struct K8sLimitRanges;
-
-impl K8sLimitRanges {
-    pub async fn list(
-        name: String,
-        namespaces: Option<Vec<String>>,
-    ) -> Result<Vec<LimitRangeItem>, String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
-
-        let all_items: Vec<LimitRangeItem> = join_all(
-            target_namespaces
-                .into_iter()
-                .map(|ns| Self::fetch(client.clone(), ns)),
-        )
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .map(Self::to_item)
-        .collect();
-
-        Ok(all_items)
-    }
-
-    pub async fn watch(
-        app_handle: AppHandle,
-        name: String,
-        namespaces: Option<Vec<String>>,
-        event_name: String,
-    ) -> Result<(), String> {
-        let client: Client = K8sClient::for_context(&name).await?;
-        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
-
-        for ns in target_namespaces {
-            let api: Api<LimitRange> = K8sClient::api::<LimitRange>(client.clone(), ns).await;
-
-            K8sCommon::event_spawn_watch(
-                app_handle.clone(),
-                event_name.clone(),
-                K8sCommon::watch_stream(&api).await?,
-                Self::emit,
-            );
-        }
-
-        Ok(())
-    }
-
-    async fn fetch(client: Client, namespace: Option<String>) -> Result<Vec<LimitRange>, String> {
-        let api: Api<LimitRange> = K8sClient::api::<LimitRange>(client, namespace).await;
-        let lp: ListParams = ListParams::default();
-        let list: ObjectList<LimitRange> = api.list(&lp).await.map_err(|e| e.to_string())?;
-        Ok(list.items)
-    }
-
-    fn to_item(lr: LimitRange) -> LimitRangeItem {
-        let type_ = lr
+impl From<&LimitRange> for LimitRangeItem {
+    fn from(lr: &LimitRange) -> Self {
+        let type_: String = lr
             .spec
             .as_ref()
             .and_then(|spec| spec.limits.get(0))
@@ -98,10 +39,10 @@ impl K8sLimitRanges {
         let (min, max, default, default_request) = if let Some(ref spec) = lr.spec {
             if let Some(ref l) = spec.limits.get(0) {
                 (
-                    Self::quantity_map_to_string(&l.min),
-                    Self::quantity_map_to_string(&l.max),
-                    Self::quantity_map_to_string(&l.default),
-                    Self::quantity_map_to_string(&l.default_request),
+                    K8sLimitRanges::quantity_map_to_string(&l.min),
+                    K8sLimitRanges::quantity_map_to_string(&l.max),
+                    K8sLimitRanges::quantity_map_to_string(&l.default),
+                    K8sLimitRanges::quantity_map_to_string(&l.default_request),
                 )
             } else {
                 (None, None, None, None)
@@ -121,6 +62,57 @@ impl K8sLimitRanges {
             creation_timestamp: K8sCommon::to_creation_timestamp(lr.metadata.clone()),
         }
     }
+}
+
+pub struct K8sLimitRanges;
+
+impl K8sLimitRanges {
+    pub async fn list(
+        context_name: String,
+        namespaces: Option<Vec<String>>,
+    ) -> Result<Vec<LimitRangeItem>, String> {
+        K8sCommon::list_resources::<LimitRange, _, LimitRangeItem>(
+            &context_name,
+            namespaces,
+            |client, ns| {
+                Box::pin(async move {
+                    let api: Api<LimitRange> = K8sClient::api::<LimitRange>(client, ns).await;
+                    let list = api
+                        .list(&Default::default())
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    Ok(list.items)
+                })
+            },
+        )
+        .await
+    }
+
+    pub async fn watch(
+        app_handle: AppHandle,
+        context_name: String,
+        namespaces: Option<Vec<String>>,
+        event_name: String,
+    ) -> Result<(), String> {
+        let client: Client = K8sClient::for_context(&context_name).await?;
+        let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
+
+        for ns in target_namespaces {
+            let api: Api<LimitRange> = K8sClient::api::<LimitRange>(client.clone(), ns).await;
+            K8sCommon::event_spawn_watch(
+                app_handle.clone(),
+                event_name.clone(),
+                K8sCommon::watch_stream(&api).await?,
+                Self::emit_event,
+            );
+        }
+
+        Ok(())
+    }
+
+    fn emit_event(app_handle: &AppHandle, event_name: &str, kind: EventType, lr: LimitRange) {
+        K8sCommon::emit_event::<LimitRange, LimitRangeItem>(app_handle, event_name, kind, lr);
+    }
 
     fn quantity_map_to_string(
         map: &Option<BTreeMap<String, Quantity>>,
@@ -130,16 +122,5 @@ impl K8sLimitRanges {
                 .map(|(k, v)| (k.clone(), v.0.clone()))
                 .collect::<BTreeMap<_, _>>()
         })
-    }
-
-    fn emit(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, lr: LimitRange) {
-        if lr.metadata.name.is_some() {
-            let item: LimitRangeItem = Self::to_item(lr);
-            let event: LimitRangeEvent = LimitRangeEvent {
-                r#type: kind,
-                object: item,
-            };
-            let _ = app_handle.emit(event_name, event);
-        }
     }
 }

@@ -1,15 +1,15 @@
-use std::pin::Pin;
-use futures_util::{StreamExt};
-use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
+use futures_util::{future::join_all, StreamExt};
+use k8s_openapi::{apimachinery::pkg::apis::meta::v1::Time, Resource};
 use kube::{
-    api::{ObjectMeta, WatchEvent, WatchParams, Api},
-    ResourceExt,
+    api::{Api, ObjectMeta, WatchEvent, WatchParams},
+    Client, ResourceExt,
 };
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
-use tauri::AppHandle;
+use std::{future::Future, pin::Pin};
+use tauri::{AppHandle, Emitter};
 
-use crate::types::event::EventType;
+use crate::{k8s::client::K8sClient, types::event::EventType};
 
 pub struct K8sCommon;
 
@@ -35,10 +35,64 @@ impl K8sCommon {
         }
     }
 
+    pub async fn list_resources<R, F, T>(
+        context_name: &str,
+        namespaces: Option<Vec<String>>,
+        fetch_fn: F,
+    ) -> Result<Vec<T>, String>
+    where
+        R: Resource + Clone + Debug + DeserializeOwned + Send + Sync + 'static,
+        F: Fn(
+                Client,
+                Option<String>,
+            ) -> Pin<Box<dyn Future<Output = Result<Vec<R>, String>> + Send>>
+            + Send
+            + Sync,
+        T: Send + 'static,
+        for<'a> &'a R: Into<T>,
+    {
+        let client: Client = K8sClient::for_context(context_name).await?;
+        let target_namespaces: Vec<Option<String>> = Self::get_target_namespaces(namespaces);
+
+        let results: Vec<Result<Vec<R>, String>> = join_all(
+            target_namespaces
+                .into_iter()
+                .map(|ns| fetch_fn(client.clone(), ns)),
+        )
+        .await;
+
+        let all: Vec<T> = results
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .map(|r| (&r).into())
+            .collect();
+
+        Ok(all)
+    }
+
+    pub async fn list_cluster_resources<R, F, T, M>(
+        context_name: &str,
+        fetch_fn: F,
+        map_fn: M,
+    ) -> Result<Vec<T>, String>
+    where
+        R: Resource + Clone + Debug + DeserializeOwned + Send + Sync + 'static,
+        F: Fn(Client) -> Pin<Box<dyn Future<Output = Result<Vec<R>, String>> + Send>> + Send + Sync,
+        M: Fn(R) -> T + Send + Sync + Clone + 'static,
+    {
+        let client = K8sClient::for_context(context_name).await?;
+        let resources = fetch_fn(client).await?;
+        Ok(resources.into_iter().map(map_fn).collect())
+    }
+
     pub fn event_spawn_watch<R, F>(
         app_handle: AppHandle,
         event_name: String,
-        mut stream: Pin<Box<dyn futures_util::Stream<Item = Result<WatchEvent<R>, kube::Error>> + Send>>,
+        mut stream: Pin<
+            Box<dyn futures_util::Stream<Item = Result<WatchEvent<R>, kube::Error>> + Send>,
+        >,
         emit_fn: F,
     ) where
         R: ResourceExt + Send + 'static,
@@ -47,9 +101,15 @@ impl K8sCommon {
         tokio::spawn(async move {
             while let Some(status) = stream.next().await {
                 match status {
-                    Ok(WatchEvent::Added(obj)) => emit_fn(&app_handle, &event_name, EventType::ADDED, obj),
-                    Ok(WatchEvent::Modified(obj)) => emit_fn(&app_handle, &event_name, EventType::MODIFIED, obj),
-                    Ok(WatchEvent::Deleted(obj)) => emit_fn(&app_handle, &event_name, EventType::DELETED, obj),
+                    Ok(WatchEvent::Added(obj)) => {
+                        emit_fn(&app_handle, &event_name, EventType::ADDED, obj)
+                    }
+                    Ok(WatchEvent::Modified(obj)) => {
+                        emit_fn(&app_handle, &event_name, EventType::MODIFIED, obj)
+                    }
+                    Ok(WatchEvent::Deleted(obj)) => {
+                        emit_fn(&app_handle, &event_name, EventType::DELETED, obj)
+                    }
                     Err(e) => eprintln!("Watch error: {}", e),
                     _ => {}
                 }
@@ -59,7 +119,10 @@ impl K8sCommon {
 
     pub async fn watch_stream<R>(
         api: &Api<R>,
-    ) -> Result<Pin<Box<dyn futures_util::Stream<Item = Result<WatchEvent<R>, kube::Error>> + Send>>, String>
+    ) -> Result<
+        Pin<Box<dyn futures_util::Stream<Item = Result<WatchEvent<R>, kube::Error>> + Send>>,
+        String,
+    >
     where
         R: kube::Resource + Clone + Debug + DeserializeOwned + Send + Sync + 'static,
     {
@@ -70,5 +133,22 @@ impl K8sCommon {
 
         let stream = api.watch(&wp, "").await.map_err(|e| e.to_string())?.boxed();
         Ok(stream)
+    }
+
+    pub fn emit_event<T, U>(
+        app_handle: &tauri::AppHandle,
+        event_name: &str,
+        kind: EventType,
+        obj: T,
+    ) where
+        T: Into<U>,
+        U: Serialize + Clone + From<T>,
+    {
+        let event = serde_json::json!({
+            "type": kind,
+            "object": obj.into(),
+        });
+
+        let _ = app_handle.emit(event_name, event);
     }
 }

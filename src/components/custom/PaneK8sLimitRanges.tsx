@@ -8,7 +8,7 @@ import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { Badge } from '../ui/badge';
+import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 
 export default function PaneK8sLimitRanges({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -81,9 +81,7 @@ export default function PaneK8sLimitRanges({ context }: PaneK8sResourceContextPr
           <Td className="max-w-truncate" title={f.name}>
             {f.name}
           </Td>
-          <Td>
-            <Badge>{f.namespace}</Badge>
-          </Td>
+          <BadgeK8sNamespaces name={f.namespace}/>
           <Td>{f.type_ || '-'}</Td>
           <Td title={renderLimitMap(f.min).title}>{renderLimitMap(f.min).display}</Td>
           <Td title={renderLimitMap(f.max).title}>{renderLimitMap(f.max).display}</Td>
