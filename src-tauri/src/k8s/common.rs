@@ -125,7 +125,6 @@ impl K8sCommon {
                 Err(e) => return Err(e),
             }
         }
-
         Ok(deleted)
     }
 

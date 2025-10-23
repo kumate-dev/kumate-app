@@ -55,12 +55,12 @@ export async function watchPods({
 
 export async function deletePods({
   name,
-  namespaces,
-  pod_names,
+  namespace,
+  podNames,
 }: {
   name: string;
-  namespaces?: string[];
-  pod_names: string[];
+  namespace: string;
+  podNames: string[];
 }): Promise<PodItem[]> {
-  return await invoke<PodItem[]>('delete_pods', { name, namespaces, pod_names });
+  return await invoke<PodItem[]>('delete_pods', { name, namespace, podNames });
 }

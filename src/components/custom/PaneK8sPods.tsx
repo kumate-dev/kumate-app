@@ -97,8 +97,8 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
     try {
       await deletePods({
         name: context?.name!,
-        namespaces: [pod.namespace],
-        pod_names: [pod.name],
+        namespace: pod.namespace,
+        podNames: [pod.name],
       });
     } catch (err) {
       console.error('Failed to delete pod', err);
