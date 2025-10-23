@@ -19,6 +19,7 @@ import PaneK8sConfigMap from '@/components/custom/PaneK8sConfigMap';
 import PaneK8sSecret from '@/components/custom/PaneK8sSecret';
 import PaneK8sResourceQuota from '@/components/custom/PaneK8sResourceQuota';
 import PaneK8sLimitRange from '@/components/custom/PaneLimitRange';
+import PaneK8sHorizontalPodAutoscaler from '@/components/custom/PaneK8sHorizontalPodAutoscaler';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -120,7 +121,7 @@ export default function Home() {
           {page === 'secrets' && <PaneK8sSecret context={selected} />}
           {page === 'resourcequotas' && <PaneK8sResourceQuota context={selected} />}
           {page === 'limitranges' && <PaneK8sLimitRange context={selected} />}
-          {page === 'hpas' && <Placeholder title="Horizontal Pod Autoscalers" />}
+          {page === 'hpas' && <PaneK8sHorizontalPodAutoscaler context={selected} />}
           {page === 'pdbs' && <Placeholder title="Pod Disruption Budgets" />}
           {page === 'priorityclasses' && <Placeholder title="Priority Classes" />}
           {page === 'runtimeclasses' && <Placeholder title="Runtime Classes" />}

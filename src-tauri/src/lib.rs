@@ -15,6 +15,7 @@ use crate::commands::contexts;
 use crate::commands::cron_jobs;
 use crate::commands::daemon_sets;
 use crate::commands::deployments;
+use crate::commands::horizontal_pod_autoscalers;
 use crate::commands::jobs;
 use crate::commands::limit_ranges;
 use crate::commands::namespaces;
@@ -86,6 +87,8 @@ pub fn run() {
             resource_quotas::watch_resource_quotas,
             limit_ranges::list_limitranges,
             limit_ranges::watch_limitranges,
+            horizontal_pod_autoscalers::list_horizontal_pod_autoscalers,
+            horizontal_pod_autoscalers::watch_horizontal_pod_autoscalers,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

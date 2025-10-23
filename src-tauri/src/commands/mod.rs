@@ -4,6 +4,7 @@ pub mod contexts;
 pub mod cron_jobs;
 pub mod daemon_sets;
 pub mod deployments;
+pub mod horizontal_pod_autoscalers;
 pub mod jobs;
 pub mod limit_ranges;
 pub mod namespaces;
