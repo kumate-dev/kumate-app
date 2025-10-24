@@ -48,7 +48,7 @@ export const TableHeader = <SortKey extends string>({
   const isIndeterminate = selectedItems.length > 0 && selectedItems.length < totalItems.length;
 
   return (
-    <thead className="sticky top-0 z-10 bg-neutral-900">
+    <thead className="sticky top-0 bg-neutral-900/100">
       <tr className="align-middle">
         {onToggleAll && (
           <Th className="w-12 text-center align-middle">

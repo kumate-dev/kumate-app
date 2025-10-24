@@ -14,6 +14,14 @@ import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 export default function PanePods({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -31,6 +39,7 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
   const [sortBy, setSortBy] = useState<keyof PodItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedPods, setSelectedPods] = useState<PodItem[]>([]);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
   const filtered = useFilteredItems(
     items,
@@ -60,6 +69,7 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
     if (selectedPods.length === 0) return toast.error('No pods selected');
     await handleDeleteResources(selectedPods);
     setSelectedPods([]);
+    setOpenDeleteModal(false);
   }, [selectedPods, handleDeleteResources]);
 
   const columns: ColumnDef<keyof PodItem | ''>[] = [
@@ -145,60 +155,65 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
   };
 
   return (
-    <PaneK8sResource
-      items={filtered}
-      loading={loading}
-      error={error ?? ''}
-      query={q}
-      onQueryChange={setQ}
-      namespaceList={namespaceList}
-      selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
-      selectedItems={selectedPods}
-      onToggleItem={togglePod}
-      onDeleteSelected={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
-      renderRow={(pod) => (
-        <>
-          <Td className="max-w-truncate align-middle">
-            <span className="block truncate" title={pod.name}>
-              {pod.name}
-            </span>
-          </Td>
-          <Td className="text-center align-middle">
-            {hasPodWarning(pod) && (
-              <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
-            )}
-          </Td>
-          <Td>
-            <BadgeK8sNamespaces name={pod.namespace} />
-          </Td>
-          <Td>
-            <div className="flex items-center gap-1">
-              {pod.container_states?.length
-                ? pod.container_states.map((st, idx) => (
-                    <span
-                      key={idx}
-                      className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass(st)}`}
-                    />
-                  ))
-                : Array.from({ length: pod.containers || 0 }).map((_, idx) => (
-                    <span key={idx} className="inline-block h-2.5 w-2.5 rounded-full bg-white/30" />
-                  ))}
-            </div>
-          </Td>
-          <Td>{pod.cpu || '-'}</Td>
-          <Td>{pod.memory || '-'}</Td>
-          <Td>{pod.restart ?? '-'}</Td>
-          <Td>{pod.node || '-'}</Td>
-          <Td>{pod.qos || '-'}</Td>
-          <AgeCell timestamp={pod.creation_timestamp || ''} />
-          <Td>
-            <Badge variant={podStatusVariant(pod.phase ?? '')}>{pod.phase ?? ''}</Badge>
-          </Td>
-        </>
-      )}
-    />
+    <>
+      <PaneK8sResource
+        items={filtered}
+        loading={loading}
+        error={error ?? ''}
+        query={q}
+        onQueryChange={setQ}
+        namespaceList={namespaceList}
+        selectedNamespaces={selectedNamespaces}
+        onSelectNamespace={setSelectedNamespaces}
+        selectedItems={selectedPods}
+        onToggleItem={togglePod}
+        onDeleteSelected={handleDeleteSelected}
+        colSpan={columns.length + 1}
+        tableHeader={tableHeader}
+        renderRow={(pod) => (
+          <>
+            <Td className="max-w-truncate align-middle">
+              <span className="block truncate" title={pod.name}>
+                {pod.name}
+              </span>
+            </Td>
+            <Td className="text-center align-middle">
+              {hasPodWarning(pod) && (
+                <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
+              )}
+            </Td>
+            <Td>
+              <BadgeK8sNamespaces name={pod.namespace} />
+            </Td>
+            <Td>
+              <div className="flex items-center gap-1">
+                {pod.container_states?.length
+                  ? pod.container_states.map((st, idx) => (
+                      <span
+                        key={idx}
+                        className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass(st)}`}
+                      />
+                    ))
+                  : Array.from({ length: pod.containers || 0 }).map((_, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-block h-2.5 w-2.5 rounded-full bg-white/30"
+                      />
+                    ))}
+              </div>
+            </Td>
+            <Td>{pod.cpu || '-'}</Td>
+            <Td>{pod.memory || '-'}</Td>
+            <Td>{pod.restart ?? '-'}</Td>
+            <Td>{pod.node || '-'}</Td>
+            <Td>{pod.qos || '-'}</Td>
+            <AgeCell timestamp={pod.creation_timestamp || ''} />
+            <Td>
+              <Badge variant={podStatusVariant(pod.phase ?? '')}>{pod.phase ?? ''}</Badge>
+            </Td>
+          </>
+        )}
+      />
+    </>
   );
 }

@@ -1,11 +1,18 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { PaneTaskbar } from './PaneTaskbar';
 import { PaneSearch } from './PaneSearch';
-import { Table, Tbody, Td, Tr, Th, Thead } from '@/components/ui/table';
+import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { ErrorMessage } from './ErrorMessage';
-import React from 'react';
 import { K8sContext } from '@/services/contexts';
 import { Checkbox } from '../ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 export interface PaneK8sResourceContextProps {
   context?: K8sContext | null;
@@ -49,9 +56,18 @@ export function PaneK8sResource<T>({
   colSpan = 5,
   tableHeader,
 }: PaneK8sResourceProps<T>) {
-  const totalItems = items;
-
   const totalColSpan = (colSpan || 0) + (onToggleItem ? 1 : 0);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+
+  const handleDeleteClick = () => {
+    if (selectedItems.length === 0) return;
+    setOpenDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDeleteSelected?.();
+    setOpenDeleteModal(false);
+  };
 
   return (
     <div className="flex h-full flex-col space-y-3">
@@ -64,7 +80,7 @@ export function PaneK8sResource<T>({
           onQueryChange={onQueryChange}
           showNamespace={showNamespace}
           selectedCount={selectedItems.length}
-          onDeleteSelected={onDeleteSelected}
+          onDeleteSelected={handleDeleteClick}
         />
       ) : (
         <div className="mb-4">
@@ -115,6 +131,31 @@ export function PaneK8sResource<T>({
           </div>
         </div>
       </div>
+
+      {onDeleteSelected && (
+        <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Delete</DialogTitle>
+            </DialogHeader>
+            <p>Are you sure you want to delete {selectedItems?.length} selected items?</p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onDeleteSelected();
+                  setOpenDeleteModal(false);
+                }}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

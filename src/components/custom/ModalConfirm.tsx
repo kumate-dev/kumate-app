@@ -1,42 +1,48 @@
 import React from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-interface ModalConfirmProps {
-  open: boolean;
-  title?: string;
-  description?: string;
-  onConfirm: () => void;
-  onCancel: () => void;
+export const Dialog = DialogPrimitive.Root;
+export const DialogTrigger = DialogPrimitive.Trigger;
+
+interface DialogContentProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+  className?: string;
+  children?: React.ReactNode;
 }
 
-export const ModalConfirm: React.FC<ModalConfirmProps> = ({
-  open,
-  title = 'Confirm',
-  description = 'Are you sure?',
-  onConfirm,
-  onCancel,
-}) => {
-  if (!open) return null;
-
+export function DialogContent({ className = '', children, ...props }: DialogContentProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-neutral-900 rounded-lg p-6 w-96 shadow-lg">
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-sm text-white/80 mb-4">{description}</p>
-        <div className="flex justify-end gap-2">
-          <button
-            className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
-          <button
-            className="px-4 py-2 bg-red-600 rounded hover:bg-red-500 text-white"
-            onClick={onConfirm}
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
+    <DialogPrimitive.Portal>
+      <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fixed inset-0 z-100 bg-black/20 backdrop-blur-sm" />
+      <DialogPrimitive.Content
+        className={`data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 fixed top-1/2 left-1/2 z-110 w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-neutral-900/95 p-4 shadow-xl ${className}`}
+        {...props}
+      >
+        {children}
+        <DialogPrimitive.Close asChild>
+          <Button variant="ghost" size="sm" className="absolute top-3 right-3 p-2">
+            <X className="h-4 w-4" />
+          </Button>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </DialogPrimitive.Portal>
   );
-};
+}
+
+interface SimpleContainerProps {
+  children?: React.ReactNode;
+}
+
+export function DialogHeader({ children }: SimpleContainerProps) {
+  return <div className="mb-3 flex items-center justify-between">{children}</div>;
+}
+
+export function DialogTitle({ children }: SimpleContainerProps) {
+  return <h2 className="text-base font-semibold text-white">{children}</h2>;
+}
+
+export function DialogFooter({ children }: SimpleContainerProps) {
+  return <div className="mt-4 flex items-center justify-end gap-2">{children}</div>;
+}

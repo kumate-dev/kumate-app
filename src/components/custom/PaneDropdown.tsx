@@ -24,7 +24,7 @@ export function PaneDropdown({ trigger, children, className }: PaneDropdownProps
     <div className={`relative ${className}`} ref={ref}>
       <div onClick={() => setOpen(!open)}>{trigger}</div>
       {open && (
-        <div className="absolute z-50 mt-1 min-w-full rounded border border-white/20 bg-neutral-900 p-1 shadow-lg">
+        <div className="absolute z-30 mt-1 min-w-full rounded border border-white/20 bg-neutral-900 p-1 shadow-lg">
           <div className="whitespace-nowrap">{children}</div>
         </div>
       )}
