@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useK8sResources } from '@/hooks/useK8sResources';
+import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listReplicaSets, watchReplicaSets, ReplicaSetItem } from '@/services/replicaSets';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
@@ -17,7 +17,7 @@ export default function PaneK8sReplicaSets({ context }: PaneK8sResourceContextPr
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<ReplicaSetItem>(
+  const { items, loading, error } = useListK8sResources<ReplicaSetItem>(
     listReplicaSets,
     watchReplicaSets,
     context,

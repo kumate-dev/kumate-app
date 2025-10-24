@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useK8sResources } from '@/hooks/useK8sResources';
+import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listStatefulSets, StatefulSetItem, watchStatefulSets } from '@/services/statefulSets';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import AgeCell from '@/components/custom/AgeCell';
@@ -18,7 +18,7 @@ export default function PaneK8sStatefulSets({ context }: PaneK8sResourceContextP
 
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<StatefulSetItem>(
+  const { items, loading, error } = useListK8sResources<StatefulSetItem>(
     listStatefulSets,
     watchStatefulSets,
     context,

@@ -21,6 +21,7 @@ import PaneK8sResourceQuota from '@/components/custom/PaneK8sResourceQuotas';
 import PaneK8sLimitRanges from '@/components/custom/PaneK8sLimitRanges';
 import PaneK8sHorizontalPodAutoscalers from '@/components/custom/PaneK8sHorizontalPodAutoscalers';
 import PaneK8sPodDisruptionBudgets from '@/components/custom/PaneK8sPodDisruptionBudgets';
+import { Toaster } from 'sonner';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);

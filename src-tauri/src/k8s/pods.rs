@@ -90,7 +90,7 @@ impl K8sPods {
         name: String,
         namespace: Option<String>,
         pod_names: Vec<String>,
-    ) -> Result<Vec<String>, String> {
+    ) -> Result<Vec<Result<String, String>>, String> {
         K8sCommon::delete_resources::<Pod, _, _>(
             &name,
             namespace,

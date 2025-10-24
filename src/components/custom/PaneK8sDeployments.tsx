@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useK8sResources } from '@/hooks/useK8sResources';
+import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listDeployments, watchDeployments, DeploymentItem } from '@/services/deployments';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
@@ -18,7 +18,7 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<DeploymentItem>(
+  const { items, loading, error } = useListK8sResources<DeploymentItem>(
     listDeployments,
     watchDeployments,
     context,

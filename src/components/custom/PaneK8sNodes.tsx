@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Td, Tr } from '@/components/ui/table';
-import { useK8sResources } from '@/hooks/useK8sResources';
+import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { listNodes, NodeItem, watchNodes } from '@/services/nodes';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
 import { PaneK8sResource, PaneK8sResourceContextProps } from '@/components/custom/PaneK8sResource';
 
 export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
-  const { items, loading, error } = useK8sResources<NodeItem>(
+  const { items, loading, error } = useListK8sResources<NodeItem>(
     listNodes as (params: { name: string }) => Promise<NodeItem[]>,
     watchNodes,
     context

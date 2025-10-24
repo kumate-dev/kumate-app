@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useK8sResources } from '@/hooks/useK8sResources';
+import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listPods, watchPods, PodItem, deletePods } from '@/services/pods';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
@@ -12,13 +12,14 @@ import { AlertTriangle, X } from 'lucide-react';
 import { BadgeVariant } from '@/types/variant';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 
 export default function PanePods({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<PodItem>(
+  const { items, loading, error } = useListK8sResources<PodItem>(
     listPods,
     watchPods,
     context,
@@ -93,16 +94,10 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
     return p.container_states?.some((st) => badStates.includes(st)) ?? false;
   };
 
-  const handleDeletePod = async (pod: PodItem) => {
-    try {
-      await deletePods({
-        name: context?.name!,
-        namespace: pod.namespace,
-        podNames: [pod.name],
-      });
-    } catch (err) {
-      console.error('Failed to delete pod', err);
-    }
+  const { handleDeleteResources } = useDeleteK8sResources<PodItem>(deletePods, context);
+
+  const handleDeletePods = async (pods: PodItem[]) => {
+    await handleDeleteResources(pods);
   };
 
   const columns: ColumnDef<keyof PodItem | ''>[] = [
@@ -179,7 +174,7 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
           <Td>
             <button
               className="text-red/60 hover:text-red-500"
-              onClick={() => handleDeletePod(f)}
+              onClick={() => handleDeletePods([f])}
               title="Delete Pod"
             >
               <X className="inline-block h-4 w-4" />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useK8sResources } from '@/hooks/useK8sResources';
+import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listCronJobs, watchCronJobs, CronJobItem } from '@/services/cronJobs';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td, Tr } from '@/components/ui/table';
@@ -17,7 +17,7 @@ export default function PaneK8sCronJobs({ context }: PaneK8sResourceContextProps
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useK8sResources<CronJobItem>(
+  const { items, loading, error } = useListK8sResources<CronJobItem>(
     listCronJobs,
     watchCronJobs,
     context,

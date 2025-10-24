@@ -1,7 +1,7 @@
 use futures_util::{future::join_all, StreamExt};
 use k8s_openapi::{apimachinery::pkg::apis::meta::v1::Time, Resource};
 use kube::{
-    api::{Api, ObjectMeta, WatchEvent, WatchParams},
+    api::{Api, DeleteParams, ObjectMeta, WatchEvent, WatchParams},
     Client, ResourceExt,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -92,7 +92,7 @@ impl K8sCommon {
         namespace: Option<String>,
         names: Vec<String>,
         api_fn: F,
-    ) -> Result<Vec<String>, String>
+    ) -> Result<Vec<Result<String, String>>, String>
     where
         R: Resource + Clone + Send + Sync + 'static + DeserializeOwned + Debug,
         F: Fn(Client, Option<String>) -> Fut + Send + Sync + Copy,
@@ -103,29 +103,21 @@ impl K8sCommon {
             .map_err(|e| e.to_string())?;
 
         let futures = names.into_iter().map(|name| {
-            let client = client.clone();
-            let namespace = namespace.clone();
+            let client: Client = client.clone();
+            let namespace: Option<String> = namespace.clone();
             let api_fn = api_fn;
             async move {
                 let api: Api<R> = api_fn(client, namespace).await;
-                let dp = kube::api::DeleteParams::default();
-                api.delete(&name, &dp)
-                    .await
-                    .map(|_| name.clone())
-                    .map_err(|e| e.to_string())
+                let dp: DeleteParams = DeleteParams::default();
+                match api.delete(&name, &dp).await {
+                    Ok(_) => Ok(name.clone()),
+                    Err(e) => Err(Self::extract_error(&e, &name)),
+                }
             }
         });
 
         let results: Vec<Result<String, String>> = join_all(futures).await;
-
-        let mut deleted: Vec<String> = Vec::new();
-        for res in results {
-            match res {
-                Ok(name) => deleted.push(name),
-                Err(e) => return Err(e),
-            }
-        }
-        Ok(deleted)
+        Ok(results)
     }
 
     pub fn event_spawn_watch<R, F>(
@@ -191,5 +183,18 @@ impl K8sCommon {
         });
 
         let _ = app_handle.emit(event_name, event);
+    }
+
+    fn extract_error(e: &kube::Error, name: &str) -> String {
+        match e {
+            kube::Error::Api(ae) => {
+                if ae.message.is_empty() {
+                    format!("{}: resource {}", ae.reason, name)
+                } else {
+                    format!("{}", ae.message)
+                }
+            }
+            other => format!("{}: {}", name, other),
+        }
     }
 }

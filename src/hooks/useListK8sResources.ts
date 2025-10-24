@@ -4,7 +4,7 @@ import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES } from '@/constants/k8s';
 import { WatchEvent } from '@/types/k8sEvent';
 import { unwatch } from '@/services/unwatch';
 
-export function useK8sResources<T extends { name: string; namespace?: string }>(
+export function useListK8sResources<T extends { name: string; namespace?: string }>(
   listFn: (params: { name: string; namespaces?: string[] }) => Promise<T[]>,
   watchFn?: (params: {
     name: string;
