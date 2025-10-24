@@ -82,6 +82,22 @@ impl K8sDeployments {
         Ok(())
     }
 
+    pub async fn delete(
+        name: String,
+        namespace: Option<String>,
+        deployment_names: Vec<String>,
+    ) -> Result<Vec<Result<String, String>>, String> {
+        K8sCommon::delete_resources::<Deployment, _, _>(
+            &name,
+            namespace,
+            deployment_names,
+            |client: kube::Client, ns: Option<String>| {
+                Box::pin(K8sClient::api::<Deployment>(client, ns))
+            },
+        )
+        .await
+    }
+
     fn emit_event(app_handle: &AppHandle, event_name: &str, kind: EventType, d: Deployment) {
         K8sCommon::emit_event::<Deployment, DeploymentItem>(app_handle, event_name, kind, d);
     }

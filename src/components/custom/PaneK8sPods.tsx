@@ -156,7 +156,6 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
       onSelectNamespace={setSelectedNamespaces}
       selectedItems={selectedPods}
       onToggleItem={togglePod}
-      onToggleAll={toggleAllPods}
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}

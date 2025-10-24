@@ -67,6 +67,7 @@ pub fn run() {
             pods::delete_pods,
             deployments::list_deployments,
             deployments::watch_deployments,
+            deployments::delete_deployments,
             replica_sets::list_replica_sets,
             replica_sets::watch_replica_sets,
             daemon_sets::list_daemon_sets,

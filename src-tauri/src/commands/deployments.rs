@@ -32,3 +32,12 @@ pub async fn watch_deployments(
     )
     .await
 }
+
+#[tauri::command]
+pub async fn delete_deployments(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sDeployments::delete(name, namespace, resource_names).await?)
+}

@@ -43,7 +43,6 @@ export function PaneK8sResource<T>({
   showNamespace = true,
   selectedItems = [],
   onToggleItem,
-  onToggleAll,
   onDeleteSelected,
   renderRow,
   emptyText = 'No items',
@@ -51,8 +50,6 @@ export function PaneK8sResource<T>({
   tableHeader,
 }: PaneK8sResourceProps<T>) {
   const totalItems = items;
-  const allSelected = totalItems.length > 0 && selectedItems.length === totalItems.length;
-  const isIndeterminate = selectedItems.length > 0 && selectedItems.length < totalItems.length;
 
   const totalColSpan = (colSpan || 0) + (onToggleItem ? 1 : 0);
 

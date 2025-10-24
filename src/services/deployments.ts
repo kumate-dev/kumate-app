@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
+import { K8sResponse } from '@/types/k8sResponse';
 
 export interface DeploymentItem {
   name: string;
@@ -45,4 +46,16 @@ export async function watchDeployments({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteDeployments({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_deployments', { name, namespace, resourceNames });
 }
