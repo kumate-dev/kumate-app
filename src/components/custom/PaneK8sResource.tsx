@@ -64,11 +64,6 @@ export function PaneK8sResource<T>({
     setOpenDeleteModal(true);
   };
 
-  const handleConfirmDelete = () => {
-    onDeleteSelected?.();
-    setOpenDeleteModal(false);
-  };
-
   return (
     <div className="flex h-full flex-col space-y-3">
       {(showNamespace && onSelectNamespace) || !showNamespace ? (
