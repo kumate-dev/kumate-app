@@ -1,10 +1,11 @@
 import { ReactNode } from 'react';
 import { PaneTaskbar } from './PaneTaskbar';
 import { PaneSearch } from './PaneSearch';
-import { Table, Tbody } from '@/components/ui/table';
+import { Table, Tbody, Td, Tr, Th, Thead } from '@/components/ui/table';
 import { ErrorMessage } from './ErrorMessage';
 import React from 'react';
 import { K8sContext } from '@/services/contexts';
+import { Checkbox } from '../ui/checkbox';
 
 export interface PaneK8sResourceContextProps {
   context?: K8sContext | null;
@@ -20,6 +21,10 @@ interface PaneK8sResourceProps<T> {
   selectedNamespaces?: string[];
   onSelectNamespace?: (ns: string[]) => void;
   showNamespace?: boolean;
+  selectedItems?: T[];
+  onToggleItem?: (item: T) => void;
+  onToggleAll?: (checked: boolean) => void;
+  onDeleteSelected?: () => void;
   renderRow: (item: T) => ReactNode;
   emptyText?: string;
   colSpan?: number;
@@ -36,11 +41,21 @@ export function PaneK8sResource<T>({
   selectedNamespaces = [],
   onSelectNamespace,
   showNamespace = true,
+  selectedItems = [],
+  onToggleItem,
+  onToggleAll,
+  onDeleteSelected,
   renderRow,
   emptyText = 'No items',
   colSpan = 5,
   tableHeader,
 }: PaneK8sResourceProps<T>) {
+  const totalItems = items;
+  const allSelected = totalItems.length > 0 && selectedItems.length === totalItems.length;
+  const isIndeterminate = selectedItems.length > 0 && selectedItems.length < totalItems.length;
+
+  const totalColSpan = (colSpan || 0) + (onToggleItem ? 1 : 0);
+
   return (
     <div className="flex h-full flex-col space-y-3">
       {(showNamespace && onSelectNamespace) || !showNamespace ? (
@@ -51,6 +66,8 @@ export function PaneK8sResource<T>({
           query={query}
           onQueryChange={onQueryChange}
           showNamespace={showNamespace}
+          selectedCount={selectedItems.length}
+          onDeleteSelected={onDeleteSelected}
         />
       ) : (
         <div className="mb-4">
@@ -67,22 +84,34 @@ export function PaneK8sResource<T>({
               {tableHeader}
               <Tbody>
                 {loading && (
-                  <tr className="text-center">
-                    <td colSpan={colSpan} className="py-4 text-white/60">
+                  <Tr className="text-center">
+                    <Td colSpan={totalColSpan} className="py-4 text-white/60">
                       Loading…
-                    </td>
-                  </tr>
+                    </Td>
+                  </Tr>
                 )}
+
                 {!loading && items.length === 0 && (
-                  <tr className="text-center">
-                    <td colSpan={colSpan} className="py-4 text-white/60">
+                  <Tr className="text-center">
+                    <Td colSpan={totalColSpan} className="py-4 text-white/60">
                       {emptyText}
-                    </td>
-                  </tr>
+                    </Td>
+                  </Tr>
                 )}
+
                 {!loading &&
                   items.map((item, idx) => (
-                    <React.Fragment key={idx}>{renderRow(item)}</React.Fragment>
+                    <Tr key={idx}>
+                      {onToggleItem && (
+                        <Td>
+                          <Checkbox
+                            checked={selectedItems.includes(item)}
+                            onCheckedChange={() => onToggleItem(item)}
+                          />
+                        </Td>
+                      )}
+                      {renderRow(item)}
+                    </Tr>
                   ))}
               </Tbody>
             </Table>

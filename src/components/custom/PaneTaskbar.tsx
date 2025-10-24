@@ -3,6 +3,7 @@ import { PaneSearch } from '@/components/custom/PaneSearch';
 import { Check } from 'lucide-react';
 import { PaneDropdown } from '@/components/custom/PaneDropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
+import { SelectedBubble } from '../ui/bubble';
 
 interface NamespaceOption {
   name: string;
@@ -15,12 +16,16 @@ interface PaneTaskbarProps {
   query: string;
   onQueryChange: (q: string) => void;
   showNamespace?: boolean;
+  selectedCount?: number;
+  onDeleteSelected?: () => void;
 }
 
 export function PaneTaskbar({
   namespaceList = [],
   selectedNamespaces = [ALL_NAMESPACES],
   onSelectNamespace,
+  selectedCount = 0,
+  onDeleteSelected,
   query,
   onQueryChange,
   showNamespace = true,
@@ -46,7 +51,7 @@ export function PaneTaskbar({
     : selectedNamespaces.join(', ');
 
   return (
-    <div className="sticky top-0 z-20 mb-2 flex items-center gap-2 py-2">
+    <div className="relative sticky top-0 z-20 mb-2 flex items-center gap-2 py-2">
       {showNamespace && onSelectNamespace && (
         <PaneDropdown trigger={<DropdownTrigger label={displayLabel} className="w-80" />}>
           {[ALL_NAMESPACES, ...namespaceList.map((ns) => ns.name)].map((ns) => (
@@ -71,6 +76,12 @@ export function PaneTaskbar({
         onQueryChange={onQueryChange}
         className="max-w-xs min-w-0 flex-shrink"
       />
+
+      {selectedCount > 0 && onDeleteSelected && (
+        <div className="ml-auto">
+          <SelectedBubble count={selectedCount} onDelete={onDeleteSelected} />
+        </div>
+      )}
     </div>
   );
 }

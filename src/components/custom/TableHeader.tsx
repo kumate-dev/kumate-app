@@ -1,6 +1,7 @@
 import { Th } from '@/components/ui/table';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import React from 'react';
+import { Checkbox } from '../ui/checkbox';
 
 export type SortKey = string;
 
@@ -9,7 +10,7 @@ export interface ColumnDef<SortKey extends string> {
   key: SortKey;
   sortable?: boolean;
   align?: 'left' | 'center' | 'right';
-  width?: string; // optional column width (e.g. w-[200px], w-1/5)
+  width?: string; // optional column width
 }
 
 interface TableHeaderProps<SortKey extends string> {
@@ -18,6 +19,9 @@ interface TableHeaderProps<SortKey extends string> {
   sortOrder: 'asc' | 'desc';
   setSortBy: React.Dispatch<React.SetStateAction<SortKey>>;
   setSortOrder: React.Dispatch<React.SetStateAction<'asc' | 'desc'>>;
+  onToggleAll?: (checked: boolean) => void;
+  selectedItems?: any[];
+  totalItems?: any[];
 }
 
 export const TableHeader = <SortKey extends string>({
@@ -26,6 +30,9 @@ export const TableHeader = <SortKey extends string>({
   sortOrder,
   setSortBy,
   setSortOrder,
+  onToggleAll,
+  selectedItems = [],
+  totalItems = [],
 }: TableHeaderProps<SortKey>) => {
   const handleSort = (column: SortKey | '', sortable?: boolean) => {
     if (!sortable || column === '') return;
@@ -37,19 +44,32 @@ export const TableHeader = <SortKey extends string>({
     }
   };
 
+  const allSelected = totalItems.length > 0 && selectedItems.length === totalItems.length;
+  const isIndeterminate = selectedItems.length > 0 && selectedItems.length < totalItems.length;
+
   return (
     <thead className="sticky top-0 z-10 bg-neutral-900">
-      <tr>
+      <tr className="align-middle">
+        {onToggleAll && (
+          <Th className="w-12 text-center align-middle">
+            <Checkbox
+              checked={allSelected}
+              indeterminate={isIndeterminate}
+              onCheckedChange={(checked) => onToggleAll(checked)}
+            />
+          </Th>
+        )}
+
         {columns.map(({ label, key, sortable = true, align = 'left', width }) => {
           const isActive = sortBy === key;
           const alignClass =
             align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
 
           return (
-            <Th key={key} className={`${alignClass} ${width || ''} select-none`}>
+            <Th key={key} className={`${alignClass} align-middle ${width || ''} select-none`}>
               {sortable && key !== '' ? (
                 <button
-                  className="group inline-flex items-center gap-1 font-medium"
+                  className="group inline-flex w-full items-center justify-start gap-1 font-medium"
                   onClick={() => handleSort(key, sortable)}
                 >
                   <span className="truncate">{label}</span>
@@ -66,7 +86,7 @@ export const TableHeader = <SortKey extends string>({
                   </span>
                 </button>
               ) : (
-                <span className="font-medium">{label}</span>
+                <span className="block truncate font-medium">{label}</span>
               )}
             </Th>
           );

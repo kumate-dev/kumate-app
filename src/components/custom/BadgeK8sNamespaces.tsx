@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { Td } from '@/components/ui/table';
 
 interface BadgeK8sNamespacesProps {
   name: string;
@@ -7,8 +6,8 @@ interface BadgeK8sNamespacesProps {
 
 export function BadgeK8sNamespaces({ name }: BadgeK8sNamespacesProps) {
   return (
-    <Td>
+    <div className="flex h-full items-center">
       <Badge>{name}</Badge>
-    </Td>
+    </div>
   );
 }
