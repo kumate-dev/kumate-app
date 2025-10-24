@@ -31,7 +31,7 @@ impl From<&Pod> for PodItem {
         Self {
             name: p.name_any(),
             namespace: K8sCommon::to_namespace(p.namespace()),
-            phase: p.status.as_ref().and_then(|s| s.phase.clone()),
+            phase: K8sPods::extract_phase(&p),
             creation_timestamp: K8sCommon::to_creation_timestamp(p.metadata.clone()),
             containers: p.spec.as_ref().map(|s| s.containers.len()).unwrap_or(0),
             container_states: K8sPods::extract_container_states(p.status.clone()),
@@ -102,6 +102,13 @@ impl K8sPods {
 
     fn emit_event(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, p: Pod) {
         K8sCommon::emit_event::<Pod, PodItem>(app_handle, event_name, kind, p);
+    }
+
+    fn extract_phase(p: &Pod) -> Option<String> {
+        if p.metadata.deletion_timestamp.is_some() {
+            return Some("Terminating".to_string());
+        }
+        p.status.as_ref().and_then(|s| s.phase.clone())
     }
 
     fn extract_container_states(status: Option<PodStatus>) -> Option<Vec<String>> {

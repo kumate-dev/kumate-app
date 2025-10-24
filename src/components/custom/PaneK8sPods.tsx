@@ -119,15 +119,15 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
       case 'ContainerCreating':
         return 'warning';
       case 'Running':
-      case 'Succeeded':
         return 'success';
       case 'Failed':
       case 'CrashLoopBackOff':
       case 'ImagePullBackOff':
       case 'ErrImagePull':
       case 'OOMKilled':
-      case 'Terminating':
         return 'error';
+      case 'Succeeded':
+      case 'Terminating':
       default:
         return 'default';
     }
@@ -185,20 +185,14 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
             <Td>
               <BadgeK8sNamespaces name={pod.namespace} />
             </Td>
-            <Td>
-              <div className="flex items-center gap-1">
+            <Td className="align-middle">
+              <div className="inline-flex items-center gap-1">
                 {pod.container_states?.length
                   ? pod.container_states.map((st, idx) => (
-                      <span
-                        key={idx}
-                        className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass(st)}`}
-                      />
+                      <span key={idx} className={`h-2.5 w-2.5 rounded-full ${dotClass(st)}`} />
                     ))
                   : Array.from({ length: pod.containers || 0 }).map((_, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-block h-2.5 w-2.5 rounded-full bg-white/30"
-                      />
+                      <span key={idx} className="h-2.5 w-2.5 rounded-full bg-white/30" />
                     ))}
               </div>
             </Td>
