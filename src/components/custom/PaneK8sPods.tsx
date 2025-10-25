@@ -80,6 +80,7 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
     { label: 'CPU', key: 'cpu' },
     { label: 'Memory', key: 'memory' },
     { label: 'Restart', key: 'restart' },
+    { label: 'Controlled By', key: 'controller' },
     { label: 'Node', key: 'node' },
     { label: 'QoS', key: 'qos' },
     { label: 'Age', key: 'creation_timestamp' },
@@ -199,6 +200,7 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
             <Td>{pod.cpu || '-'}</Td>
             <Td>{pod.memory || '-'}</Td>
             <Td>{pod.restart ?? '-'}</Td>
+            <Td>{pod.controller ?? '-'}</Td>
             <Td>{pod.node || '-'}</Td>
             <Td>{pod.qos || '-'}</Td>
             <AgeCell timestamp={pod.creation_timestamp || ''} />

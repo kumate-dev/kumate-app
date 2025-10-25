@@ -15,6 +15,7 @@ export interface PodItem {
   restart?: number;
   node?: string;
   qos?: string;
+  controller?: string,
 }
 
 export interface PodEvent {

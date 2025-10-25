@@ -1,5 +1,5 @@
 use k8s_openapi::api::core::v1::{Container, Pod, PodSpec, PodStatus};
-use kube::{Api, Client, ResourceExt};
+use kube::{api::ObjectMeta, Api, Client, ResourceExt};
 use serde::Serialize;
 
 use super::client::K8sClient;
@@ -18,6 +18,7 @@ pub struct PodItem {
     pub restart: Option<i32>,
     pub node: Option<String>,
     pub qos: Option<String>,
+    pub controller: Option<String>,
 }
 
 impl From<Pod> for PodItem {
@@ -40,6 +41,7 @@ impl From<&Pod> for PodItem {
             restart: K8sPods::sum_restarts(p.status.clone()),
             node: p.spec.as_ref().and_then(|s| s.node_name.clone()),
             qos: p.status.as_ref().and_then(|s| s.qos_class.clone()),
+            controller: K8sPods::extract_controller(&p.metadata)
         }
     }
 }
@@ -275,5 +277,11 @@ impl K8sPods {
         } else {
             s.parse::<f64>().ok().map(|cores| cores * 1000.0)
         }
+    }
+
+    fn extract_controller(metadata: &ObjectMeta) -> Option<String> {
+        metadata.owner_references.as_ref()?.first().map(|owner| {
+            format!("{}", owner.kind)
+        })
     }
 }
