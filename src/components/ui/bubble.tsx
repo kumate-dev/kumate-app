@@ -1,21 +1,24 @@
-import { Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import React from 'react';
 
-interface SelectedBubbleProps {
+interface BubbleProps {
   count: number;
-  onDelete: () => void;
+  children?: React.ReactNode;
+  onClick?: () => void;
 }
 
-export const SelectedBubble: React.FC<SelectedBubbleProps> = ({ count, onDelete }) => {
+export const Bubble: React.FC<BubbleProps> = ({ count, onClick, children }) => {
   if (count === 0) return null;
 
   return (
-    <div
-      className="ml-auto flex h-8 cursor-pointer items-center rounded-full bg-red-600 px-3 text-sm font-medium text-white transition select-none hover:bg-red-700"
-      onClick={onDelete}
-      title="Delete selected"
+    <Button
+      variant="secondary"
+      size="sm"
+      className="ml-auto flex items-center gap-1 px-3"
+      onClick={onClick}
+      title={typeof children === 'string' ? children : undefined}
     >
-      <Trash2 className="h-4 w-4" />
-    </div>
+      {children || count}
+    </Button>
   );
 };

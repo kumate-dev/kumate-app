@@ -19,7 +19,7 @@ import { readyVariant } from '@/utils/k8s';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
-import { BadgeVariant } from '@/types/variant';
+import { k8sDeploymentStatusVariant } from '@/constants/variant';
 
 export default function PaneK8sDeployments({ context }: { context?: any }) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -37,7 +37,7 @@ export default function PaneK8sDeployments({ context }: { context?: any }) {
   const [sortBy, setSortBy] = useState<keyof DeploymentItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedDeployments, setSelectedDeployments] = useState<DeploymentItem[]>([]);
-  const [selectedItem, setSelectedItem] = useState<DeploymentItem | null>(null);
+  const [selectedDeployment, setSelectedDeployment] = useState<DeploymentItem | null>(null);
 
   const filtered = useFilteredItems(
     items,
@@ -72,21 +72,9 @@ export default function PaneK8sDeployments({ context }: { context?: any }) {
     setSelectedDeployments([]);
   }, [selectedDeployments, handleDeleteResources]);
 
-  const statusVariant = (s: string): BadgeVariant => {
-    switch (s) {
-      case 'Available':
-        return 'success';
-      case 'Progressing':
-      case 'Scaling':
-        return 'warning';
-      case 'Terminating':
-        return 'secondary';
-      case 'Failed':
-      case 'Unavailable':
-        return 'error';
-      default:
-        return 'default';
-    }
+  const handleDeleteOne = async (item: DeploymentItem) => {
+    await handleDeleteResources([item]);
+    setSelectedDeployment(null);
   };
 
   const columns: ColumnDef<keyof DeploymentItem | ''>[] = [
@@ -127,7 +115,7 @@ export default function PaneK8sDeployments({ context }: { context?: any }) {
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}
-      onRowClick={(f) => setSelectedItem(f)}
+      onRowClick={(f) => setSelectedDeployment(f)}
       renderRow={(f) => (
         <>
           <Td className="max-w-truncate align-middle">
@@ -143,12 +131,18 @@ export default function PaneK8sDeployments({ context }: { context?: any }) {
           </Td>
           <AgeCell timestamp={f.creation_timestamp || ''} />
           <Td>
-            <Badge variant={statusVariant(f.status || '')}>{f.status || ''}</Badge>
+            <Badge variant={k8sDeploymentStatusVariant(f.status || '')}>{f.status || ''}</Badge>
           </Td>
           <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>
           </Td>
-          {selectedItem && <SidebarK8sDeployment item={selectedItem} setItem={setSelectedItem} />}
+          {selectedDeployment && (
+            <SidebarK8sDeployment
+              item={selectedDeployment}
+              setItem={setSelectedDeployment}
+              onDelete={handleDeleteOne}
+            />
+          )}
         </>
       )}
     />

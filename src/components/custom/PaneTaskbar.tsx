@@ -3,7 +3,8 @@ import { PaneSearch } from '@/components/custom/PaneSearch';
 import { Check } from 'lucide-react';
 import { PaneDropdown } from '@/components/custom/PaneDropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
-import { SelectedBubble } from '../ui/bubble';
+import { Bubble } from '../ui/bubble';
+import { BubbleTrash } from './BubbleTrash';
 
 interface NamespaceOption {
   name: string;
@@ -79,7 +80,7 @@ export function PaneTaskbar({
 
       {selectedCount > 0 && onDeleteSelected && (
         <div className="ml-auto">
-          <SelectedBubble count={selectedCount} onDelete={onDeleteSelected} />
+          <BubbleTrash onDelete={onDeleteSelected} />
         </div>
       )}
     </div>

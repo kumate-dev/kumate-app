@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ModalConfirmDelete } from './ModalConfirmDelete';
 
 export interface PaneK8sResourceContextProps {
   context?: K8sContext | null;
@@ -135,28 +136,12 @@ export function PaneK8sResource<T>({
       </div>
 
       {onDeleteSelected && (
-        <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirm Delete</DialogTitle>
-            </DialogHeader>
-            <p>Are you sure you want to delete {selectedItems?.length} selected items?</p>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  onDeleteSelected();
-                  setOpenDeleteModal(false);
-                }}
-              >
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <ModalConfirmDelete
+          open={openDeleteModal}
+          setOpen={setOpenDeleteModal}
+          items={selectedItems}
+          onConfirm={onDeleteSelected}
+        />
       )}
     </div>
   );
