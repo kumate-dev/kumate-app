@@ -48,3 +48,18 @@ export function DialogTitle({ children }: SimpleContainerProps) {
 export function DialogFooter({ children }: SimpleContainerProps) {
   return <div className="mt-4 flex items-center justify-end gap-2">{children}</div>;
 }
+
+interface DialogCloseProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close> {
+  children?: React.ReactNode;
+  className?: string;
+}
+
+export function DialogClose({ children, className = '', ...props }: DialogCloseProps) {
+  return (
+    <DialogPrimitive.Close asChild {...props}>
+      <Button variant="ghost" size="sm" className={`p-2 ${className}`}>
+        {children ?? <X className="h-4 w-4" />}
+      </Button>
+    </DialogPrimitive.Close>
+  );
+}

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
+import { PaneK8sResource } from './PaneK8sResource';
+import { SidebarK8sDeployment } from './SidebarK8sDeployment';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
@@ -13,14 +14,14 @@ import { ColumnDef, TableHeader } from './TableHeader';
 import { Td } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { BadgeVariant } from '@/types/variant';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { readyVariant } from '@/utils/k8s';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import { readyVariant } from '@/utils/k8s';
+import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
+import { BadgeVariant } from '@/types/variant';
 
-export default function PaneK8sDeployments({ context }: PaneK8sResourceContextProps) {
+export default function PaneK8sDeployments({ context }: { context?: any }) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
@@ -36,6 +37,7 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
   const [sortBy, setSortBy] = useState<keyof DeploymentItem>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedDeployments, setSelectedDeployments] = useState<DeploymentItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<DeploymentItem | null>(null);
 
   const filtered = useFilteredItems(
     items,
@@ -125,6 +127,7 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}
+      onRowClick={(f) => setSelectedItem(f)}
       renderRow={(f) => (
         <>
           <Td className="max-w-truncate align-middle">
@@ -145,6 +148,7 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
           <Td>
             <button className="text-white/60 hover:text-white/80">⋮</button>
           </Td>
+          {selectedItem && <SidebarK8sDeployment item={selectedItem} setItem={setSelectedItem} />}
         </>
       )}
     />

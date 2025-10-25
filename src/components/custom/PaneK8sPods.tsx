@@ -14,14 +14,6 @@ import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 
 export default function PanePods({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

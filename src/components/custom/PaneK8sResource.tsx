@@ -3,8 +3,8 @@ import { PaneTaskbar } from './PaneTaskbar';
 import { PaneSearch } from './PaneSearch';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { ErrorMessage } from './ErrorMessage';
-import { K8sContext } from '@/services/contexts';
 import { Checkbox } from '../ui/checkbox';
+import { K8sContext } from '@/services/contexts';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ export interface PaneK8sResourceContextProps {
   context?: K8sContext | null;
 }
 
-interface PaneK8sResourceProps<T> {
+export interface PaneK8sResourceProps<T> {
   items: T[];
   loading: boolean;
   error?: string | null;
@@ -33,6 +33,7 @@ interface PaneK8sResourceProps<T> {
   onToggleAll?: (checked: boolean) => void;
   onDeleteSelected?: () => void;
   renderRow: (item: T) => ReactNode;
+  onRowClick?: (item: T) => void;
   emptyText?: string;
   colSpan?: number;
   tableHeader?: ReactNode;
@@ -52,6 +53,7 @@ export function PaneK8sResource<T>({
   onToggleItem,
   onDeleteSelected,
   renderRow,
+  onRowClick,
   emptyText = 'No items',
   colSpan = 5,
   tableHeader,
@@ -60,7 +62,7 @@ export function PaneK8sResource<T>({
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
   const handleDeleteClick = () => {
-    if (selectedItems.length === 0) return;
+    if (!selectedItems || selectedItems.length === 0) return;
     setOpenDeleteModal(true);
   };
 
@@ -74,7 +76,7 @@ export function PaneK8sResource<T>({
           query={query}
           onQueryChange={onQueryChange}
           showNamespace={showNamespace}
-          selectedCount={selectedItems.length}
+          selectedCount={selectedItems?.length || 0}
           onDeleteSelected={handleDeleteClick}
         />
       ) : (
@@ -109,12 +111,17 @@ export function PaneK8sResource<T>({
 
                 {!loading &&
                   items.map((item, idx) => (
-                    <Tr key={idx}>
+                    <Tr
+                      key={idx}
+                      className={`cursor-pointer ${onRowClick ? 'hover:bg-white/5' : ''}`}
+                      onClick={() => onRowClick?.(item)}
+                    >
                       {onToggleItem && (
                         <Td>
                           <Checkbox
-                            checked={selectedItems.includes(item)}
+                            checked={selectedItems?.includes(item)}
                             onCheckedChange={() => onToggleItem(item)}
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </Td>
                       )}

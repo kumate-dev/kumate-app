@@ -41,7 +41,7 @@ impl From<&Pod> for PodItem {
             restart: K8sPods::sum_restarts(p.status.clone()),
             node: p.spec.as_ref().and_then(|s| s.node_name.clone()),
             qos: p.status.as_ref().and_then(|s| s.qos_class.clone()),
-            controller: K8sPods::extract_controller(&p.metadata)
+            controller: K8sPods::extract_controller(&p.metadata),
         }
     }
 }
@@ -280,8 +280,10 @@ impl K8sPods {
     }
 
     fn extract_controller(metadata: &ObjectMeta) -> Option<String> {
-        metadata.owner_references.as_ref()?.first().map(|owner| {
-            format!("{}", owner.kind)
-        })
+        metadata
+            .owner_references
+            .as_ref()?
+            .first()
+            .map(|owner| format!("{}", owner.kind))
     }
 }
