@@ -58,7 +58,6 @@ export function SidebarK8sResources<T>({
         onClick={closeSidebar}
       />
 
-      {/* Sidebar */}
       <div
         className={`fixed top-0 right-0 z-50 flex h-full transform flex-col border-l border-white/10 bg-neutral-900/95 shadow-xl transition-transform duration-300 ease-in-out ${
           visible ? 'translate-x-0' : 'translate-x-full'
@@ -66,9 +65,8 @@ export function SidebarK8sResources<T>({
         style={{ width }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-white/10 p-4">
-          <h2 className="text-lg font-semibold text-white">Resource Detail</h2>
-          <Button variant="ghost" size="sm" onClick={closeSidebar}>
+        <div className="flex shrink-0 justify-end border-b border-white/10">
+          <Button variant="ghost" className="text-white/70" onClick={closeSidebar}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -96,10 +94,6 @@ export function SidebarK8sResources<T>({
         </div>
 
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-white/10 p-4">
-          <Button variant="outline" onClick={closeSidebar}>
-            Close
-          </Button>
-
           {onDelete && <BubbleTrash onDelete={() => setOpenDeleteModal(true)} />}
         </div>
       </div>

@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 use tauri::AppHandle;
@@ -13,8 +15,13 @@ use k8s_openapi::api::apps::v1::{
 pub struct DeploymentItem {
     pub name: String,
     pub namespace: String,
-    pub ready: String,
     pub creation_timestamp: Option<String>,
+    pub labels: Option<BTreeMap<String, String>>,
+    pub annotations: Option<BTreeMap<String, String>>,
+    pub replicas: Option<i32>,
+    pub selector: Option<BTreeMap<String, String>>,
+    pub strategy_type: Option<String>,
+    pub ready: String,
     pub status: Option<String>,
 }
 
@@ -26,12 +33,26 @@ impl From<Deployment> for DeploymentItem {
 
 impl From<&Deployment> for DeploymentItem {
     fn from(d: &Deployment) -> Self {
+        let metadata = d.metadata.clone();
+        let spec = d.spec.clone();
+
         Self {
             name: d.name_any(),
             namespace: K8sCommon::to_namespace(d.namespace()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(metadata.clone()),
+            labels: metadata.labels.clone(),
+            annotations: metadata.annotations.clone(),
+            replicas: spec.as_ref().and_then(|s| s.replicas),
+            selector: spec
+                .as_ref()
+                .map(|s| s.selector.clone())
+                .and_then(|sel| sel.match_labels.clone()),
+            strategy_type: spec
+                .as_ref()
+                .and_then(|s| s.strategy.clone())
+                .and_then(|st| st.type_),
             ready: K8sDeployments::extract_ready(d),
             status: K8sDeployments::extract_status(d),
-            creation_timestamp: K8sCommon::to_creation_timestamp(d.metadata.clone()),
         }
     }
 }

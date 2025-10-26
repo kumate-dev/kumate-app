@@ -5,14 +5,6 @@ import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { ErrorMessage } from './ErrorMessage';
 import { Checkbox } from '../ui/checkbox';
 import { K8sContext } from '@/services/contexts';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { ModalConfirmDelete } from './ModalConfirmDelete';
 
 export interface PaneK8sResourceContextProps {
@@ -112,11 +104,17 @@ export function PaneK8sResource<T>({
 
                 {!loading &&
                   items.map((item, idx) => (
-                    <Tr
-                      key={idx}
-                      className={`cursor-pointer ${onRowClick ? 'hover:bg-white/5' : ''}`}
-                      onClick={() => onRowClick?.(item)}
-                    >
+                  <Tr
+                    key={idx}
+                    className={`cursor-pointer ${onRowClick ? 'hover:bg-white/5' : ''}`}
+                    onClick={(e) => {
+                      onRowClick?.(item);
+                      if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                      }
+                      e.currentTarget.blur?.();
+                    }}
+                  >
                       {onToggleItem && (
                         <Td>
                           <Checkbox

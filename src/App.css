@@ -120,7 +120,11 @@ button {
     color: #ffffff;
     background-color: #0f0f0f98;
   }
+  button:focus {
+    outline: none;
+  }
   button:active {
     background-color: #0f0f0f69;
+    transform: none;
   }
 }

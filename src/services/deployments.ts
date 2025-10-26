@@ -6,8 +6,13 @@ import { K8sResponse } from '@/types/k8sResponse';
 export interface DeploymentItem {
   name: string;
   namespace: string;
-  ready: string;
   creation_timestamp?: string;
+  labels?: Record<string, string>;
+  annotations?: Record<string, string>;
+  replicas?: number;
+  selector?: Record<string, string>;
+  strategy_type?: string;
+  ready: string;
   status?: string;
 }
 
