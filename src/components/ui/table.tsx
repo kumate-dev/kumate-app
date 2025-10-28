@@ -44,7 +44,7 @@ export const Td = forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTa
     return (
       <td
         ref={ref}
-        className={`overflow-hidden px-3 py-2 align-middle text-sm text-ellipsis whitespace-nowrap ${className}`}
+        className={`w-1/4 overflow-hidden px-3 py-2 align-middle text-sm text-ellipsis whitespace-nowrap text-white/70 ${className}`}
         {...props}
       />
     );

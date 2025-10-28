@@ -147,6 +147,8 @@ export default function PanePods({ context }: PaneK8sResourceContextProps) {
     return p.container_states?.some((st) => badStates.includes(st)) ?? false;
   };
 
+  console.log(filtered);
+
   return (
     <>
       <PaneK8sResource

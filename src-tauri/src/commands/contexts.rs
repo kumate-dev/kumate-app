@@ -1,4 +1,6 @@
-use crate::{services::k8s::contexts::K8sContexts, state::AppState, types::k8s_contexts::K8sContext};
+use crate::{
+    services::k8s::contexts::K8sContexts, state::AppState, types::k8s_contexts::K8sContext,
+};
 
 #[tauri::command]
 pub async fn import_kube_contexts(state: tauri::State<'_, AppState>) -> Result<usize, String> {

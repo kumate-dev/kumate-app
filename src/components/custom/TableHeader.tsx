@@ -51,7 +51,7 @@ export const TableHeader = <SortKey extends string>({
     <thead className="sticky top-0 bg-neutral-900/100">
       <tr className="align-middle">
         {onToggleAll && (
-          <Th className="w-12 text-center align-middle">
+          <Th className="w-[1px] px-0 text-center align-middle" style={{ width: '1px' }}>
             <Checkbox
               checked={allSelected}
               indeterminate={isIndeterminate}

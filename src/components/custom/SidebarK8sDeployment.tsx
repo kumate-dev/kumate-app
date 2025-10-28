@@ -18,17 +18,17 @@ export function SidebarK8sDeployment({ item, setItem, onDelete }: SidebarDeploym
       <Table>
         <Tbody>
           <Tr>
-            <Td className="w-1/4 text-white/70">Name</Td>
+            <Td>Name</Td>
             <Td className="break-all text-white">{i.name}</Td>
           </Tr>
 
           <Tr>
-            <Td className="w-1/4 text-white/70">Age</Td>
+            <Td>Age</Td>
             <AgeCell timestamp={i.creation_timestamp || ''} />
           </Tr>
 
           <Tr>
-            <Td className="w-1/4 text-white/70">Namespace</Td>
+            <Td>Namespace</Td>
             <Td>{i.namespace}</Td>
           </Tr>
 
@@ -37,19 +37,19 @@ export function SidebarK8sDeployment({ item, setItem, onDelete }: SidebarDeploym
           <TableYamlRow label="Annotations" data={i.annotations} />
 
           <Tr>
-            <Td className="w-1/4 text-white/70">Replicas</Td>
+            <Td>Replicas</Td>
             <Td>{i.replicas ?? '-'}</Td>
           </Tr>
-          
+
           <TableYamlRow label="Selector" data={i.selector} />
 
           <Tr>
-            <Td className="w-1/4 text-white/70">Strategy Type</Td>
+            <Td>Strategy Type</Td>
             <Td>{i.strategy_type ?? '-'}</Td>
           </Tr>
 
           <Tr>
-            <Td className="w-1/4 text-white/70">Status</Td>
+            <Td>Status</Td>
             <Td>
               <Badge variant={k8sDeploymentStatusVariant(i.status || '')}>{i.status}</Badge>
             </Td>

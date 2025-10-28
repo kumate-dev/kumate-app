@@ -104,15 +104,15 @@ export function PaneK8sResource<T>({
 
                 {!loading &&
                   items.map((item, idx) => (
-                  <Tr
-                    key={idx}
-                    className={`cursor-pointer ${onRowClick ? 'hover:bg-white/5' : ''}`}
-                    onClick={(e) => {
-                      onRowClick?.(item);
-                    }}
-                  >
+                    <Tr
+                      key={idx}
+                      className={`cursor-pointer ${onRowClick ? 'hover:bg-white/5' : ''}`}
+                      onClick={() => {
+                        onRowClick?.(item);
+                      }}
+                    >
                       {onToggleItem && (
-                        <Td>
+                        <Td className="w-[1%] px-0 whitespace-nowrap">
                           <Checkbox
                             checked={selectedItems?.includes(item)}
                             onCheckedChange={() => onToggleItem(item)}

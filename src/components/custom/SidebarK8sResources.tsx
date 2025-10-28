@@ -52,14 +52,14 @@ export function SidebarK8sResources<T>({
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 cursor-default ${
+        className={`fixed inset-0 z-40 cursor-default bg-black/40 transition-opacity duration-300 ${
           visible ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={closeSidebar}
       />
 
       <div
-        className={`fixed top-0 right-0 z-50 flex h-full transform flex-col border-l border-white/10 bg-neutral-900/95 shadow-xl transition-transform duration-300 ease-in-out cursor-auto ${
+        className={`fixed top-0 right-0 z-50 flex h-full transform cursor-auto flex-col border-l border-white/10 bg-neutral-900/95 shadow-xl transition-transform duration-300 ease-in-out ${
           visible ? 'translate-x-0' : 'translate-x-full'
         }`}
         style={{ width }}
