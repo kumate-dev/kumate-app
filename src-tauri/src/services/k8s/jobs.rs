@@ -3,7 +3,7 @@ use serde::Serialize;
 use tauri::AppHandle;
 
 use super::client::K8sClient;
-use crate::{k8s::common::K8sCommon, types::event::EventType};
+use crate::{services::k8s::common::K8sCommon, types::event::EventType};
 use k8s_openapi::api::batch::v1::Job;
 
 #[derive(Serialize, Debug, Clone)]

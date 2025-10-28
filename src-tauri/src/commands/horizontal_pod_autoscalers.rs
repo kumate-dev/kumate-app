@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::horizontal_pod_autoscalers::{HorizontalPodAutoscalerItem, K8sHorizontalPodAutoscalers},
+    services::k8s::horizontal_pod_autoscalers::{HorizontalPodAutoscalerItem, K8sHorizontalPodAutoscalers},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

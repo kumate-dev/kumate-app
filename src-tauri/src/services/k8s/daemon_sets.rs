@@ -3,7 +3,7 @@ use serde::Serialize;
 use tauri::AppHandle;
 
 use super::client::K8sClient;
-use crate::k8s::common::K8sCommon;
+use crate::services::k8s::common::K8sCommon;
 use crate::types::event::EventType;
 use k8s_openapi::api::apps::v1::{DaemonSet, DaemonSetStatus};
 

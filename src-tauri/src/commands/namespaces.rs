@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::namespaces::{K8sNamespaces, NamespaceItem},
+    services::k8s::namespaces::{K8sNamespaces, NamespaceItem},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

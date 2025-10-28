@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::replication_controllers::{K8sReplicationControllers, ReplicationControllerItem},
+    services::k8s::replication_controllers::{K8sReplicationControllers, ReplicationControllerItem},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

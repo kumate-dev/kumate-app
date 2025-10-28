@@ -1,57 +1,56 @@
+use k8s_openapi::api::core::v1::ConfigMap;
 use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
-use tauri::AppHandle;
 
-use super::client::K8sClient;
-use crate::{k8s::common::K8sCommon, types::event::EventType};
-use k8s_openapi::api::core::v1::Secret;
+use crate::{
+    services::k8s::{client::K8sClient, common::K8sCommon},
+    types::event::EventType,
+};
 
 #[derive(Serialize, Debug, Clone)]
-pub struct SecretItem {
+pub struct ConfigMapItem {
     pub name: String,
     pub namespace: String,
-    pub type_: String,
     pub data_keys: Vec<String>,
     pub creation_timestamp: Option<String>,
 }
 
-impl From<Secret> for SecretItem {
-    fn from(secret: Secret) -> Self {
-        (&secret).into()
+impl From<ConfigMap> for ConfigMapItem {
+    fn from(cm: ConfigMap) -> Self {
+        (&cm).into()
     }
 }
 
-impl From<&Secret> for SecretItem {
-    fn from(secret: &Secret) -> Self {
-        let keys: Vec<String> = secret
+impl From<&ConfigMap> for ConfigMapItem {
+    fn from(cm: &ConfigMap) -> Self {
+        let keys: Vec<String> = cm
             .data
             .as_ref()
-            .map(|m| m.keys().cloned().collect())
+            .map(|d| d.keys().cloned().collect())
             .unwrap_or_default();
 
-        SecretItem {
-            name: secret.name_any(),
-            namespace: K8sCommon::to_namespace(secret.namespace()),
-            type_: secret.type_.clone().unwrap_or_default(),
+        Self {
+            name: cm.name_any(),
+            namespace: K8sCommon::to_namespace(cm.namespace()),
             data_keys: keys,
-            creation_timestamp: K8sCommon::to_creation_timestamp(secret.metadata.clone()),
+            creation_timestamp: K8sCommon::to_creation_timestamp(cm.metadata.clone()),
         }
     }
 }
 
-pub struct K8sSecrets;
+pub struct K8sConfigMaps;
 
-impl K8sSecrets {
+impl K8sConfigMaps {
     pub async fn list(
         context_name: String,
         namespaces: Option<Vec<String>>,
-    ) -> Result<Vec<SecretItem>, String> {
-        K8sCommon::list_resources::<Secret, _, SecretItem>(
+    ) -> Result<Vec<ConfigMapItem>, String> {
+        K8sCommon::list_resources::<ConfigMap, _, ConfigMapItem>(
             &context_name,
             namespaces,
-            |client, ns| {
+            |client, namespace| {
                 Box::pin(async move {
-                    let api: Api<Secret> = K8sClient::api::<Secret>(client, ns).await;
+                    let api: Api<ConfigMap> = K8sClient::api::<ConfigMap>(client, namespace).await;
                     let list = api
                         .list(&Default::default())
                         .await
@@ -64,7 +63,7 @@ impl K8sSecrets {
     }
 
     pub async fn watch(
-        app_handle: AppHandle,
+        app_handle: tauri::AppHandle,
         context_name: String,
         namespaces: Option<Vec<String>>,
         event_name: String,
@@ -73,7 +72,8 @@ impl K8sSecrets {
         let target_namespaces: Vec<Option<String>> = K8sCommon::get_target_namespaces(namespaces);
 
         for ns in target_namespaces {
-            let api: Api<Secret> = K8sClient::api::<Secret>(client.clone(), ns).await;
+            let api: Api<ConfigMap> = K8sClient::api::<ConfigMap>(client.clone(), ns).await;
+
             K8sCommon::event_spawn_watch(
                 app_handle.clone(),
                 event_name.clone(),
@@ -85,7 +85,7 @@ impl K8sSecrets {
         Ok(())
     }
 
-    fn emit_event(app_handle: &AppHandle, event_name: &str, kind: EventType, secret: Secret) {
-        K8sCommon::emit_event::<Secret, SecretItem>(app_handle, event_name, kind, secret);
+    fn emit_event(app_handle: &tauri::AppHandle, event_name: &str, kind: EventType, cm: ConfigMap) {
+        K8sCommon::emit_event::<ConfigMap, ConfigMapItem>(app_handle, event_name, kind, cm);
     }
 }

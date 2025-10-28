@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::replica_sets::{K8sReplicaSets, ReplicaSetItem},
+    services::k8s::replica_sets::{K8sReplicaSets, ReplicaSetItem},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

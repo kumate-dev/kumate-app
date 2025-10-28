@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::cron_jobs::{CronJobItem, K8sCronJobs},
+    services::k8s::cron_jobs::{CronJobItem, K8sCronJobs},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

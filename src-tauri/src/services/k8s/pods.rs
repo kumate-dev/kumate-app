@@ -3,7 +3,7 @@ use kube::{api::ObjectMeta, Api, Client, ResourceExt};
 use serde::Serialize;
 
 use super::client::K8sClient;
-use crate::{k8s::common::K8sCommon, types::event::EventType, utils::bytes::Bytes};
+use crate::{services::k8s::common::K8sCommon, types::event::EventType, utils::bytes::Bytes};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct PodItem {

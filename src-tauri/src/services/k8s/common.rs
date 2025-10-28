@@ -9,7 +9,7 @@ use std::fmt::Debug;
 use std::{future::Future, pin::Pin};
 use tauri::{AppHandle, Emitter};
 
-use crate::{k8s::client::K8sClient, types::event::EventType};
+use crate::{services::k8s::client::K8sClient, types::event::EventType};
 
 pub struct K8sCommon;
 

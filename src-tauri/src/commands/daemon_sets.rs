@@ -5,7 +5,7 @@ use tauri::AppHandle;
 
 use crate::{
     commands::common::watch,
-    k8s::daemon_sets::{DaemonSetItem, K8sDaemonSets},
+    services::k8s::daemon_sets::{DaemonSetItem, K8sDaemonSets},
     utils::watcher::WatchManager,
 };
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{k8s::resource_quotas::K8sResourceQuotas, utils::watcher::WatchManager};
+use crate::{services::k8s::resource_quotas::K8sResourceQuotas, utils::watcher::WatchManager};
 use anyhow::Result;
 use tauri::AppHandle;
 
@@ -10,7 +10,7 @@ use crate::commands::common::watch;
 pub async fn list_resource_quotas(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<crate::k8s::resource_quotas::ResourceQuotaItem>, String> {
+) -> Result<Vec<crate::services::k8s::resource_quotas::ResourceQuotaItem>, String> {
     K8sResourceQuotas::list(name, namespaces).await
 }
 

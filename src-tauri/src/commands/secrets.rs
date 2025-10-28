@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::secrets::{K8sSecrets, SecretItem},
+    services::k8s::secrets::{K8sSecrets, SecretItem},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

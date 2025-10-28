@@ -3,7 +3,7 @@ use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 
 use crate::{
-    k8s::{client::K8sClient, common::K8sCommon},
+    services::k8s::{client::K8sClient, common::K8sCommon},
     types::event::EventType,
 };
 

@@ -4,7 +4,7 @@ use tauri::AppHandle;
 
 use super::client::K8sClient;
 use crate::utils::converts::int_or_string_to_string;
-use crate::{k8s::common::K8sCommon, types::event::EventType};
+use crate::{services::k8s::common::K8sCommon, types::event::EventType};
 use k8s_openapi::api::policy::v1::{PodDisruptionBudget, PodDisruptionBudgetStatus};
 
 #[derive(Serialize, Debug, Clone)]

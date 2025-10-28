@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::pods::{K8sPods, PodItem},
+    services::k8s::pods::{K8sPods, PodItem},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

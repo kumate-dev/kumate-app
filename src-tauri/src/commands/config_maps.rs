@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::config_maps::{ConfigMapItem, K8sConfigMaps},
+    services::k8s::config_maps::{ConfigMapItem, K8sConfigMaps},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

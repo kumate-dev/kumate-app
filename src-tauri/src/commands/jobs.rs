@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::jobs::{JobItem, K8sJobs},
+    services::k8s::jobs::{JobItem, K8sJobs},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;

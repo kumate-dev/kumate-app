@@ -8,7 +8,7 @@ use tauri::Manager;
 mod commands;
 mod constants;
 mod databases;
-mod k8s;
+mod services;
 mod state;
 mod types;
 mod utils;

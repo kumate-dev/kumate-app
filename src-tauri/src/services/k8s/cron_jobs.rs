@@ -3,7 +3,7 @@ use kube::{Api, Client, ResourceExt};
 use serde::Serialize;
 use tauri::AppHandle;
 
-use crate::k8s::common::K8sCommon;
+use crate::services::k8s::common::K8sCommon;
 use crate::types::event::EventType;
 
 use super::client::K8sClient;

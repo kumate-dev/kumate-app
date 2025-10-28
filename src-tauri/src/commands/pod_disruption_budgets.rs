@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    k8s::pod_disruption_budgets::{K8sPodDisruptionBudgets, PodDisruptionBudgetItem},
+    services::k8s::pod_disruption_budgets::{K8sPodDisruptionBudgets, PodDisruptionBudgetItem},
     utils::watcher::WatchManager,
 };
 use tauri::AppHandle;

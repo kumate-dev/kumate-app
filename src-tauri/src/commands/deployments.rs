@@ -1,6 +1,6 @@
 use crate::{
     commands::common::watch,
-    k8s::deployments::{DeploymentItem, K8sDeployments},
+    services::k8s::deployments::{DeploymentItem, K8sDeployments},
     utils::watcher::WatchManager,
 };
 use anyhow::Result;
