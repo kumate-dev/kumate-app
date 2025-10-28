@@ -1,21 +1,18 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch,
-    services::k8s::replication_controllers::{
-        K8sReplicationControllers, ReplicationControllerItem,
-    },
-    utils::watcher::WatchManager,
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
 };
-use anyhow::Result;
+use k8s_openapi::api::core::v1::ReplicationController;
+use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_replication_controllers(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<ReplicationControllerItem>, String> {
-    K8sReplicationControllers::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<ReplicationController>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -31,7 +28,16 @@ pub async fn watch_replication_controllers(
         "replication_controllers".to_string(),
         namespaces,
         state,
-        Arc::new(K8sReplicationControllers::watch),
+        Arc::new(K8sResources::<ReplicationController>::watch),
     )
     .await
+}
+
+#[tauri::command]
+pub async fn delete_replication_controllers(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sResources::<ReplicationController>::delete(name, namespace, resource_names).await?)
 }

@@ -1,23 +1,26 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { Td } from '@/components/ui/table';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listSecrets, watchSecrets, SecretItem } from '@/services/secrets';
-import { ColumnDef, TableHeader } from './TableHeader';
-import { Td, Tr } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import AgeCell from '@/components/custom/AgeCell';
-import { BadgeVariant } from '@/types/variant';
+import { listSecrets, watchSecrets, deleteSecrets } from '@/services/secrets';
+import { V1Secret } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { ColumnDef, TableHeader } from './TableHeader';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import AgeCell from '@/components/custom/AgeCell';
+import { Badge } from '@/components/ui/badge';
+import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
+import { toast } from 'sonner';
+import { BadgeVariant } from '@/types/variant';
 
 export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useListK8sResources<SecretItem>(
+  const { items, loading, error } = useListK8sResources<V1Secret>(
     listSecrets,
     watchSecrets,
     context,
@@ -25,20 +28,42 @@ export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps)
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof SecretItem>('name');
+  const [sortBy, setSortBy] = useState<keyof V1Secret>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedSecrets, setSelectedSecrets] = useState<V1Secret[]>([]);
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['name', 'namespace', 'type_'],
+    ['metadata.name', 'metadata.namespace', 'type'],
     sortBy,
     sortOrder
   );
 
-  const typeVariant = (type_: string): BadgeVariant => {
-    switch (type_) {
+  const { handleDeleteResources } = useDeleteK8sResources<V1Secret>(deleteSecrets, context);
+
+  const toggleSecret = useCallback((secret: V1Secret) => {
+    setSelectedSecrets((prev) =>
+      prev.includes(secret) ? prev.filter((s) => s !== secret) : [...prev, secret]
+    );
+  }, []);
+
+  const toggleAllSecrets = useCallback(
+    (checked: boolean) => {
+      setSelectedSecrets(checked ? [...filtered] : []);
+    },
+    [filtered]
+  );
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (!selectedSecrets.length) return toast.error('No Secrets selected');
+    await handleDeleteResources(selectedSecrets);
+    setSelectedSecrets([]);
+  }, [selectedSecrets, handleDeleteResources]);
+
+  const typeVariant = (type?: string): BadgeVariant => {
+    switch (type) {
       case 'Opaque':
         return 'secondary';
       case 'kubernetes.io/service-account-token':
@@ -52,12 +77,12 @@ export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps)
     }
   };
 
-  const columns: ColumnDef<keyof SecretItem | ''>[] = [
-    { label: 'Name', key: 'name' },
-    { label: 'Namespace', key: 'namespace' },
-    { label: 'Type', key: 'type_' },
-    { label: 'Data Keys', key: 'data_keys' },
-    { label: 'Age', key: 'creation_timestamp' },
+  const columns: ColumnDef<keyof V1Secret | ''>[] = [
+    { label: 'Name', key: 'metadata' },
+    { label: 'Namespace', key: 'metadata' },
+    { label: 'Type', key: 'type' },
+    { label: 'Data Keys', key: 'data' },
+    { label: 'Age', key: 'metadata' },
   ];
 
   const tableHeader = (
@@ -67,7 +92,38 @@ export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps)
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      onToggleAll={toggleAllSecrets}
+      selectedItems={selectedSecrets}
+      totalItems={filtered}
     />
+  );
+
+  const renderRow = (secret: V1Secret) => (
+    <>
+      <Td className="max-w-truncate align-middle">
+        <span className="block truncate" title={secret.metadata?.name}>
+          {secret.metadata?.name}
+        </span>
+      </Td>
+      <Td>
+        <BadgeK8sNamespaces name={secret.metadata?.namespace ?? ''} />
+      </Td>
+      <Td>
+        <Badge variant={typeVariant(secret.type)}>{secret.type ?? '-'}</Badge>
+      </Td>
+      <Td className="max-w-truncate">
+        <span
+          className="block truncate"
+          title={secret.data ? Object.keys(secret.data).join(', ') : ''}
+        >
+          {secret.data ? Object.keys(secret.data).join(', ') : '-'}
+        </span>
+      </Td>
+      <AgeCell timestamp={secret.metadata?.creationTimestamp ?? ''} />
+      <Td>
+        <button className="text-white/60 hover:text-white/80">⋮</button>
+      </Td>
+    </>
   );
 
   return (
@@ -80,30 +136,13 @@ export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps)
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={setSelectedNamespaces}
-      colSpan={columns.length}
+      selectedItems={selectedSecrets}
+      onToggleItem={toggleSecret}
+      onToggleAll={toggleAllSecrets}
+      onDeleteSelected={handleDeleteSelected}
+      colSpan={columns.length + 1}
       tableHeader={tableHeader}
-      renderRow={(f) => (
-        <Tr key={`${f.namespace}/${f.name}`}>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.name}>
-              {f.name}
-            </span>
-          </Td>
-          <BadgeK8sNamespaces name={f.namespace} />
-          <Td>
-            <Badge variant={typeVariant(f.type_)}>{f.type_}</Badge>
-          </Td>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.data_keys.join(', ')}>
-              {f.data_keys.join(', ')}
-            </span>
-          </Td>
-          <AgeCell timestamp={f.creation_timestamp || ''} />
-          <Td>
-            <button className="text-white/60 hover:text-white/80">⋮</button>
-          </Td>
-        </Tr>
-      )}
+      renderRow={renderRow}
     />
   );
 }

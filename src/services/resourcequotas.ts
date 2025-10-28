@@ -1,18 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventType, EventHandler } from '@/types/k8sEvent';
-
-export interface ResourceQuotaItem {
-  name: string;
-  namespace: string;
-  hard: [string, string][];
-  used: [string, string][];
-  creation_timestamp?: string;
-}
+import { K8sResponse } from '@/types/k8sResponse';
+import { V1ResourceQuota } from '@kubernetes/client-node';
 
 export interface ResourceQuotaEvent {
   type: EventType;
-  object: ResourceQuotaItem;
+  object: V1ResourceQuota;
 }
 
 export async function listResourceQuotas({
@@ -21,8 +15,8 @@ export async function listResourceQuotas({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<ResourceQuotaItem[]> {
-  return await invoke<ResourceQuotaItem[]>('list_resource_quotas', { name, namespaces });
+}): Promise<V1ResourceQuota[]> {
+  return await invoke<V1ResourceQuota[]>('list_resource_quotas', { name, namespaces });
 }
 
 export async function watchResourceQuotas({
@@ -45,4 +39,16 @@ export async function watchResourceQuotas({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteResourceQuotas({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_resource_quotas', { name, namespace, resourceNames });
 }

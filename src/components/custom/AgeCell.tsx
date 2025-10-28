@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { relativeAge } from '@/utils/time';
 import { Td } from '@/components/ui/table';
 
-export default function AgeCell({ timestamp }: { timestamp: string }) {
+export default function AgeCell({ timestamp }: { timestamp?: string | Date }) {
   const ref = useRef<HTMLTableCellElement>(null);
 
   useEffect(() => {
@@ -10,7 +10,12 @@ export default function AgeCell({ timestamp }: { timestamp: string }) {
     if (!el) return;
 
     const update = () => {
-      el.textContent = relativeAge(timestamp);
+      let tsStr: string | undefined;
+      if (!timestamp) tsStr = undefined;
+      else if (timestamp instanceof Date) tsStr = timestamp.toISOString();
+      else tsStr = timestamp;
+
+      el.textContent = tsStr ? relativeAge(tsStr) : '-';
     };
 
     update();
@@ -19,13 +24,5 @@ export default function AgeCell({ timestamp }: { timestamp: string }) {
     return () => clearInterval(id);
   }, [timestamp]);
 
-  return (
-    <Td
-      ref={ref}
-      className="text-white/80"
-      style={{
-        minWidth: '70px',
-      }}
-    />
-  );
+  return <Td ref={ref} className="text-white/80" style={{ minWidth: '70px' }} />;
 }

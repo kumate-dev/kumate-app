@@ -1,19 +1,18 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch,
-    services::k8s::stateful_sets::{K8sStatefulSets, StatefulSetItem},
-    utils::watcher::WatchManager,
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
 };
-use anyhow::Result;
+use k8s_openapi::api::apps::v1::StatefulSet;
+use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_stateful_sets(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<StatefulSetItem>, String> {
-    K8sStatefulSets::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<StatefulSet>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -29,7 +28,16 @@ pub async fn watch_stateful_sets(
         "stateful_sets".to_string(),
         namespaces,
         state,
-        Arc::new(K8sStatefulSets::watch),
+        Arc::new(K8sResources::<StatefulSet>::watch),
     )
     .await
+}
+
+#[tauri::command]
+pub async fn delete_stateful_sets(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sResources::<StatefulSet>::delete(name, namespace, resource_names).await?)
 }

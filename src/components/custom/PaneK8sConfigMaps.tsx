@@ -1,21 +1,24 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { V1ConfigMap } from '@kubernetes/client-node';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listConfigMaps, watchConfigMaps, ConfigMapItem } from '@/services/configMaps';
+import { listConfigMaps, watchConfigMaps, deleteConfigMaps } from '@/services/configMaps';
 import { ColumnDef, TableHeader } from './TableHeader';
-import { Td, Tr } from '@/components/ui/table';
+import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
+import { toast } from 'sonner';
 
 export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useListK8sResources<ConfigMapItem>(
+  const { items, loading, error } = useListK8sResources<V1ConfigMap>(
     listConfigMaps,
     watchConfigMaps,
     context,
@@ -23,23 +26,45 @@ export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextPro
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof ConfigMapItem>('name');
+  const [sortBy, setSortBy] = useState<keyof V1ConfigMap>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedItems, setSelectedItems] = useState<V1ConfigMap[]>([]);
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['name', 'namespace'],
-    sortBy,
-    sortOrder
+    ['metadata.name', 'metadata.namespace', 'data'],
+    'metadata.name',
+    'asc'
   );
 
-  const columns: ColumnDef<keyof ConfigMapItem | ''>[] = [
-    { label: 'Name', key: 'name' },
-    { label: 'Namespace', key: 'namespace' },
-    { label: 'Keys', key: 'data_keys' },
-    { label: 'Age', key: 'creation_timestamp' },
+  const { handleDeleteResources } = useDeleteK8sResources<V1ConfigMap>(deleteConfigMaps, context);
+
+  const toggleItem = useCallback((item: V1ConfigMap) => {
+    setSelectedItems((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+    );
+  }, []);
+
+  const toggleAll = useCallback(
+    (checked: boolean) => {
+      setSelectedItems(checked ? [...filtered] : []);
+    },
+    [filtered]
+  );
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedItems.length === 0) return toast.error('No ConfigMaps selected');
+    await handleDeleteResources(selectedItems);
+    setSelectedItems([]);
+  }, [selectedItems, handleDeleteResources]);
+
+  const columns: ColumnDef<keyof V1ConfigMap | ''>[] = [
+    { label: 'Name', key: 'metadata' },
+    { label: 'Namespace', key: 'metadata' },
+    { label: 'Keys', key: 'data' },
+    { label: 'Age', key: 'metadata' },
   ];
 
   const tableHeader = (
@@ -49,7 +74,34 @@ export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextPro
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={filtered}
     />
+  );
+
+  const renderRow = (cm: V1ConfigMap) => (
+    <>
+      <Td className="max-w-truncate align-middle">
+        <span className="block truncate" title={cm.metadata?.name ?? ''}>
+          {cm.metadata?.name}
+        </span>
+      </Td>
+      <Td>
+        <BadgeK8sNamespaces name={cm.metadata?.namespace ?? ''} />
+      </Td>
+      <Td className="max-w-truncate align-middle" title={Object.keys(cm.data || {}).join(', ')}>
+        {cm.data && Object.keys(cm.data).length > 0 ? (
+          Object.keys(cm.data).join(', ')
+        ) : (
+          <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
+        )}
+      </Td>
+      <AgeCell timestamp={cm.metadata?.creationTimestamp} />
+      <Td>
+        <button className="text-white/60 hover:text-white/80">⋮</button>
+      </Td>
+    </>
   );
 
   return (
@@ -62,27 +114,12 @@ export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextPro
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={setSelectedNamespaces}
-      colSpan={columns.length}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
+      onDeleteSelected={handleDeleteSelected}
+      colSpan={columns.length + 1}
       tableHeader={tableHeader}
-      renderRow={(f) => (
-        <Tr key={`${f.namespace}/${f.name}`}>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.name}>
-              {f.name}
-            </span>
-          </Td>
-          <BadgeK8sNamespaces name={f.namespace} />
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.data_keys.join(', ')}>
-              {f.data_keys.join(', ')}
-            </span>
-          </Td>
-          <AgeCell timestamp={f.creation_timestamp || ''} />
-          <Td>
-            <button className="text-white/60 hover:text-white/80">⋮</button>
-          </Td>
-        </Tr>
-      )}
+      renderRow={renderRow}
     />
   );
 }

@@ -1,17 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
-
-export interface ReplicaSetItem {
-  name: string;
-  namespace: string;
-  ready: string;
-  creation_timestamp?: string;
-}
+import type { V1ReplicaSet } from '@kubernetes/client-node';
+import { K8sResponse } from '@/types/k8sResponse';
 
 export interface ReplicaSetEvent {
   type: EventType;
-  object: ReplicaSetItem;
+  object: V1ReplicaSet;
 }
 
 export async function listReplicaSets({
@@ -20,8 +15,8 @@ export async function listReplicaSets({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<ReplicaSetItem[]> {
-  return await invoke<ReplicaSetItem[]>('list_replica_sets', { name, namespaces });
+}): Promise<V1ReplicaSet[]> {
+  return await invoke<V1ReplicaSet[]>('list_replica_sets', { name, namespaces });
 }
 
 export async function watchReplicaSets({
@@ -44,4 +39,20 @@ export async function watchReplicaSets({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteReplicaSets({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_replica_sets', {
+    name,
+    namespace,
+    resourceNames,
+  });
 }

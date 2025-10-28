@@ -4,7 +4,7 @@ import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES } from '@/constants/k8s';
 import { WatchEvent } from '@/types/k8sEvent';
 import { unwatch } from '@/services/unwatch';
 
-export function useListK8sResources<T extends { name: string; namespace?: string }>(
+export function useListK8sResources<T extends { metadata?: { name?: string; namespace?: string } }>(
   listFn: (params: { name: string; namespaces?: string[] }) => Promise<T[]>,
   watchFn?: (params: {
     name: string;
@@ -20,6 +20,7 @@ export function useListK8sResources<T extends { name: string; namespace?: string
 
   useEffect(() => {
     if (!context?.name || !listFn) return;
+
     const clusterName = context.name;
     const nsList = namespaces && !namespaces.includes(ALL_NAMESPACES) ? namespaces : undefined;
 
@@ -38,10 +39,11 @@ export function useListK8sResources<T extends { name: string; namespace?: string
         });
       });
 
-    function dedupeResources<T extends { name: string; namespace?: string }>(items: T[]): T[] {
+    function dedupeResources(items: T[]): T[] {
       const seen = new Set<string>();
       return items.filter((item) => {
-        const key = `${item.namespace || ''}/${item.name}`;
+        const metadata = item.metadata;
+        const key = `${metadata?.namespace || ''}/${metadata?.name || ''}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -73,10 +75,16 @@ export function useListK8sResources<T extends { name: string; namespace?: string
             namespaces: nsList,
             onEvent: (evt) => {
               const { type, object } = evt;
-              const key = `${(object as any).namespace || ''}/${(object as any).name}`;
+              const metadata = object.metadata;
+              const key = `${metadata?.namespace || ''}/${metadata?.name || ''}`;
 
               setItems((prev) => {
-                const map = new Map(prev.map((i: any) => [`${i.namespace || ''}/${i.name}`, i]));
+                const map = new Map(
+                  prev.map((i) => {
+                    const m = i.metadata;
+                    return [`${m?.namespace || ''}/${m?.name || ''}`, i];
+                  })
+                );
 
                 switch (type) {
                   case 'ADDED':

@@ -1,21 +1,18 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch,
-    services::k8s::horizontal_pod_autoscalers::{
-        HorizontalPodAutoscalerItem, K8sHorizontalPodAutoscalers,
-    },
-    utils::watcher::WatchManager,
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
 };
-use anyhow::Result;
+use k8s_openapi::api::autoscaling::v1::HorizontalPodAutoscaler;
+use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_horizontal_pod_autoscalers(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<HorizontalPodAutoscalerItem>, String> {
-    K8sHorizontalPodAutoscalers::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<HorizontalPodAutoscaler>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -31,7 +28,16 @@ pub async fn watch_horizontal_pod_autoscalers(
         "horizontal_pod_autoscalers".to_string(),
         namespaces,
         state,
-        Arc::new(K8sHorizontalPodAutoscalers::watch),
+        Arc::new(K8sResources::<HorizontalPodAutoscaler>::watch),
     )
     .await
+}
+
+#[tauri::command]
+pub async fn delete_horizontal_pod_autoscalers(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sResources::<HorizontalPodAutoscaler>::delete(name, namespace, resource_names).await?)
 }

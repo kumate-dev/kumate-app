@@ -1,18 +1,18 @@
-use crate::{
-    commands::common::watch,
-    services::k8s::limit_ranges::{K8sLimitRanges, LimitRangeItem},
-    utils::watcher::WatchManager,
-};
-use anyhow::Result;
 use std::sync::Arc;
+
+use crate::{
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
+};
+use k8s_openapi::api::core::v1::LimitRange;
+use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_limit_ranges(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<LimitRangeItem>, String> {
-    K8sLimitRanges::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<LimitRange>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -28,7 +28,16 @@ pub async fn watch_limit_ranges(
         "limit_ranges".to_string(),
         namespaces,
         state,
-        Arc::new(K8sLimitRanges::watch),
+        Arc::new(K8sResources::<LimitRange>::watch),
     )
     .await
+}
+
+#[tauri::command]
+pub async fn delete_limit_ranges(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sResources::<LimitRange>::delete(name, namespace, resource_names).await?)
 }

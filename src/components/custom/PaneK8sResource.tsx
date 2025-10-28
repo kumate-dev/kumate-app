@@ -103,26 +103,30 @@ export function PaneK8sResource<T>({
                 )}
 
                 {!loading &&
-                  items.map((item, idx) => (
-                    <Tr
-                      key={idx}
-                      className={`cursor-pointer ${onRowClick ? 'hover:bg-white/5' : ''}`}
-                      onClick={() => {
-                        onRowClick?.(item);
-                      }}
-                    >
-                      {onToggleItem && (
-                        <Td className="w-[1%] px-0 whitespace-nowrap">
-                          <Checkbox
-                            checked={selectedItems?.includes(item)}
-                            onCheckedChange={() => onToggleItem(item)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </Td>
-                      )}
-                      {renderRow(item)}
-                    </Tr>
-                  ))}
+                  items.map((item) => {
+                    // fallback: lấy metadata nếu có, else dùng index làm key
+                    const meta: any = (item as any).metadata ?? {};
+                    const uid = meta.uid ?? meta.name ?? items.indexOf(item);
+
+                    return (
+                      <Tr
+                        key={uid}
+                        className={`cursor-pointer ${onRowClick ? 'hover:bg-white/5' : ''}`}
+                        onClick={() => onRowClick?.(item)}
+                      >
+                        {onToggleItem && (
+                          <Td className="w-[1%] px-0 whitespace-nowrap">
+                            <Checkbox
+                              checked={selectedItems?.includes(item)}
+                              onCheckedChange={() => onToggleItem(item)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </Td>
+                        )}
+                        {renderRow(item)}
+                      </Tr>
+                    );
+                  })}
               </Tbody>
             </Table>
           </div>

@@ -1,18 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
-
-export interface SecretItem {
-  name: string;
-  namespace: string;
-  type_: string;
-  data_keys: string[];
-  creation_timestamp?: string;
-}
+import type { V1Secret } from '@kubernetes/client-node';
+import { K8sResponse } from '@/types/k8sResponse';
 
 export interface SecretEvent {
   type: EventType;
-  object: SecretItem;
+  object: V1Secret;
 }
 
 export async function listSecrets({
@@ -21,8 +15,8 @@ export async function listSecrets({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<SecretItem[]> {
-  return await invoke<SecretItem[]>('list_secrets', { name, namespaces });
+}): Promise<V1Secret[]> {
+  return await invoke<V1Secret[]>('list_secrets', { name, namespaces });
 }
 
 export async function watchSecrets({
@@ -45,4 +39,20 @@ export async function watchSecrets({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteSecrets({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_secrets', {
+    name,
+    namespace,
+    resourceNames,
+  });
 }

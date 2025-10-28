@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { Td } from '@/components/ui/table';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
@@ -6,20 +7,22 @@ import { useListK8sResources } from '@/hooks/useListK8sResources';
 import {
   listResourceQuotas,
   watchResourceQuotas,
-  ResourceQuotaItem,
+  deleteResourceQuotas,
 } from '@/services/resourceQuotas';
-import { ColumnDef, TableHeader } from './TableHeader';
-import { Td, Tr } from '@/components/ui/table';
-import AgeCell from '@/components/custom/AgeCell';
+import { V1ResourceQuota } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { ColumnDef, TableHeader } from './TableHeader';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import AgeCell from '@/components/custom/AgeCell';
+import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
+import { toast } from 'sonner';
 
 export default function PaneK8sResourceQuotas({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useListK8sResources<ResourceQuotaItem>(
+  const { items, loading, error } = useListK8sResources<V1ResourceQuota>(
     listResourceQuotas,
     watchResourceQuotas,
     context,
@@ -27,31 +30,53 @@ export default function PaneK8sResourceQuotas({ context }: PaneK8sResourceContex
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof ResourceQuotaItem>('name');
+  const [sortBy, setSortBy] = useState<keyof V1ResourceQuota>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedQuotas, setSelectedQuotas] = useState<V1ResourceQuota[]>([]);
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['name', 'namespace'],
+    ['metadata.name', 'metadata.namespace'],
     sortBy,
     sortOrder
   );
 
-  function renderKeyValue(items?: [string, string][]): { display: string; title: string } {
-    if (!items || items.length === 0) return { display: '-', title: '-' };
+  const { handleDeleteResources } = useDeleteK8sResources<V1ResourceQuota>(
+    deleteResourceQuotas,
+    context
+  );
 
-    const text = items.map(([k, v]) => `${k}: ${v}`).join(', ');
+  const toggleQuota = useCallback((rq: V1ResourceQuota) => {
+    setSelectedQuotas((prev) => (prev.includes(rq) ? prev.filter((r) => r !== rq) : [...prev, rq]));
+  }, []);
+
+  const toggleAllQuotas = useCallback(
+    (checked: boolean) => setSelectedQuotas(checked ? [...filtered] : []),
+    [filtered]
+  );
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (!selectedQuotas.length) return toast.error('No ResourceQuotas selected');
+    await handleDeleteResources(selectedQuotas);
+    setSelectedQuotas([]);
+  }, [selectedQuotas, handleDeleteResources]);
+
+  const renderKeyValue = (map?: Record<string, string | number>) => {
+    if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
+    const text = Object.entries(map)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
     return { display: text, title: text };
-  }
+  };
 
-  const columns: ColumnDef<keyof ResourceQuotaItem | ''>[] = [
-    { label: 'Name', key: 'name' },
-    { label: 'Namespace', key: 'namespace' },
-    { label: 'Hard', key: 'hard' },
-    { label: 'Used', key: 'used' },
-    { label: 'Age', key: 'creation_timestamp' },
+  const columns: ColumnDef<keyof V1ResourceQuota | ''>[] = [
+    { label: 'Name', key: 'metadata' },
+    { label: 'Namespace', key: 'metadata' },
+    { label: 'Hard', key: 'status' },
+    { label: 'Used', key: 'status' },
+    { label: 'Age', key: 'metadata' },
   ];
 
   const tableHeader = (
@@ -61,7 +86,39 @@ export default function PaneK8sResourceQuotas({ context }: PaneK8sResourceContex
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      onToggleAll={toggleAllQuotas}
+      selectedItems={selectedQuotas}
+      totalItems={filtered}
     />
+  );
+
+  const renderRow = (rq: V1ResourceQuota) => (
+    <>
+      <Td className="max-w-truncate align-middle">
+        <span className="block truncate" title={rq.metadata?.name}>
+          {rq.metadata?.name}
+        </span>
+      </Td>
+      <Td>
+        <BadgeK8sNamespaces name={rq.metadata?.namespace ?? ''} />
+      </Td>
+      <Td
+        className="max-w-truncate"
+        title={renderKeyValue(rq.status?.hard as Record<string, string>).title}
+      >
+        {renderKeyValue(rq.status?.hard as Record<string, string>).display}
+      </Td>
+      <Td
+        className="max-w-truncate"
+        title={renderKeyValue(rq.status?.used as Record<string, string>).title}
+      >
+        {renderKeyValue(rq.status?.used as Record<string, string>).display}
+      </Td>
+      <AgeCell timestamp={rq.metadata?.creationTimestamp ?? ''} />
+      <Td>
+        <button className="text-white/60 hover:text-white/80">⋮</button>
+      </Td>
+    </>
   );
 
   return (
@@ -74,32 +131,13 @@ export default function PaneK8sResourceQuotas({ context }: PaneK8sResourceContex
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={setSelectedNamespaces}
-      colSpan={columns.length}
+      selectedItems={selectedQuotas}
+      onToggleItem={toggleQuota}
+      onToggleAll={toggleAllQuotas}
+      onDeleteSelected={handleDeleteSelected}
+      colSpan={columns.length + 1}
       tableHeader={tableHeader}
-      renderRow={(f) => (
-        <Tr key={`${f.namespace}/${f.name}`}>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.name}>
-              {f.name}
-            </span>
-          </Td>
-          <BadgeK8sNamespaces name={f.namespace} />
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={renderKeyValue(f.hard).title}>
-              {renderKeyValue(f.hard).display}
-            </span>
-          </Td>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={renderKeyValue(f.used).title}>
-              {renderKeyValue(f.used).display}
-            </span>
-          </Td>
-          <AgeCell timestamp={f.creation_timestamp || ''} />
-          <Td>
-            <button className="text-white/60 hover:text-white/80">⋮</button>
-          </Td>
-        </Tr>
-      )}
+      renderRow={renderRow}
     />
   );
 }

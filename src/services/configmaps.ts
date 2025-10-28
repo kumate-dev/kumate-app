@@ -1,17 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
-
-export interface ConfigMapItem {
-  name: string;
-  namespace: string;
-  data_keys: string[];
-  creation_timestamp?: string;
-}
+import type { V1ConfigMap } from '@kubernetes/client-node';
+import { K8sResponse } from '@/types/k8sResponse';
 
 export interface ConfigMapEvent {
   type: EventType;
-  object: ConfigMapItem;
+  object: V1ConfigMap;
 }
 
 export async function listConfigMaps({
@@ -20,8 +15,8 @@ export async function listConfigMaps({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<ConfigMapItem[]> {
-  return await invoke<ConfigMapItem[]>('list_config_maps', { name, namespaces });
+}): Promise<V1ConfigMap[]> {
+  return await invoke<V1ConfigMap[]>('list_config_maps', { name, namespaces });
 }
 
 export async function watchConfigMaps({
@@ -44,4 +39,20 @@ export async function watchConfigMaps({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteConfigMaps({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_config_maps', {
+    name,
+    namespace,
+    resourceNames,
+  });
 }

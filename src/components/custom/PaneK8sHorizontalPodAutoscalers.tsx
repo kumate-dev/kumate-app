@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { V1HorizontalPodAutoscaler } from '@kubernetes/client-node';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
@@ -6,22 +7,23 @@ import { useListK8sResources } from '@/hooks/useListK8sResources';
 import {
   listHorizontalPodAutoscalers,
   watchHorizontalPodAutoscalers,
-  HorizontalPodAutoscalerItem,
+  deleteHorizontalPodAutoscalers,
 } from '@/services/horizontalPodAutoscalers';
 import { ColumnDef, TableHeader } from './TableHeader';
-import { Td, Tr } from '@/components/ui/table';
+import { Td } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { Badge } from '../ui/badge';
-import { BadgeVariant } from '@/types/variant';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
+import { toast } from 'sonner';
 
 export default function PaneK8sHorizontalPodAutoscalers({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useListK8sResources<HorizontalPodAutoscalerItem>(
+  const { items, loading, error } = useListK8sResources<V1HorizontalPodAutoscaler>(
     listHorizontalPodAutoscalers,
     watchHorizontalPodAutoscalers,
     context,
@@ -29,19 +31,44 @@ export default function PaneK8sHorizontalPodAutoscalers({ context }: PaneK8sReso
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof HorizontalPodAutoscalerItem>('name');
+  const [sortBy, setSortBy] = useState<keyof V1HorizontalPodAutoscaler>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedItems, setSelectedItems] = useState<V1HorizontalPodAutoscaler[]>([]);
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['name', 'namespace', 'target_ref'],
-    sortBy,
-    sortOrder
+    ['metadata.name', 'metadata.namespace', 'spec.scaleTargetRef.name'],
+    'metadata.name',
+    'asc'
   );
 
-  const statusVariant = (status: string): BadgeVariant => {
+  const { handleDeleteResources } = useDeleteK8sResources<V1HorizontalPodAutoscaler>(
+    deleteHorizontalPodAutoscalers,
+    context
+  );
+
+  const toggleItem = useCallback((item: V1HorizontalPodAutoscaler) => {
+    setSelectedItems((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+    );
+  }, []);
+
+  const toggleAll = useCallback(
+    (checked: boolean) => {
+      setSelectedItems(checked ? [...filtered] : []);
+    },
+    [filtered]
+  );
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedItems.length === 0) return toast.error('No HPAs selected');
+    await handleDeleteResources(selectedItems);
+    setSelectedItems([]);
+  }, [selectedItems, handleDeleteResources]);
+
+  const statusVariant = (status?: string) => {
     switch (status) {
       case 'Active':
       case 'AbleToScale':
@@ -55,15 +82,16 @@ export default function PaneK8sHorizontalPodAutoscalers({ context }: PaneK8sReso
     }
   };
 
-  const columns: ColumnDef<keyof HorizontalPodAutoscalerItem | ''>[] = [
-    { label: 'Name', key: 'name' },
-    { label: 'Namespace', key: 'namespace' },
-    { label: 'Target', key: 'target_ref' },
-    { label: 'Min', key: 'min_replicas' },
-    { label: 'Max', key: 'max_replicas' },
-    { label: 'Current', key: 'current_replicas' },
-    { label: 'Desired', key: 'desired_replicas' },
-    { label: 'Age', key: 'creation_timestamp' },
+  const columns: ColumnDef<keyof V1HorizontalPodAutoscaler | ''>[] = [
+    { label: 'Name', key: 'metadata' },
+    { label: 'Namespace', key: 'metadata' },
+    { label: 'Target', key: 'spec' },
+    { label: 'Min', key: 'spec' },
+    { label: 'Max', key: 'spec' },
+    { label: 'Current', key: 'status' },
+    { label: 'Desired', key: 'status' },
+    { label: 'Age', key: 'metadata' },
+    { label: 'Status', key: 'status' },
   ];
 
   const tableHeader = (
@@ -73,7 +101,54 @@ export default function PaneK8sHorizontalPodAutoscalers({ context }: PaneK8sReso
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={filtered}
     />
+  );
+
+  const status = (hpa: V1HorizontalPodAutoscaler): string => {
+    const conditions = (hpa.status as any)?.conditions as
+      | { type?: string; status?: string }[]
+      | undefined;
+    if (!conditions || conditions.length === 0) return 'Unknown';
+
+    for (const cond of conditions) {
+      const type = cond.type;
+      const status = cond.status;
+
+      if (type === 'ScalingActive' && status === 'True') return 'Active';
+      if (type === 'ScalingActive' && status === 'False') return 'Error';
+      if (type === 'AbleToScale' && status === 'True') return 'AbleToScale';
+      if (type === 'AbleToScale' && status === 'False') return 'Failed';
+    }
+
+    return 'Unknown';
+  };
+
+  const renderRow = (hpa: V1HorizontalPodAutoscaler) => (
+    <>
+      <Td className="max-w-truncate align-middle">
+        <span className="block truncate" title={hpa.metadata?.name ?? ''}>
+          {hpa.metadata?.name}
+        </span>
+      </Td>
+      <Td>
+        <BadgeK8sNamespaces name={hpa.metadata?.namespace ?? ''} />
+      </Td>
+      <Td>{hpa.spec?.scaleTargetRef?.name ?? '-'}</Td>
+      <Td>{hpa.spec?.minReplicas ?? '-'}</Td>
+      <Td>{hpa.spec?.maxReplicas ?? '-'}</Td>
+      <Td>{hpa.status?.currentReplicas ?? '-'}</Td>
+      <Td>{hpa.status?.desiredReplicas ?? '-'}</Td>
+      <AgeCell timestamp={hpa.metadata?.creationTimestamp ?? ''} />
+      <Td>
+        <Badge variant={statusVariant(status(hpa))}>{status(hpa)}</Badge>
+      </Td>
+      <Td>
+        <button className="text-white/60 hover:text-white/80">⋮</button>
+      </Td>
+    </>
   );
 
   return (
@@ -86,28 +161,12 @@ export default function PaneK8sHorizontalPodAutoscalers({ context }: PaneK8sReso
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={setSelectedNamespaces}
-      colSpan={columns.length}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
+      onDeleteSelected={handleDeleteSelected}
+      colSpan={columns.length + 1}
       tableHeader={tableHeader}
-      renderRow={(f) => (
-        <Tr key={`${f.namespace}/${f.name}`}>
-          <Td className="max-w-truncate" title={f.name}>
-            <span className="block truncate">{f.name}</span>
-          </Td>
-          <BadgeK8sNamespaces name={f.namespace} />
-          <Td>{f.target_ref}</Td>
-          <Td>{f.min_replicas ?? '-'}</Td>
-          <Td>{f.max_replicas}</Td>
-          <Td>{f.current_replicas ?? '-'}</Td>
-          <Td>{f.desired_replicas ?? '-'}</Td>
-          <AgeCell timestamp={f.creation_timestamp || ''} />
-          <Td>
-            <Badge variant={statusVariant(f.status)}>{f.status}</Badge>
-          </Td>
-          <Td>
-            <button className="text-white/60 hover:text-white/80">⋮</button>
-          </Td>
-        </Tr>
-      )}
+      renderRow={renderRow}
     />
   );
 }

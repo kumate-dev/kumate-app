@@ -2,23 +2,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
 import { K8sResponse } from '@/types/k8sResponse';
-
-export interface DeploymentItem {
-  name: string;
-  namespace: string;
-  creation_timestamp?: string;
-  labels?: Record<string, string>;
-  annotations?: Record<string, string>;
-  replicas?: number;
-  selector?: Record<string, string>;
-  strategy_type?: string;
-  ready: string;
-  status?: string;
-}
+import type { V1Deployment } from '@kubernetes/client-node';
 
 export interface DeploymentEvent {
   type: EventType;
-  object: DeploymentItem;
+  object: V1Deployment;
 }
 
 export async function listDeployments({
@@ -27,8 +15,8 @@ export async function listDeployments({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<DeploymentItem[]> {
-  return await invoke<DeploymentItem[]>('list_deployments', { name, namespaces });
+}): Promise<V1Deployment[]> {
+  return await invoke<V1Deployment[]>('list_deployments', { name, namespaces });
 }
 
 export async function watchDeployments({
@@ -59,7 +47,7 @@ export async function deleteDeployments({
   resourceNames,
 }: {
   name: string;
-  namespace: string;
+  namespace?: string;
   resourceNames: string[];
 }): Promise<K8sResponse[]> {
   return await invoke<K8sResponse[]>('delete_deployments', { name, namespace, resourceNames });

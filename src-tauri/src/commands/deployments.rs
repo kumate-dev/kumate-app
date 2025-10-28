@@ -1,18 +1,18 @@
-use crate::{
-    commands::common::watch,
-    services::k8s::deployments::{DeploymentItem, K8sDeployments},
-    utils::watcher::WatchManager,
-};
-use anyhow::Result;
 use std::sync::Arc;
+
+use crate::{
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
+};
+use k8s_openapi::api::apps::v1::Deployment;
+use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_deployments(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<DeploymentItem>, String> {
-    K8sDeployments::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<Deployment>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -28,7 +28,7 @@ pub async fn watch_deployments(
         "deployments".to_string(),
         namespaces,
         state,
-        Arc::new(K8sDeployments::watch),
+        Arc::new(K8sResources::<Deployment>::watch),
     )
     .await
 }
@@ -39,5 +39,5 @@ pub async fn delete_deployments(
     namespace: Option<String>,
     resource_names: Vec<String>,
 ) -> Result<Vec<Result<String, String>>, String> {
-    Ok(K8sDeployments::delete(name, namespace, resource_names).await?)
+    Ok(K8sResources::<Deployment>::delete(name, namespace, resource_names).await?)
 }

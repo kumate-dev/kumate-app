@@ -1,17 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
-
-export interface StatefulSetItem {
-  name: string;
-  namespace: string;
-  ready: string;
-  creation_timestamp?: string;
-}
+import type { V1StatefulSet } from '@kubernetes/client-node';
+import { K8sResponse } from '@/types/k8sResponse';
 
 export interface StatefulSetEvent {
   type: EventType;
-  object: StatefulSetItem;
+  object: V1StatefulSet;
 }
 
 export async function listStatefulSets({
@@ -20,8 +15,11 @@ export async function listStatefulSets({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<StatefulSetItem[]> {
-  return await invoke<StatefulSetItem[]>('list_stateful_sets', { name, namespaces });
+}): Promise<V1StatefulSet[]> {
+  return await invoke<V1StatefulSet[]>('list_replication_controllers', {
+    name,
+    namespaces,
+  });
 }
 
 export async function watchStatefulSets({
@@ -33,7 +31,7 @@ export async function watchStatefulSets({
   namespaces?: string[];
   onEvent?: EventHandler<StatefulSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_stateful_sets', { name, namespaces });
+  const eventName = await invoke<string>('watch_replication_controllers', { name, namespaces });
 
   const unlisten = await listen<StatefulSetEvent>(eventName, (evt) => {
     try {
@@ -44,4 +42,20 @@ export async function watchStatefulSets({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteStatefulSets({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_replication_controllers', {
+    name,
+    namespace,
+    resourceNames,
+  });
 }

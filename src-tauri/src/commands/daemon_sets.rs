@@ -1,20 +1,18 @@
 use std::sync::Arc;
 
-use anyhow::Result;
-use tauri::AppHandle;
-
 use crate::{
-    commands::common::watch,
-    services::k8s::daemon_sets::{DaemonSetItem, K8sDaemonSets},
-    utils::watcher::WatchManager,
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
 };
+use k8s_openapi::api::apps::v1::DaemonSet;
+use serde_json::Value;
+use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_daemon_sets(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<DaemonSetItem>, String> {
-    K8sDaemonSets::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<DaemonSet>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -30,7 +28,16 @@ pub async fn watch_daemon_sets(
         "daemon_sets".to_string(),
         namespaces,
         state,
-        Arc::new(K8sDaemonSets::watch),
+        Arc::new(K8sResources::<DaemonSet>::watch),
     )
     .await
+}
+
+#[tauri::command]
+pub async fn delete_daemon_sets(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sResources::<DaemonSet>::delete(name, namespace, resource_names).await?)
 }

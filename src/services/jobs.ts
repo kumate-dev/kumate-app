@@ -1,17 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
-
-export interface JobItem {
-  name: string;
-  namespace: string;
-  progress: string;
-  creation_timestamp?: string;
-}
+import type { V1Job } from '@kubernetes/client-node';
+import { K8sResponse } from '@/types/k8sResponse';
 
 export interface JobEvent {
   type: EventType;
-  object: JobItem;
+  object: V1Job;
 }
 
 export async function listJobs({
@@ -20,8 +15,8 @@ export async function listJobs({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<JobItem[]> {
-  return await invoke<JobItem[]>('list_jobs', { name, namespaces });
+}): Promise<V1Job[]> {
+  return await invoke<V1Job[]>('list_jobs', { name, namespaces });
 }
 
 export async function watchJobs({
@@ -44,4 +39,20 @@ export async function watchJobs({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteJobs({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_jobs', {
+    name,
+    namespace,
+    resourceNames,
+  });
 }

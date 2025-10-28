@@ -1,19 +1,18 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch,
-    services::k8s::cron_jobs::{CronJobItem, K8sCronJobs},
-    utils::watcher::WatchManager,
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
 };
-use anyhow::Result;
+use k8s_openapi::api::batch::v1::CronJob;
+use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_cron_jobs(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<CronJobItem>, String> {
-    K8sCronJobs::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<CronJob>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -29,7 +28,16 @@ pub async fn watch_cron_jobs(
         "cron_jobs".to_string(),
         namespaces,
         state,
-        Arc::new(K8sCronJobs::watch),
+        Arc::new(K8sResources::<CronJob>::watch),
     )
     .await
+}
+
+#[tauri::command]
+pub async fn delete_cron_jobs(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sResources::<CronJob>::delete(name, namespace, resource_names).await?)
 }

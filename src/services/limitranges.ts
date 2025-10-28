@@ -1,21 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
-
-export interface LimitRangeItem {
-  name: string;
-  namespace: string;
-  type_: string;
-  min?: Record<string, string>;
-  max?: Record<string, string>;
-  default?: Record<string, string>;
-  defaultRequest?: Record<string, string>;
-  creation_timestamp?: string;
-}
+import type { V1LimitRange } from '@kubernetes/client-node';
+import { K8sResponse } from '@/types/k8sResponse';
 
 export interface LimitRangeEvent {
   type: EventType;
-  object: LimitRangeItem;
+  object: V1LimitRange;
 }
 
 export async function listLimitRanges({
@@ -24,8 +15,8 @@ export async function listLimitRanges({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<LimitRangeItem[]> {
-  return await invoke<LimitRangeItem[]>('list_limit_ranges', { name, namespaces });
+}): Promise<V1LimitRange[]> {
+  return await invoke<V1LimitRange[]>('list_limit_ranges', { name, namespaces });
 }
 
 export async function watchLimitRanges({
@@ -48,4 +39,20 @@ export async function watchLimitRanges({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteLimitRanges({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_limit_ranges', {
+    name,
+    namespace,
+    resourceNames,
+  });
 }

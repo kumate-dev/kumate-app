@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use k8s_openapi::Resource as K8sResource;
+use k8s_openapi::{Metadata, Resource as K8sResource};
+use kube::api::ObjectMeta;
 use kube::config::{Config, KubeConfigOptions, Kubeconfig};
 use kube::core::NamespaceResourceScope;
 use kube::{Api, Client, Resource};
@@ -12,7 +13,11 @@ pub struct K8sClient;
 impl K8sClient {
     pub async fn api<K>(client: Client, namespace: Option<String>) -> Api<K>
     where
-        K: Resource<DynamicType = (), Scope = NamespaceResourceScope> + K8sResource + Clone,
+        K: Resource<DynamicType = (), Scope = NamespaceResourceScope>
+            + K8sResource
+            + Metadata<Ty = ObjectMeta>
+            + Clone
+            + serde::de::DeserializeOwned,
     {
         match namespace.as_ref().map(|s| s.trim().to_lowercase()) {
             None => Api::all(client),

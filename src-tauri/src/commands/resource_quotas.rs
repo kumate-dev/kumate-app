@@ -1,17 +1,18 @@
 use std::sync::Arc;
 
-use crate::{services::k8s::resource_quotas::K8sResourceQuotas, utils::watcher::WatchManager};
-use anyhow::Result;
+use crate::{
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
+};
+use k8s_openapi::api::core::v1::ResourceQuota;
+use serde_json::Value;
 use tauri::AppHandle;
-
-use crate::commands::common::watch;
 
 #[tauri::command]
 pub async fn list_resource_quotas(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<crate::services::k8s::resource_quotas::ResourceQuotaItem>, String> {
-    K8sResourceQuotas::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<ResourceQuota>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -27,7 +28,16 @@ pub async fn watch_resource_quotas(
         "resource_quotas".to_string(),
         namespaces,
         state,
-        Arc::new(K8sResourceQuotas::watch),
+        Arc::new(K8sResources::<ResourceQuota>::watch),
     )
     .await
+}
+
+#[tauri::command]
+pub async fn delete_resource_quotas(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sResources::<ResourceQuota>::delete(name, namespace, resource_names).await?)
 }

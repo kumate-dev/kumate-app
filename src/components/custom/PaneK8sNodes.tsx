@@ -2,27 +2,48 @@ import { useState } from 'react';
 import { Td, Tr } from '@/components/ui/table';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { listNodes, NodeItem, watchNodes } from '@/services/nodes';
+import { listNodes, watchNodes } from '@/services/nodes';
+import { V1Node } from '@kubernetes/client-node';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
-import { PaneK8sResource, PaneK8sResourceContextProps } from '@/components/custom/PaneK8sResource';
+import { ColumnDef, TableHeader } from './TableHeader';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 
 export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
-  const { items, loading, error } = useListK8sResources<NodeItem>(
-    listNodes as (params: { name: string }) => Promise<NodeItem[]>,
-    watchNodes,
-    context
-  );
+  const { items, loading, error } = useListK8sResources<V1Node>(listNodes, watchNodes, context);
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof NodeItem>('name');
+  const [sortBy, setSortBy] = useState<keyof V1Node>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const filtered = useFilteredItems(items, [], q, ['name'], sortBy, sortOrder);
+  const filtered = useFilteredItems(
+    items,
+    [],
+    q,
+    ['metadata.name', 'metadata.labels["kubernetes.io/role"]', 'status.nodeInfo.kubeletVersion'],
+    sortBy,
+    sortOrder
+  );
 
-  function conditionVariant(cond: string) {
-    switch (cond) {
+  const extractCondition = (node: V1Node): string => {
+    const conditions = node.status?.conditions;
+    if (!conditions) return 'Unknown';
+
+    const readyCond = conditions.find((c) => c.type === 'Ready');
+    if (!readyCond) return 'Unknown';
+
+    switch (readyCond.status) {
+      case 'True':
+        return 'Ready';
+      case 'Unknown':
+        return 'Unknown';
+      default:
+        return 'NotReady';
+    }
+  };
+
+  const conditionVariant = (status: string) => {
+    switch (status) {
       case 'Ready':
         return 'success';
       case 'Unknown':
@@ -30,18 +51,15 @@ export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
       default:
         return 'error';
     }
-  }
+  };
 
-  const columns: ColumnDef<keyof NodeItem | ''>[] = [
-    { label: 'Name', key: 'name' },
-    { label: 'CPU', key: 'cpu' },
-    { label: 'Memory', key: 'memory' },
-    { label: 'Disk', key: 'disk' },
-    { label: 'Taint', key: 'taints' },
-    { label: 'Roles', key: 'roles' },
-    { label: 'Version', key: 'version' },
-    { label: 'Age', key: 'creation_timestamp' },
-    { label: 'Conditions', key: 'condition' },
+  const columns: ColumnDef<keyof V1Node | ''>[] = [
+    { label: 'Name', key: 'metadata' },
+    { label: 'Roles', key: 'metadata' },
+    { label: 'Version', key: 'status' },
+    { label: 'Age', key: 'metadata' },
+    { label: 'Condition', key: 'status' },
+    { label: '', key: '', sortable: false },
   ];
 
   const tableHeader = (
@@ -54,6 +72,35 @@ export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
     />
   );
 
+  const renderRow = (node: V1Node) => {
+    const condition = extractCondition(node);
+    const roles =
+      Object.keys(node.metadata?.labels || {})
+        .filter((k) => k.startsWith('node-role.kubernetes.io/'))
+        .map((k) => k.replace('node-role.kubernetes.io/', ''))
+        .join(', ') || '—';
+
+    const version = node.status?.nodeInfo?.kubeletVersion || '—';
+    const age = node.metadata?.creationTimestamp || '';
+
+    return (
+      <Tr key={node.metadata?.name}>
+        <Td className="max-w-truncate" title={node.metadata?.name}>
+          {node.metadata?.name}
+        </Td>
+        <Td>{roles}</Td>
+        <Td>{version}</Td>
+        <AgeCell timestamp={age} />
+        <Td>
+          <Badge variant={conditionVariant(condition)}>{condition}</Badge>
+        </Td>
+        <Td>
+          <button className="text-white/60 hover:text-white/80">⋮</button>
+        </Td>
+      </Tr>
+    );
+  };
+
   return (
     <PaneK8sResource
       items={filtered}
@@ -64,30 +111,7 @@ export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
       showNamespace={false}
       colSpan={columns.length}
       tableHeader={tableHeader}
-      renderRow={(f) => (
-        <Tr key={f.name}>
-          <Td className="max-w-truncate">
-            <span className="block truncate" title={f.name}>
-              {f.name}
-            </span>
-          </Td>
-          <Td>{f.cpu || '—'}</Td>
-          <Td>{f.memory || '—'}</Td>
-          <Td>{f.disk || '—'}</Td>
-          <Td>{f.taints || ''}</Td>
-          <Td>{f.roles || ''}</Td>
-          <Td>{f.version || ''}</Td>
-          <AgeCell timestamp={f.creation_timestamp || ''} />
-          <Td>
-            <Badge variant={conditionVariant(f.condition || 'Unknown')}>
-              {f.condition || 'Unknown'}
-            </Badge>
-          </Td>
-          <Td>
-            <button className="text-white/60 hover:text-white/80">⋮</button>
-          </Td>
-        </Tr>
-      )}
+      renderRow={renderRow}
     />
   );
 }

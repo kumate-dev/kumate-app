@@ -1,32 +1,28 @@
 import { useState, useCallback } from 'react';
-import { PaneK8sResource } from './PaneK8sResource';
+import { V1Deployment } from '@kubernetes/client-node';
+import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { SidebarK8sDeployment } from './SidebarK8sDeployment';
 import { useNamespaceStore } from '@/state/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import {
-  listDeployments,
-  watchDeployments,
-  DeploymentItem,
-  deleteDeployments,
-} from '@/services/deployments';
+import { listDeployments, watchDeployments, deleteDeployments } from '@/services/deployments';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
-import { readyVariant } from '@/utils/k8s';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
-import { k8sDeploymentStatusVariant } from '@/constants/variant';
+import { AlertTriangle } from 'lucide-react';
+import { BadgeVariant } from '@/types/variant';
 
-export default function PaneK8sDeployments({ context }: { context?: any }) {
+export default function PaneK8sDeployments({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useListK8sResources<DeploymentItem>(
+  const { items, loading, error } = useListK8sResources<V1Deployment>(
     listDeployments,
     watchDeployments,
     context,
@@ -34,21 +30,23 @@ export default function PaneK8sDeployments({ context }: { context?: any }) {
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof DeploymentItem>('name');
+  const [sortBy, setSortBy] = useState<keyof V1Deployment>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedDeployments, setSelectedDeployments] = useState<DeploymentItem[]>([]);
-  const [selectedDeployment, setSelectedDeployment] = useState<DeploymentItem | null>(null);
+  const [selectedDeployments, setSelectedDeployments] = useState<V1Deployment[]>([]);
+  const [selectedDeployment, setSelectedDeployment] = useState<V1Deployment | null>(null);
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['name', 'namespace'],
-    sortBy,
-    sortOrder
+    ['metadata.name', 'metadata.namespace'],
+    'metadata.name',
+    'asc'
   );
 
-  const toggleDeployment = useCallback((dep: DeploymentItem) => {
+  const { handleDeleteResources } = useDeleteK8sResources<V1Deployment>(deleteDeployments, context);
+
+  const toggleDeployment = useCallback((dep: V1Deployment) => {
     setSelectedDeployments((prev) =>
       prev.includes(dep) ? prev.filter((d) => d !== dep) : [...prev, dep]
     );
@@ -61,29 +59,26 @@ export default function PaneK8sDeployments({ context }: { context?: any }) {
     [filtered]
   );
 
-  const { handleDeleteResources } = useDeleteK8sResources<DeploymentItem>(
-    deleteDeployments,
-    context
-  );
-
   const handleDeleteSelected = useCallback(async () => {
     if (selectedDeployments.length === 0) return toast.error('No deployments selected');
     await handleDeleteResources(selectedDeployments);
     setSelectedDeployments([]);
+    setSelectedDeployment(null);
   }, [selectedDeployments, handleDeleteResources]);
 
-  const handleDeleteOne = async (item: DeploymentItem) => {
+  const handleDeleteOne = async (item: V1Deployment) => {
     await handleDeleteResources([item]);
     setSelectedDeployment(null);
   };
 
-  const columns: ColumnDef<keyof DeploymentItem | ''>[] = [
-    { label: 'Name', key: 'name' },
-    { label: 'Namespace', key: 'namespace' },
-    { label: 'Ready', key: 'ready' },
-    { label: 'Age', key: 'creation_timestamp' },
-    { label: 'Status', key: 'status' },
+  const columns: ColumnDef<keyof V1Deployment | ''>[] = [
+    { label: 'Name', key: 'metadata' },
     { label: '', key: '', sortable: false },
+    { label: 'Namespace', key: 'metadata' },
+    { label: 'Replicas', key: 'spec' },
+    { label: 'Ready', key: 'status' },
+    { label: 'Age', key: 'metadata' },
+    { label: 'Status', key: 'status' },
   ];
 
   const tableHeader = (
@@ -97,6 +92,55 @@ export default function PaneK8sDeployments({ context }: { context?: any }) {
       selectedItems={selectedDeployments}
       totalItems={filtered}
     />
+  );
+
+  const deploymentStatusVariant = (s: string): BadgeVariant => {
+    switch (s) {
+      case 'Progressing':
+        return 'warning';
+      case 'Available':
+        return 'success';
+      case 'Failed':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const renderRow = (dep: V1Deployment) => (
+    <>
+      <Td className="max-w-truncate align-middle">
+        <span className="block truncate" title={dep.metadata?.name ?? ''}>
+          {dep.metadata?.name}
+        </span>
+      </Td>
+      <Td className="text-center align-middle">
+        {dep.status?.conditions?.some((c) => c.status === 'False') && (
+          <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
+        )}
+      </Td>
+      <Td>
+        <BadgeK8sNamespaces name={dep.metadata?.namespace ?? ''} />
+      </Td>
+      <Td>{dep.spec?.replicas ?? '-'}</Td>
+      <Td>
+        {dep.status?.readyReplicas ?? '-'} / {dep.status?.replicas ?? '-'}
+      </Td>
+      <AgeCell timestamp={dep.metadata?.creationTimestamp} />
+      <Td>
+        <Badge variant={deploymentStatusVariant(dep.status?.conditions?.[0]?.type ?? '')}>
+          {dep.status?.conditions?.[0]?.type ?? ''}
+        </Badge>
+      </Td>
+
+      {selectedDeployment && selectedDeployment.metadata?.uid === dep.metadata?.uid && (
+        <SidebarK8sDeployment
+          item={selectedDeployment}
+          setItem={setSelectedDeployment}
+          onDelete={handleDeleteOne}
+        />
+      )}
+    </>
   );
 
   return (
@@ -116,35 +160,7 @@ export default function PaneK8sDeployments({ context }: { context?: any }) {
       colSpan={columns.length + 1}
       tableHeader={tableHeader}
       onRowClick={(f) => setSelectedDeployment(f)}
-      renderRow={(f) => (
-        <>
-          <Td className="max-w-truncate align-middle">
-            <span className="block truncate" title={f.name}>
-              {f.name}
-            </span>
-          </Td>
-          <Td>
-            <BadgeK8sNamespaces name={f.namespace} />
-          </Td>
-          <Td>
-            <Badge variant={readyVariant(f.ready)}>{f.ready}</Badge>
-          </Td>
-          <AgeCell timestamp={f.creation_timestamp || ''} />
-          <Td>
-            <Badge variant={k8sDeploymentStatusVariant(f.status || '')}>{f.status || ''}</Badge>
-          </Td>
-          <Td>
-            <button className="text-white/60 hover:text-white/80">⋮</button>
-          </Td>
-          {selectedDeployment && (
-            <SidebarK8sDeployment
-              item={selectedDeployment}
-              setItem={setSelectedDeployment}
-              onDelete={handleDeleteOne}
-            />
-          )}
-        </>
-      )}
+      renderRow={renderRow}
     />
   );
 }

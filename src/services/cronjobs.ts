@@ -1,19 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { EventHandler, EventType } from '@/types/k8sEvent';
-
-export interface CronJobItem {
-  name: string;
-  namespace: string;
-  schedule: string;
-  suspend: boolean;
-  last_schedule?: string;
-  creation_timestamp?: string;
-}
+import type { V1CronJob } from '@kubernetes/client-node';
+import { K8sResponse } from '@/types/k8sResponse';
 
 export interface CronJobEvent {
   type: EventType;
-  object: CronJobItem;
+  object: V1CronJob;
 }
 
 export async function listCronJobs({
@@ -22,8 +15,8 @@ export async function listCronJobs({
 }: {
   name: string;
   namespaces?: string[];
-}): Promise<CronJobItem[]> {
-  return await invoke<CronJobItem[]>('list_cron_jobs', { name, namespaces });
+}): Promise<V1CronJob[]> {
+  return await invoke<V1CronJob[]>('list_cron_jobs', { name, namespaces });
 }
 
 export async function watchCronJobs({
@@ -46,4 +39,20 @@ export async function watchCronJobs({
   });
 
   return { eventName, unlisten };
+}
+
+export async function deleteCronJobs({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_cron_jobs', {
+    name,
+    namespace,
+    resourceNames,
+  });
 }

@@ -1,19 +1,18 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch,
-    services::k8s::config_maps::{ConfigMapItem, K8sConfigMaps},
-    utils::watcher::WatchManager,
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
 };
-use anyhow::Result;
+use k8s_openapi::api::core::v1::ConfigMap;
+use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_config_maps(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<ConfigMapItem>, String> {
-    K8sConfigMaps::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<ConfigMap>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -29,7 +28,16 @@ pub async fn watch_config_maps(
         "config_maps".to_string(),
         namespaces,
         state,
-        Arc::new(K8sConfigMaps::watch),
+        Arc::new(K8sResources::<ConfigMap>::watch),
     )
     .await
+}
+
+#[tauri::command]
+pub async fn delete_config_maps(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
+    Ok(K8sResources::<ConfigMap>::delete(name, namespace, resource_names).await?)
 }

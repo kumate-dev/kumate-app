@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
 import type { K8sResponse } from '@/types/k8sResponse';
 
-export function useDeleteK8sResources<T extends { name: string; namespace?: string }>(
+export function useDeleteK8sResources<T>(
   deleteFn: (params: {
     name: string;
     namespace: string;
@@ -13,9 +13,14 @@ export function useDeleteK8sResources<T extends { name: string; namespace?: stri
     const namespaceMap: Record<string, string[]> = {};
 
     resources.forEach((r) => {
-      const ns = r.namespace || '';
+      const meta: any = (r as any).metadata ?? {};
+      const ns = meta.namespace || '';
+      const name = meta.name;
+
+      if (!name) return;
+
       if (!namespaceMap[ns]) namespaceMap[ns] = [];
-      namespaceMap[ns].push(r.name);
+      namespaceMap[ns].push(name);
     });
 
     for (const ns in namespaceMap) {

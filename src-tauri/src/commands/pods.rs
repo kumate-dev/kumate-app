@@ -1,19 +1,18 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch,
-    services::k8s::pods::{K8sPods, PodItem},
-    utils::watcher::WatchManager,
+    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
 };
-use anyhow::Result;
+use k8s_openapi::api::core::v1::Pod;
+use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
 pub async fn list_pods(
     name: String,
     namespaces: Option<Vec<String>>,
-) -> Result<Vec<PodItem>, String> {
-    K8sPods::list(name, namespaces).await
+) -> Result<Vec<Value>, String> {
+    K8sResources::<Pod>::list(name, namespaces).await
 }
 
 #[tauri::command]
@@ -29,7 +28,7 @@ pub async fn watch_pods(
         "pods".to_string(),
         namespaces,
         state,
-        Arc::new(K8sPods::watch),
+        Arc::new(K8sResources::<Pod>::watch),
     )
     .await
 }
@@ -40,5 +39,5 @@ pub async fn delete_pods(
     namespace: Option<String>,
     resource_names: Vec<String>,
 ) -> Result<Vec<Result<String, String>>, String> {
-    Ok(K8sPods::delete(name, namespace, resource_names).await?)
+    Ok(K8sResources::<Pod>::delete(name, namespace, resource_names).await?)
 }
