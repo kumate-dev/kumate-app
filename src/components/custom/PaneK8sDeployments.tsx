@@ -75,7 +75,6 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
     { label: 'Name', key: 'metadata' },
     { label: '', key: '', sortable: false },
     { label: 'Namespace', key: 'metadata' },
-    { label: 'Replicas', key: 'spec' },
     { label: 'Ready', key: 'status' },
     { label: 'Age', key: 'metadata' },
     { label: 'Status', key: 'status' },
@@ -122,9 +121,8 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
       <Td>
         <BadgeK8sNamespaces name={dep.metadata?.namespace ?? ''} />
       </Td>
-      <Td>{dep.spec?.replicas ?? '-'}</Td>
       <Td>
-        {dep.status?.readyReplicas ?? '-'} / {dep.status?.replicas ?? '-'}
+        {dep.status?.readyReplicas ?? '0'}/{dep.status?.replicas ?? '0'}
       </Td>
       <AgeCell timestamp={dep.metadata?.creationTimestamp} />
       <Td>
