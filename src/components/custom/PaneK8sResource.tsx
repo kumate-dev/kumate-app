@@ -109,10 +109,6 @@ export function PaneK8sResource<T>({
                     className={`cursor-pointer ${onRowClick ? 'hover:bg-white/5' : ''}`}
                     onClick={(e) => {
                       onRowClick?.(item);
-                      if (document.activeElement instanceof HTMLElement) {
-                        document.activeElement.blur();
-                      }
-                      e.currentTarget.blur?.();
                     }}
                   >
                       {onToggleItem && (

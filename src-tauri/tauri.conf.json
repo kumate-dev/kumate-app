@@ -31,7 +31,7 @@
     "copyright": "© 2025 Kumate",
     "category": "DeveloperTool",
     "shortDescription": "A modern Kubernetes resource manager",
-    "longDescription": "Kumate helps developers visualize, monitor, and manage Kubernetes clusters efficiently — a lightweight alternative to Lens.",
+    "longDescription": "Kumate helps developers visualize, monitor, and manage Kubernetes clusters efficiently.",
 
     "macOS": {
       "entitlements": null,
