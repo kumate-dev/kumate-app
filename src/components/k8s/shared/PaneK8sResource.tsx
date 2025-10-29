@@ -1,12 +1,13 @@
-import { ReactNode, useRef, useState } from 'react';
-import { PaneTaskbar } from '../../common/Taskbar';
-import { PaneSearch } from '../../common/Search';
-import { Table, Tbody, Td, Tr } from '@/components/ui/table';
-import { ErrorMessage } from '../../common/ErrorMessage';
-import { Checkbox } from '../../ui/checkbox';
-import { ModalConfirmDelete } from '../../common/ModalConfirmDelete';
+import { ReactNode, useRef, useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { K8sContext } from '@/api/k8s/contexts';
 import { V1Namespace } from '@kubernetes/client-node';
+import { PaneTaskbar } from '@/components/common/Taskbar';
+import { PaneSearch } from '@/components/common/Search';
+import { Table, Tbody, Td, Tr } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
 
 export interface PaneK8sResourceContextProps {
   context?: K8sContext | null;
@@ -59,7 +60,18 @@ export function PaneK8sResource<T>({
 }: PaneK8sResourceProps<T>) {
   const totalColSpan = (colSpan || 0) + (onToggleItem ? 1 : 0);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [showSkeleton, setShowSkeleton] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loading) {
+      timer = setTimeout(() => setShowSkeleton(true), 250);
+    } else {
+      setShowSkeleton(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   const handleDeleteClick = () => {
     if (!selectedItems || selectedItems.length === 0) return;
@@ -93,13 +105,21 @@ export function PaneK8sResource<T>({
             <Table ref={tableRef}>
               {tableHeader}
               <Tbody>
-                {loading && (
-                  <Tr className="text-center">
-                    <Td colSpan={totalColSpan} className="py-4 text-white/60">
-                      Loading…
-                    </Td>
-                  </Tr>
-                )}
+                {showSkeleton &&
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <Tr key={`skeleton-${i}`}>
+                      {onToggleItem && (
+                        <Td className="w-[1%] px-0">
+                          <Skeleton className="h-5 w-5 rounded" />
+                        </Td>
+                      )}
+                      {Array.from({ length: colSpan }).map((_, j) => (
+                        <Td key={j} className="py-2">
+                          <Skeleton className="h-4 w-[80%] rounded" />
+                        </Td>
+                      ))}
+                    </Tr>
+                  ))}
 
                 {!loading && items.length === 0 && (
                   <Tr className="text-center">
