@@ -1,60 +1,49 @@
 import { useState, useCallback } from 'react';
-import { V1LimitRange } from '@kubernetes/client-node';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listLimitRanges, watchLimitRanges, deleteLimitRanges } from '@/api/k8s/limitRanges';
+import { V1LimitRange, V1Namespace } from '@kubernetes/client-node';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
 
-export default function PaneLimitRanges({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PaneLimitRangesProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1LimitRange[];
+  loading: boolean;
+  error: string;
+  onDeleteLimitRanges: (limitRanges: V1LimitRange[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1LimitRange>(
-    listLimitRanges,
-    watchLimitRanges,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneLimitRanges({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteLimitRanges,
+}: PaneLimitRangesProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1LimitRange>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1LimitRange[]>([]);
-
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace'],
-    'metadata.name',
-    'asc'
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1LimitRange>(deleteLimitRanges, context);
 
   const toggleItem = useCallback((lr: V1LimitRange) => {
     setSelectedItems((prev) => (prev.includes(lr) ? prev.filter((i) => i !== lr) : [...prev, lr]));
   }, []);
 
   const toggleAll = useCallback(
-    (checked: boolean) => setSelectedItems(checked ? [...filtered] : []),
-    [filtered]
+    (checked: boolean) => setSelectedItems(checked ? [...items] : []),
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (!selectedItems.length) return toast.error('No limit ranges selected');
-    await handleDeleteResources(selectedItems);
+    if (!selectedItems.length) return;
+    await onDeleteLimitRanges(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, handleDeleteResources]);
+  }, [selectedItems, onDeleteLimitRanges]);
 
   const renderLimitMap = (map?: Record<string, string>): { display: string; title: string } => {
     if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
@@ -84,7 +73,7 @@ export default function PaneLimitRanges({ context }: PaneResourceContextProps) {
       setSortOrder={setSortOrder}
       onToggleAll={toggleAll}
       selectedItems={selectedItems}
-      totalItems={filtered}
+      totalItems={items}
     />
   );
 
@@ -102,22 +91,19 @@ export default function PaneLimitRanges({ context }: PaneResourceContextProps) {
       <Td>{renderLimitMap(lr.spec?.limits?.[0]?._default).display}</Td>
       <Td>{renderLimitMap(lr.spec?.limits?.[0]?.defaultRequest).display}</Td>
       <AgeCell timestamp={lr.metadata?.creationTimestamp ?? ''} />
-      <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
-      </Td>
     </>
   );
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
+      onSelectNamespace={onSelectNamespace}
       selectedItems={selectedItems}
       onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}

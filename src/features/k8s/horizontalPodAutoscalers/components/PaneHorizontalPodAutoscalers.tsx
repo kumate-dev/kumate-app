@@ -95,9 +95,6 @@ export default function PaneHorizontalPodAutoscalers({
       <Td>
         <BadgeStatus status={getHorizontalPodAutoscalerStatus(hpa)} />
       </Td>
-      <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
-      </Td>
     </>
   );
 

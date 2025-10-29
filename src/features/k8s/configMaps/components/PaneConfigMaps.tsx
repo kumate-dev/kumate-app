@@ -87,9 +87,6 @@ export default function PaneConfigMaps({
         )}
       </Td>
       <AgeCell timestamp={cm.metadata?.creationTimestamp} />
-      <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
-      </Td>
     </>
   );
 

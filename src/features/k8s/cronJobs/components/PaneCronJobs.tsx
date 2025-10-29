@@ -89,9 +89,6 @@ export default function PaneCronJobs({
       </Td>
       <AgeCell timestamp={cj.status?.lastScheduleTime ?? ''} />
       <AgeCell timestamp={cj.metadata?.creationTimestamp ?? ''} />
-      <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
-      </Td>
     </>
   );
 

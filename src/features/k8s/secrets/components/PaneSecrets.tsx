@@ -1,80 +1,58 @@
 import { useState, useCallback } from 'react';
+import { V1Secret, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listSecrets, watchSecrets, deleteSecrets } from '@/api/k8s/secrets';
-import { V1Secret } from '@kubernetes/client-node';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
-import { Badge } from '@/components/ui/badge';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
-import { BadgeVariant } from '@/types/variant';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getSecretTypeStatus } from '../utils/secretTypeStatus';
 
-export default function PaneSecrets({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PaneSecretsProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1Secret[];
+  loading: boolean;
+  error: string;
+  onDeleteSecrets: (secrets: V1Secret[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1Secret>(
-    listSecrets,
-    watchSecrets,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneSecrets({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteSecrets,
+}: PaneSecretsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Secret>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedSecrets, setSelectedSecrets] = useState<V1Secret[]>([]);
+  const [selectedItems, setSelectedItems] = useState<V1Secret[]>([]);
 
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace', 'type'],
-    sortBy,
-    sortOrder
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1Secret>(deleteSecrets, context);
-
-  const toggleSecret = useCallback((secret: V1Secret) => {
-    setSelectedSecrets((prev) =>
+  const toggleItem = useCallback((secret: V1Secret) => {
+    setSelectedItems((prev) =>
       prev.includes(secret) ? prev.filter((s) => s !== secret) : [...prev, secret]
     );
   }, []);
 
-  const toggleAllSecrets = useCallback(
+  const toggleAll = useCallback(
     (checked: boolean) => {
-      setSelectedSecrets(checked ? [...filtered] : []);
+      setSelectedItems(checked ? [...items] : []);
     },
-    [filtered]
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (!selectedSecrets.length) return toast.error('No Secrets selected');
-    await handleDeleteResources(selectedSecrets);
-    setSelectedSecrets([]);
-  }, [selectedSecrets, handleDeleteResources]);
+    if (!selectedItems.length) return;
+    await onDeleteSecrets(selectedItems);
+    setSelectedItems([]);
+  }, [selectedItems, onDeleteSecrets]);
 
-  const typeVariant = (type?: string): BadgeVariant => {
-    switch (type) {
-      case 'Opaque':
-        return 'secondary';
-      case 'kubernetes.io/service-account-token':
-        return 'warning';
-      case 'kubernetes.io/dockerconfigjson':
-        return 'success';
-      case 'kubernetes.io/tls':
-        return 'error';
-      default:
-        return 'default';
-    }
+  const getDataKeys = (secret: V1Secret): string => {
+    return secret.data ? Object.keys(secret.data).join(', ') : '-';
   };
 
   const columns: ColumnDef<keyof V1Secret | ''>[] = [
@@ -92,53 +70,50 @@ export default function PaneSecrets({ context }: PaneResourceContextProps) {
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onToggleAll={toggleAllSecrets}
-      selectedItems={selectedSecrets}
-      totalItems={filtered}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={items}
     />
   );
 
-  const renderRow = (secret: V1Secret) => (
-    <>
-      <Td className="max-w-truncate align-middle">
-        <span className="block truncate" title={secret.metadata?.name}>
-          {secret.metadata?.name}
-        </span>
-      </Td>
-      <Td>
-        <BadgeNamespaces name={secret.metadata?.namespace ?? ''} />
-      </Td>
-      <Td>
-        <Badge variant={typeVariant(secret.type)}>{secret.type ?? '-'}</Badge>
-      </Td>
-      <Td className="max-w-truncate">
-        <span
-          className="block truncate"
-          title={secret.data ? Object.keys(secret.data).join(', ') : ''}
-        >
-          {secret.data ? Object.keys(secret.data).join(', ') : '-'}
-        </span>
-      </Td>
-      <AgeCell timestamp={secret.metadata?.creationTimestamp ?? ''} />
-      <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
-      </Td>
-    </>
-  );
+  const renderRow = (secret: V1Secret) => {
+    const dataKeys = getDataKeys(secret);
+
+    return (
+      <>
+        <Td className="max-w-truncate align-middle">
+          <span className="block truncate" title={secret.metadata?.name}>
+            {secret.metadata?.name}
+          </span>
+        </Td>
+        <Td>
+          <BadgeNamespaces name={secret.metadata?.namespace ?? ''} />
+        </Td>
+        <Td>
+          <BadgeStatus status={getSecretTypeStatus(secret)} />
+        </Td>
+        <Td className="max-w-truncate">
+          <span className="block truncate" title={dataKeys}>
+            {dataKeys}
+          </span>
+        </Td>
+        <AgeCell timestamp={secret.metadata?.creationTimestamp ?? ''} />
+      </>
+    );
+  };
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
-      selectedItems={selectedSecrets}
-      onToggleItem={toggleSecret}
-      onToggleAll={toggleAllSecrets}
+      onSelectNamespace={onSelectNamespace}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}

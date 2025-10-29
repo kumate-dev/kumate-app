@@ -1,46 +1,36 @@
 import { useState, useCallback } from 'react';
-import { V1Job } from '@kubernetes/client-node';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listJobs, watchJobs, deleteJobs } from '@/api/k8s/jobs';
+import { V1Job, V1Namespace } from '@kubernetes/client-node';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getJobStatus } from '../utils/jobStatus';
 
-export default function PaneJobs({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PaneJobsProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1Job[];
+  loading: boolean;
+  error: string;
+  onDeleteJobs: (jobs: V1Job[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1Job>(
-    listJobs,
-    watchJobs,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneJobs({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteJobs,
+}: PaneJobsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Job>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1Job[]>([]);
-
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace'],
-    'metadata.name',
-    'asc'
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1Job>(deleteJobs, context);
 
   const toggleItem = useCallback((job: V1Job) => {
     setSelectedItems((prev) =>
@@ -49,28 +39,21 @@ export default function PaneJobs({ context }: PaneResourceContextProps) {
   }, []);
 
   const toggleAll = useCallback(
-    (checked: boolean) => setSelectedItems(checked ? [...filtered] : []),
-    [filtered]
+    (checked: boolean) => setSelectedItems(checked ? [...items] : []),
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (!selectedItems.length) return toast.error('No jobs selected');
-    await handleDeleteResources(selectedItems);
+    if (!selectedItems.length) return;
+    await onDeleteJobs(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, handleDeleteResources]);
-
-  const progressVariant = (job: V1Job) => {
-    const succeeded = job.status?.succeeded ?? 0;
-    const completions = job.spec?.completions ?? 0;
-    if (completions > 0) return succeeded >= completions ? 'success' : 'warning';
-    return 'default';
-  };
+  }, [selectedItems, onDeleteJobs]);
 
   const columns: ColumnDef<keyof V1Job | ''>[] = [
     { label: 'Name', key: 'metadata' },
     { label: 'Namespace', key: 'metadata' },
-    { label: 'Progress', key: 'status' },
     { label: 'Age', key: 'metadata' },
+    { label: 'Status', key: 'status' },
   ];
 
   const tableHeader = (
@@ -82,46 +65,43 @@ export default function PaneJobs({ context }: PaneResourceContextProps) {
       setSortOrder={setSortOrder}
       onToggleAll={toggleAll}
       selectedItems={selectedItems}
-      totalItems={filtered}
+      totalItems={items}
     />
+  );
+
+  const renderRow = (job: V1Job) => (
+    <>
+      <Td className="max-w-truncate align-middle">
+        <span className="block truncate" title={job.metadata?.name ?? ''}>
+          {job.metadata?.name}
+        </span>
+      </Td>
+      <Td>
+        <BadgeNamespaces name={job.metadata?.namespace ?? ''} />
+      </Td>
+      <AgeCell timestamp={job.metadata?.creationTimestamp ?? ''} />
+      <Td>
+        <BadgeStatus status={getJobStatus(job)} />
+      </Td>
+    </>
   );
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
+      onSelectNamespace={onSelectNamespace}
       selectedItems={selectedItems}
       onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}
-      renderRow={(job) => (
-        <>
-          <Td className="max-w-truncate align-middle">
-            <span className="block truncate" title={job.metadata?.name ?? ''}>
-              {job.metadata?.name}
-            </span>
-          </Td>
-          <Td>
-            <BadgeNamespaces name={job.metadata?.namespace ?? ''} />
-          </Td>
-          <Td>
-            <Badge variant={progressVariant(job)}>
-              {`${job.status?.succeeded ?? 0}/${job.spec?.completions ?? '-'}`}
-            </Badge>
-          </Td>
-          <AgeCell timestamp={job.metadata?.creationTimestamp ?? ''} />
-          <Td>
-            <button className="text-white/60 hover:text-white/80">⋮</button>
-          </Td>
-        </>
-      )}
+      renderRow={renderRow}
     />
   );
 }

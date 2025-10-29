@@ -3,13 +3,11 @@ import { V1DaemonSet, V1Namespace } from '@kubernetes/client-node';
 import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
-import { readyVariant } from '@/utils/k8s';
-import { BadgeVariant } from '@/types/variant';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
-import { daemonSetHasWarning } from '../utils/daemonSetHasWarning';
 import { Warning } from '@/components/common/Warning';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getDaemonSetStatus } from '../utils/daemonSetStatus';
 
 export interface PaneDaemonSetsProps {
   selectedNamespaces: string[];
@@ -54,7 +52,6 @@ export default function PaneDaemonSets({
 
   const columns: ColumnDef<keyof V1DaemonSet | ''>[] = [
     { label: 'Name', key: 'metadata' },
-    { label: '', key: '', sortable: false },
     { label: 'Namespace', key: 'metadata' },
     { label: 'Ready', key: 'status' },
     { label: 'Age', key: 'metadata' },
@@ -80,25 +77,13 @@ export default function PaneDaemonSets({
           {ds.metadata?.name}
         </span>
       </Td>
-      <Td className="text-center align-middle">{daemonSetHasWarning(ds) && <Warning />}</Td>
       <Td>
         <BadgeNamespaces name={ds.metadata?.namespace ?? ''} />
       </Td>
       <Td>
-        <Badge
-          variant={
-            readyVariant(
-              `${ds.status?.numberReady ?? 0}/${ds.status?.desiredNumberScheduled ?? 0}`
-            ) as BadgeVariant
-          }
-        >
-          {ds.status?.numberReady ?? 0} / {ds.status?.desiredNumberScheduled ?? 0}
-        </Badge>
+        <BadgeStatus status={getDaemonSetStatus(ds)} />
       </Td>
       <AgeCell timestamp={ds.metadata?.creationTimestamp ?? ''} />
-      <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
-      </Td>
     </>
   );
 

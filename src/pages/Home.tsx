@@ -5,16 +5,8 @@ import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 import Overview from '@/features/k8s/overview/components/Overview';
-import PaneNodes from '@/features/k8s/nodes/components/PaneNodes';
-import PaneNamespaces from '@/features/k8s/namespaces/components/PaneNamespaces';
-import PaneSecrets from '@/features/k8s/secrets/components/PaneSecrets';
 import PaneResourceQuotas from '@/features/k8s/resourceQuotas/components/PaneResourceQuotas';
-import PaneLimitRanges from '@/features/k8s/limitRanges/components/PaneLimitRanges';
-import PaneHorizontalPodAutoscalers from '@/features/k8s/horizontalPodAutoscalers/components/PaneHorizontalPodAutoscalers';
-import PanePodDisruptionBudgets from '@/features/k8s/podDisruptionBudgets/components/PanePodDisruptionBudgets';
-import PaneReplicaSets from '@/features/k8s/replicaSets/components/PaneReplicaSets';
 import PaneStatefulSets from '@/features/k8s/statefulSets/components/PaneStatefulSets';
-import PaneJobs from '@/features/k8s/jobs/components/PaneJobs';
 import ComingSoon from './ComingSoon';
 import Pods from '@/features/k8s/pods/pages/Pods';
 import ConfigMaps from '@/features/k8s/configMaps/pages/ConfigMaps';
@@ -22,6 +14,16 @@ import CronJobs from '@/features/k8s/cronJobs/pages/CronJobs';
 import DaemonSets from '@/features/k8s/daemonSets/pages/DaemonSets';
 import Deployments from '@/features/k8s/deployments/pages/Deployments';
 import HorizontalPodAutoscalers from '@/features/k8s/horizontalPodAutoscalers/pages/HorizontalPodAutoscalers';
+import Jobs from '@/features/k8s/jobs/pages/Jobs';
+import LimitRanges from '@/features/k8s/limitRanges/pages/LimitRanges';
+import Namespaces from '@/features/k8s/namespaces/pages/Namespaces';
+import Nodes from '@/features/k8s/nodes/pages/Nodes';
+import PodDisruptionBudgets from '@/features/k8s/podDisruptionBudgets/pages/PodDisruptionBudgets';
+import ReplicaSets from '@/features/k8s/replicaSets/pages/ReplicaSets';
+import ReplicationControllers from '@/features/k8s/replicationControllers/pages/ReplicationControllers';
+import Secrets from '@/features/k8s/secrets/pages/Secrets';
+import StatefulSets from '@/features/k8s/statefulSets/pages/StatefulSets';
+import ResourceQuotas from '@/features/k8s/resourceQuotas/pages/ResourceQuotas';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -74,21 +76,26 @@ export default function Home() {
 
   const pageComponents: Record<string, React.FC<{ context?: K8sContext | null }>> = {
     overview: Overview,
-    nodes: PaneNodes,
-    namespaces: PaneNamespaces,
+    nodes: Nodes,
+    namespaces: Namespaces,
+
+    // Workloads
     pods: Pods,
     deployments: Deployments,
-    config_maps: ConfigMaps,
-    secrets: PaneSecrets,
-    resource_quotas: PaneResourceQuotas,
-    limit_ranges: PaneLimitRanges,
     horizontal_pod_autoscalers: HorizontalPodAutoscalers,
-    pod_disruption_budgets: PanePodDisruptionBudgets,
-    replica_sets: PaneReplicaSets,
-    stateful_sets: PaneStatefulSets,
+    pod_disruption_budgets: PodDisruptionBudgets,
+    replica_sets: ReplicaSets,
+    replication_controllers: ReplicationControllers,
+    stateful_sets: StatefulSets,
     daemon_sets: DaemonSets,
-    jobs: PaneJobs,
+    jobs: Jobs,
     cron_jobs: CronJobs,
+
+    // Configs
+    config_maps: ConfigMaps,
+    secrets: Secrets,
+    resource_quotas: ResourceQuotas,
+    limit_ranges: LimitRanges,
   };
 
   const PageComponent = pageComponents[page] || ComingSoon;

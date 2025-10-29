@@ -1,56 +1,43 @@
 import { useState } from 'react';
-import { Td, Tr } from '@/components/ui/table';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { listNodes, watchNodes } from '@/api/k8s/nodes';
 import { V1Node } from '@kubernetes/client-node';
+import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../common/components/PaneGeneric';
+import { BadgeVariant } from '@/types/variant';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getNodeStatus } from '../utils/nodeStatus';
 
-export default function PaneNodes({ context }: PaneResourceContextProps) {
-  const { items, loading, error } = useListK8sResources<V1Node>(listNodes, watchNodes, context);
+export interface PaneNodesProps {
+  items: V1Node[];
+  loading: boolean;
+  error: string;
+}
 
+export default function PaneNodes({ items, loading, error }: PaneNodesProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Node>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedItems, setSelectedItems] = useState<V1Node[]>([]);
 
-  const filtered = useFilteredItems(
-    items,
-    [],
-    q,
-    ['metadata.name', 'metadata.labels["kubernetes.io/role"]', 'status.nodeInfo.kubeletVersion'],
-    sortBy,
-    sortOrder
-  );
-
-  const extractCondition = (node: V1Node): string => {
-    const conditions = node.status?.conditions;
-    if (!conditions) return 'Unknown';
-
-    const readyCond = conditions.find((c) => c.type === 'Ready');
-    if (!readyCond) return 'Unknown';
-
-    switch (readyCond.status) {
-      case 'True':
-        return 'Ready';
-      case 'Unknown':
-        return 'Unknown';
-      default:
-        return 'NotReady';
-    }
+  const getNodeRoles = (node: V1Node): string => {
+    return (
+      Object.keys(node.metadata?.labels || {})
+        .filter((k) => k.startsWith('node-role.kubernetes.io/'))
+        .map((k) => k.replace('node-role.kubernetes.io/', ''))
+        .join(', ') || '—'
+    );
   };
 
-  const conditionVariant = (status: string) => {
-    switch (status) {
-      case 'Ready':
-        return 'success';
-      case 'Unknown':
-        return 'warning';
-      default:
-        return 'error';
-    }
+  const toggleItem = (node: V1Node) => {
+    setSelectedItems((prev) =>
+      prev.includes(node) ? prev.filter((n) => n !== node) : [...prev, node]
+    );
+  };
+
+  const toggleAll = (checked: boolean) => {
+    setSelectedItems(checked ? [...items] : []);
   };
 
   const columns: ColumnDef<keyof V1Node | ''>[] = [
@@ -59,7 +46,6 @@ export default function PaneNodes({ context }: PaneResourceContextProps) {
     { label: 'Version', key: 'status' },
     { label: 'Age', key: 'metadata' },
     { label: 'Condition', key: 'status' },
-    { label: '', key: '', sortable: false },
   ];
 
   const tableHeader = (
@@ -69,19 +55,15 @@ export default function PaneNodes({ context }: PaneResourceContextProps) {
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={items}
     />
   );
 
   const renderRow = (node: V1Node) => {
-    const condition = extractCondition(node);
-    const roles =
-      Object.keys(node.metadata?.labels || {})
-        .filter((k) => k.startsWith('node-role.kubernetes.io/'))
-        .map((k) => k.replace('node-role.kubernetes.io/', ''))
-        .join(', ') || '—';
-
+    const roles = getNodeRoles(node);
     const version = node.status?.nodeInfo?.kubeletVersion || '—';
-    const age = node.metadata?.creationTimestamp || '';
 
     return (
       <Tr key={node.metadata?.name}>
@@ -90,12 +72,9 @@ export default function PaneNodes({ context }: PaneResourceContextProps) {
         </Td>
         <Td>{roles}</Td>
         <Td>{version}</Td>
-        <AgeCell timestamp={age} />
+        <AgeCell timestamp={node.metadata?.creationTimestamp || ''} />
         <Td>
-          <Badge variant={conditionVariant(condition)}>{condition}</Badge>
-        </Td>
-        <Td>
-          <button className="text-white/60 hover:text-white/80">⋮</button>
+          <BadgeStatus status={getNodeStatus(node)} />
         </Td>
       </Tr>
     );
@@ -103,12 +82,14 @@ export default function PaneNodes({ context }: PaneResourceContextProps) {
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       showNamespace={false}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
       colSpan={columns.length}
       tableHeader={tableHeader}
       renderRow={renderRow}

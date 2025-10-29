@@ -1,68 +1,56 @@
 import { useState, useCallback } from 'react';
+import { V1StatefulSet, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listStatefulSets, watchStatefulSets, deleteStatefulSets } from '@/api/k8s/statefulSets';
-import { V1StatefulSet } from '@kubernetes/client-node';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { Badge } from '@/components/ui/badge';
-import { readyVariant } from '@/utils/k8s';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
+import { K8sStatus } from '@/types/k8sStatus';
 import { BadgeVariant } from '@/types/variant';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getStatefulSetStatus } from '../utils/statefulSetStatus';
 
-export default function PaneStatefulSets({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PaneStatefulSetsProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1StatefulSet[];
+  loading: boolean;
+  error: string;
+  onDeleteStatefulSets: (statefulSets: V1StatefulSet[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1StatefulSet>(
-    listStatefulSets,
-    watchStatefulSets,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneStatefulSets({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteStatefulSets,
+}: PaneStatefulSetsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1StatefulSet>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedSets, setSelectedSets] = useState<V1StatefulSet[]>([]);
+  const [selectedItems, setSelectedItems] = useState<V1StatefulSet[]>([]);
 
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace'],
-    sortBy,
-    sortOrder
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1StatefulSet>(
-    deleteStatefulSets,
-    context
-  );
-
-  const toggleSet = useCallback((ss: V1StatefulSet) => {
-    setSelectedSets((prev) => (prev.includes(ss) ? prev.filter((s) => s !== ss) : [...prev, ss]));
+  const toggleItem = useCallback((ss: V1StatefulSet) => {
+    setSelectedItems((prev) => (prev.includes(ss) ? prev.filter((s) => s !== ss) : [...prev, ss]));
   }, []);
 
-  const toggleAllSets = useCallback(
+  const toggleAll = useCallback(
     (checked: boolean) => {
-      setSelectedSets(checked ? [...filtered] : []);
+      setSelectedItems(checked ? [...items] : []);
     },
-    [filtered]
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (!selectedSets.length) return toast.error('No StatefulSets selected');
-    await handleDeleteResources(selectedSets);
-    setSelectedSets([]);
-  }, [selectedSets, handleDeleteResources]);
+    if (!selectedItems.length) return;
+    await onDeleteStatefulSets(selectedItems);
+    setSelectedItems([]);
+  }, [selectedItems, onDeleteStatefulSets]);
 
   const columns: ColumnDef<keyof V1StatefulSet | ''>[] = [
     { label: 'Name', key: 'metadata' },
@@ -79,54 +67,44 @@ export default function PaneStatefulSets({ context }: PaneResourceContextProps) 
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onToggleAll={toggleAllSets}
-      selectedItems={selectedSets}
-      totalItems={filtered}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={items}
     />
   );
 
-  const renderRow = (ss: V1StatefulSet) => (
-    <>
-      <Td className="max-w-truncate align-middle">
-        <span className="block truncate" title={ss.metadata?.name}>
-          {ss.metadata?.name}
-        </span>
-      </Td>
-      <Td />
-      <Td>
-        <BadgeNamespaces name={ss.metadata?.namespace ?? ''} />
-      </Td>
-      <Td>
-        <Badge
-          variant={
-            readyVariant(
-              `${ss.status?.readyReplicas ?? 0}/${ss.status?.replicas ?? 0}`
-            ) as BadgeVariant
-          }
-        >
-          {ss.status?.readyReplicas ?? 0} / {ss.status?.replicas ?? 0}
-        </Badge>
-      </Td>
-      <AgeCell timestamp={ss.metadata?.creationTimestamp ?? ''} />
-      <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
-      </Td>
-    </>
-  );
+  const renderRow = (ss: V1StatefulSet) => {
+    return (
+      <>
+        <Td className="max-w-truncate align-middle">
+          <span className="block truncate" title={ss.metadata?.name}>
+            {ss.metadata?.name}
+          </span>
+        </Td>
+        <Td />
+        <Td>
+          <BadgeNamespaces name={ss.metadata?.namespace ?? ''} />
+        </Td>
+        <Td>
+          <BadgeStatus status={getStatefulSetStatus(ss)} />
+        </Td>
+        <AgeCell timestamp={ss.metadata?.creationTimestamp ?? ''} />
+      </>
+    );
+  };
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
-      selectedItems={selectedSets}
-      onToggleItem={toggleSet}
-      onToggleAll={toggleAllSets}
+      onSelectNamespace={onSelectNamespace}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}

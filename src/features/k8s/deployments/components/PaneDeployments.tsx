@@ -62,11 +62,9 @@ export default function PaneDeployments({
 
   const columns: ColumnDef<keyof V1Deployment | ''>[] = [
     { label: 'Name', key: 'metadata' },
-    { label: '', key: '', sortable: false },
     { label: 'Namespace', key: 'metadata' },
     { label: 'Ready', key: 'status' },
     { label: 'Age', key: 'metadata' },
-    { label: 'Status', key: 'status' },
   ];
 
   const tableHeader = (
@@ -89,21 +87,13 @@ export default function PaneDeployments({
           {dep.metadata?.name}
         </span>
       </Td>
-      <Td className="text-center align-middle">
-        {dep.status?.conditions?.some((c) => c.status === 'False') && (
-          <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
-        )}
-      </Td>
       <Td>
         <BadgeNamespaces name={dep.metadata?.namespace ?? ''} />
       </Td>
       <Td>
-        {dep.status?.readyReplicas ?? '0'}/{dep.status?.replicas ?? '0'}
-      </Td>
-      <AgeCell timestamp={dep.metadata?.creationTimestamp} />
-      <Td>
         <BadgeStatus status={getDeploymentStatus(dep)} />
       </Td>
+      <AgeCell timestamp={dep.metadata?.creationTimestamp} />
     </>
   );
 

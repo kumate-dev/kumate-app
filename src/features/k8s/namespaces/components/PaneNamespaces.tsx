@@ -1,50 +1,48 @@
-import { Td, Tr } from '@/components/ui/table';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { listNamespaces, watchNamespaces } from '@/api/k8s/namespaces';
+import { useState } from 'react';
 import { V1Namespace } from '@kubernetes/client-node';
-import { Badge } from '@/components/ui/badge';
+import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
-import { useState } from 'react';
+import { PaneResource } from '../../common/components/PaneGeneric';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getNamespaceStatus } from '../utils/namespaceStatus';
 
-export default function PaneNamespaces({ context }: PaneResourceContextProps) {
-  const { items, loading, error } = useListK8sResources<V1Namespace>(
-    listNamespaces,
-    watchNamespaces,
-    context
-  );
+export interface PaneNamespacesProps {
+  items: V1Namespace[];
+  loading: boolean;
+  error: string;
+  onDeleteNamespaces?: (namespaces: V1Namespace[]) => Promise<void>;
+}
 
+export default function PaneNamespaces({
+  items,
+  loading,
+  error,
+  onDeleteNamespaces,
+}: PaneNamespacesProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Namespace>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedItems, setSelectedItems] = useState<V1Namespace[]>([]);
 
-  const filtered = useFilteredItems(
-    items,
-    [],
-    q,
-    ['metadata.name', 'status.phase'],
-    sortBy,
-    sortOrder
-  );
+  const toggleItem = (ns: V1Namespace) => {
+    setSelectedItems((prev) => (prev.includes(ns) ? prev.filter((n) => n !== ns) : [...prev, ns]));
+  };
 
-  const statusVariant = (phase?: string) => {
-    switch (phase) {
-      case 'Active':
-        return 'success';
-      case 'Terminating':
-        return 'warning';
-      default:
-        return 'default';
-    }
+  const toggleAll = (checked: boolean) => {
+    setSelectedItems(checked ? [...items] : []);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!selectedItems.length || !onDeleteNamespaces) return;
+    await onDeleteNamespaces(selectedItems);
+    setSelectedItems([]);
   };
 
   const columns: ColumnDef<keyof V1Namespace | ''>[] = [
     { label: 'Name', key: 'metadata' },
-    { label: 'Status', key: 'status' },
     { label: 'Age', key: 'metadata' },
-    { label: '', key: '', sortable: false },
+    { label: 'Status', key: 'status' },
   ];
 
   const tableHeader = (
@@ -54,6 +52,9 @@ export default function PaneNamespaces({ context }: PaneResourceContextProps) {
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={items}
     />
   );
 
@@ -62,24 +63,24 @@ export default function PaneNamespaces({ context }: PaneResourceContextProps) {
       <Td className="max-w-truncate" title={ns.metadata?.name}>
         {ns.metadata?.name}
       </Td>
-      <Td>
-        <Badge variant={statusVariant(ns.status?.phase)}>{ns.status?.phase || 'Unknown'}</Badge>
-      </Td>
       <AgeCell timestamp={ns.metadata?.creationTimestamp || ''} />
       <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
+        <BadgeStatus status={getNamespaceStatus(ns)} />
       </Td>
     </Tr>
   );
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       showNamespace={false}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
+      onDeleteSelected={onDeleteNamespaces ? handleDeleteSelected : undefined}
       colSpan={columns.length}
       tableHeader={tableHeader}
       renderRow={renderRow}

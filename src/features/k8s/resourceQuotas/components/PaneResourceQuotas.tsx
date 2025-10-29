@@ -1,75 +1,50 @@
 import { useState, useCallback } from 'react';
+import { V1ResourceQuota, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import {
-  listResourceQuotas,
-  watchResourceQuotas,
-  deleteResourceQuotas,
-} from '@/api/k8s/resourceQuotas';
-import { V1ResourceQuota } from '@kubernetes/client-node';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
+import { renderKeyValue } from '../utils/renderKeyValue';
 
-export default function PaneResourceQuotas({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PaneResourceQuotasProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1ResourceQuota[];
+  loading: boolean;
+  error: string;
+  onDeleteResourceQuotas: (resourceQuotas: V1ResourceQuota[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1ResourceQuota>(
-    listResourceQuotas,
-    watchResourceQuotas,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneResourceQuotas({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteResourceQuotas,
+}: PaneResourceQuotasProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1ResourceQuota>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedQuotas, setSelectedQuotas] = useState<V1ResourceQuota[]>([]);
+  const [selectedItems, setSelectedItems] = useState<V1ResourceQuota[]>([]);
 
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace'],
-    sortBy,
-    sortOrder
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1ResourceQuota>(
-    deleteResourceQuotas,
-    context
-  );
-
-  const toggleQuota = useCallback((rq: V1ResourceQuota) => {
-    setSelectedQuotas((prev) => (prev.includes(rq) ? prev.filter((r) => r !== rq) : [...prev, rq]));
+  const toggleItem = useCallback((rq: V1ResourceQuota) => {
+    setSelectedItems((prev) => (prev.includes(rq) ? prev.filter((r) => r !== rq) : [...prev, rq]));
   }, []);
 
-  const toggleAllQuotas = useCallback(
-    (checked: boolean) => setSelectedQuotas(checked ? [...filtered] : []),
-    [filtered]
+  const toggleAll = useCallback(
+    (checked: boolean) => setSelectedItems(checked ? [...items] : []),
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (!selectedQuotas.length) return toast.error('No ResourceQuotas selected');
-    await handleDeleteResources(selectedQuotas);
-    setSelectedQuotas([]);
-  }, [selectedQuotas, handleDeleteResources]);
-
-  const renderKeyValue = (map?: Record<string, string | number>) => {
-    if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
-    const text = Object.entries(map)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(', ');
-    return { display: text, title: text };
-  };
+    if (!selectedItems.length) return;
+    await onDeleteResourceQuotas(selectedItems);
+    setSelectedItems([]);
+  }, [selectedItems, onDeleteResourceQuotas]);
 
   const columns: ColumnDef<keyof V1ResourceQuota | ''>[] = [
     { label: 'Name', key: 'metadata' },
@@ -86,54 +61,49 @@ export default function PaneResourceQuotas({ context }: PaneResourceContextProps
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onToggleAll={toggleAllQuotas}
-      selectedItems={selectedQuotas}
-      totalItems={filtered}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={items}
     />
   );
 
-  const renderRow = (rq: V1ResourceQuota) => (
-    <>
-      <Td className="max-w-truncate align-middle">
-        <span className="block truncate" title={rq.metadata?.name}>
-          {rq.metadata?.name}
-        </span>
-      </Td>
-      <Td>
-        <BadgeNamespaces name={rq.metadata?.namespace ?? ''} />
-      </Td>
-      <Td
-        className="max-w-truncate"
-        title={renderKeyValue(rq.status?.hard as Record<string, string>).title}
-      >
-        {renderKeyValue(rq.status?.hard as Record<string, string>).display}
-      </Td>
-      <Td
-        className="max-w-truncate"
-        title={renderKeyValue(rq.status?.used as Record<string, string>).title}
-      >
-        {renderKeyValue(rq.status?.used as Record<string, string>).display}
-      </Td>
-      <AgeCell timestamp={rq.metadata?.creationTimestamp ?? ''} />
-      <Td>
-        <button className="text-white/60 hover:text-white/80">⋮</button>
-      </Td>
-    </>
-  );
+  const renderRow = (rq: V1ResourceQuota) => {
+    const hardResources = renderKeyValue(rq.status?.hard as Record<string, string>);
+    const usedResources = renderKeyValue(rq.status?.used as Record<string, string>);
+
+    return (
+      <>
+        <Td className="max-w-truncate align-middle">
+          <span className="block truncate" title={rq.metadata?.name}>
+            {rq.metadata?.name}
+          </span>
+        </Td>
+        <Td>
+          <BadgeNamespaces name={rq.metadata?.namespace ?? ''} />
+        </Td>
+        <Td className="max-w-truncate" title={hardResources.title}>
+          {hardResources.display}
+        </Td>
+        <Td className="max-w-truncate" title={usedResources.title}>
+          {usedResources.display}
+        </Td>
+        <AgeCell timestamp={rq.metadata?.creationTimestamp ?? ''} />
+      </>
+    );
+  };
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
-      selectedItems={selectedQuotas}
-      onToggleItem={toggleQuota}
-      onToggleAll={toggleAllQuotas}
+      onSelectNamespace={onSelectNamespace}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}

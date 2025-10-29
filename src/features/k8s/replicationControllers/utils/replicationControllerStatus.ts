@@ -1,10 +1,10 @@
 import { BadgeVariant } from '@/types/variant';
-import { V1Deployment } from '@kubernetes/client-node';
+import { V1ReplicationController } from '@kubernetes/client-node';
 import { K8sStatus } from '@/types/k8sStatus';
 
-export const getDeploymentStatus = (dep: V1Deployment): K8sStatus => {
-  const ready = dep.status?.readyReplicas ?? 0;
-  const desired = dep.status?.replicas ?? 0;
+export const getReplicationControllerStatus = (rc: V1ReplicationController): K8sStatus => {
+  const ready = rc.status?.readyReplicas ?? 0;
+  const desired = rc.status?.replicas ?? 0;
   const status = `${ready} / ${desired}`;
 
   let variant: BadgeVariant = 'default';
