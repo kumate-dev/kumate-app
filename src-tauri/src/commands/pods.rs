@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use crate::{
     commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
@@ -6,14 +6,12 @@ use crate::{
 use k8s_openapi::api::core::v1::Pod;
 use serde_json::Value;
 use tauri::AppHandle;
-use tokio::time::sleep;
 
 #[tauri::command]
 pub async fn list_pods(
     name: String,
     namespaces: Option<Vec<String>>,
 ) -> Result<Vec<Value>, String> {
-    sleep(Duration::from_secs(3)).await;
     K8sResources::<Pod>::list(name, namespaces).await
 }
 
