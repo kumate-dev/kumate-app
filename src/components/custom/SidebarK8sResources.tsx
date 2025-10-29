@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode, useRef } from 'react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BubbleTrash } from './BubbleTrash';
@@ -7,7 +7,8 @@ import { ModalConfirmDelete } from './ModalConfirmDelete';
 export interface SidebarK8sResourcesProps<T> {
   item: T | null;
   setItem: (item: T | null) => void;
-  width?: string;
+  width?: number;
+  tableRef?: React.RefObject<HTMLTableElement | null>;
   sections?: {
     key: string;
     title: string;
@@ -19,13 +20,18 @@ export interface SidebarK8sResourcesProps<T> {
 export function SidebarK8sResources<T>({
   item,
   setItem,
-  width = '550px',
+  width = 550,
+  tableRef,
   sections = [],
   onDelete,
 }: SidebarK8sResourcesProps<T>) {
+  const [sidebarWidth, setSidebarWidth] = useState(width);
+  const [isResizing, setIsResizing] = useState(false);
   const [sectionsOpen, setSectionsOpen] = useState<Record<string, boolean>>({});
   const [visible, setVisible] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (item) setVisible(true);
@@ -36,18 +42,35 @@ export function SidebarK8sResources<T>({
     setTimeout(() => setItem(null), 300);
   };
 
-  const handleConfirmDelete = () => {
-    if (!item || !onDelete) return;
-    onDelete(item);
-    setOpenDeleteModal(false);
-    closeSidebar();
-  };
+  const startResizing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
 
-  if (!item && !visible) return null;
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    const tableWidth = tableRef?.current?.offsetWidth ?? 1000;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = startWidth - (e.clientX - startX);
+      setSidebarWidth(Math.min(Math.max(newWidth, 300), tableWidth));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
   const toggleSection = (key: string) => {
     setSectionsOpen((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  if (!item && !visible) return null;
 
   return (
     <>
@@ -59,12 +82,18 @@ export function SidebarK8sResources<T>({
       />
 
       <div
+        ref={sidebarRef}
         className={`fixed top-0 right-0 z-50 flex h-full transform cursor-auto flex-col border-l border-white/10 bg-neutral-900/95 shadow-xl transition-transform duration-300 ease-in-out ${
           visible ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        style={{ width }}
+        } ${isResizing ? 'select-none' : ''}`}
+        style={{ width: `${sidebarWidth}px` }}
         onClick={(e) => e.stopPropagation()}
       >
+        <div
+          className="absolute left-0 top-0 h-full w-1 cursor-ew-resize bg-transparent hover:bg-white/10 active:bg-white/20"
+          onMouseDown={startResizing}
+        />
+
         <div className="flex shrink-0 justify-end border-b border-white/10">
           <Button variant="ghost" className="text-white/70" onClick={closeSidebar}>
             <X className="h-4 w-4" />
@@ -75,7 +104,7 @@ export function SidebarK8sResources<T>({
           {sections.map((section) => (
             <div key={section.key}>
               <h3
-                className="mb-2 flex cursor-pointer items-center justify-between text-white/80 select-none"
+                className="mb-2 flex cursor-pointer select-none items-center justify-between text-white/80"
                 onClick={() => toggleSection(section.key)}
               >
                 <span>{section.title}</span>
@@ -103,7 +132,12 @@ export function SidebarK8sResources<T>({
           open={openDeleteModal}
           setOpen={setOpenDeleteModal}
           items={[item]}
-          onConfirm={handleConfirmDelete}
+          onConfirm={() => {
+            if (!item || !onDelete) return;
+            onDelete(item);
+            setOpenDeleteModal(false);
+            closeSidebar();
+          }}
           title="Confirm Delete"
         />
       )}

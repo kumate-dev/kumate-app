@@ -104,7 +104,6 @@ export function PaneK8sResource<T>({
 
                 {!loading &&
                   items.map((item) => {
-                    // fallback: lấy metadata nếu có, else dùng index làm key
                     const meta: any = (item as any).metadata ?? {};
                     const uid = meta.uid ?? meta.name ?? items.indexOf(item);
 

@@ -1,13 +1,17 @@
 import React, { forwardRef } from 'react';
 
-export function Table({ className = '', ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
-  return (
-    <table
-      className={`w-full table-auto border-collapse text-left text-sm ${className}`}
-      {...props}
-    />
-  );
-}
+export const Table = forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTMLTableElement>>(
+  ({ className = '', ...props }, ref) => {
+    return (
+      <table
+        ref={ref} // 👈 forward ref
+        className={`w-full table-auto border-collapse text-left text-sm ${className}`}
+        {...props}
+      />
+    );
+  }
+);
+
 
 export function Thead({ className = '', ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return <thead className={`text-white/70 ${className}`} {...props} />;

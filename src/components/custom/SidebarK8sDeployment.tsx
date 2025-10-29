@@ -6,6 +6,7 @@ import { k8sDeploymentStatusVariant } from '@/constants/variant';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { TableYamlRow } from './TableYamlRow';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import { useRef } from 'react';
 
 interface SidebarDeploymentProps {
   item: V1Deployment | null;
@@ -91,6 +92,11 @@ export function SidebarK8sDeployment({ item, setItem, onDelete }: SidebarDeploym
     : [];
 
   return (
-    <SidebarK8sResources item={item} setItem={setItem} sections={sections} onDelete={onDelete} />
+    <SidebarK8sResources
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+    />
   );
 }
