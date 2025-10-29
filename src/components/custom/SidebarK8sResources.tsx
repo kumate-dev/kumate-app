@@ -19,7 +19,7 @@ export interface SidebarK8sResourcesProps<T> {
 export function SidebarK8sResources<T>({
   item,
   setItem,
-  width = '500px',
+  width = '550px',
   sections = [],
   onDelete,
 }: SidebarK8sResourcesProps<T>) {

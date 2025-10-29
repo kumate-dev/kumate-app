@@ -15,7 +15,7 @@ export function TableYamlRow<T extends Record<string, any>>({
   return (
     <Tr>
       <Td className="w-1/4 align-middle text-white/70">{label}</Td>
-      <Td className={`overflow-x-auto max-w-[${maxWidth}]`}>
+      <Td className="w-3/4 overflow-hidden align-middle" style={{ maxWidth, overflow: 'hidden' }}>
         <CollapsibleYaml label={label} data={data} />
       </Td>
     </Tr>

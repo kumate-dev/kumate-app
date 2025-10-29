@@ -26,13 +26,13 @@ export function CollapsibleYaml<T extends Record<string, any>>({
     if (!isObject) {
       const val = data as string;
       const truncated = val.length > truncateLength ? val.slice(0, truncateLength) + '…' : val;
-      return <pre className="m-0 truncate whitespace-pre">{truncated}</pre>;
+      return <pre className="m-0 max-w-full truncate whitespace-pre">{truncated}</pre>;
     }
 
     if (keys.length === 1) {
       const val = yaml.dump({ [keys[0]]: data[keys[0]] });
       const truncated = val.length > truncateLength ? val.slice(0, truncateLength) + '…' : val;
-      return <pre className="m-0 truncate whitespace-pre">{truncated}</pre>;
+      return <pre className="m-0 max-w-full truncate whitespace-pre">{truncated}</pre>;
     }
 
     return (
@@ -43,7 +43,7 @@ export function CollapsibleYaml<T extends Record<string, any>>({
   };
 
   return (
-    <div className="flex w-full flex-col">
+    <div className="flex w-full min-w-0 flex-col">
       {isObject && keys.length > 1 && (
         <button
           type="button"
@@ -58,7 +58,7 @@ export function CollapsibleYaml<T extends Record<string, any>>({
       )}
       <div>
         {isOpen || keys.length <= 1 ? (
-          <pre className="overflow-x-auto rounded bg-white/10 p-2 text-xs whitespace-pre text-white">
+          <pre className="max-w-full overflow-x-auto rounded bg-white/10 p-2 text-xs whitespace-pre text-white">
             {typeof data === 'string' ? data : yaml.dump(data)}
           </pre>
         ) : !isObject ? (

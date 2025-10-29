@@ -25,7 +25,11 @@ export function SidebarK8sDeployment({ item, setItem, onDelete }: SidebarDeploym
 
   const renderOverview = (dep: V1Deployment) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-      <Table>
+      <Table className="table-fixed">
+        <colgroup>
+          <col className="w-1/4" />
+          <col className="w-3/4" />
+        </colgroup>
         <Tbody>
           <Tr>
             <Td>Name</Td>
