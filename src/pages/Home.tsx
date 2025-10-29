@@ -1,27 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
-import { Sidebar } from '@/layouts/Sidebar';
 import PaneOverview from '@/components/custom/PaneOverview';
-import PaneK8sPod from '@/components/custom/PaneK8sPods';
-import PaneK8sNode from '@/components/custom/PaneK8sNodes';
-import PaneK8sNamespace from '@/components/custom/PaneK8sNamespaces';
-import PaneK8sDeployment from '@/components/custom/PaneK8sDeployments';
-import PaneK8sDaemonSet from '@/components/custom/PaneK8sDaemonSets';
-import PaneK8sStatefulSet from '@/components/custom/PaneK8sStatefulSets';
-import PaneK8sReplicaSet from '@/components/custom/PaneK8sReplicaSets';
-import PaneK8sReplicationController from '@/components/custom/PaneK8sReplicationControllers';
-import PaneK8sJob from '@/components/custom/PaneK8sJobs';
-import PaneK8sCronJob from '@/components/custom/PaneK8sCronJobs';
+import PaneK8sPod from '@/components/k8s/pods/PaneK8sPods';
+import PaneK8sNode from '@/components/k8s/nodes/PaneK8sNodes';
+import PaneK8sNamespace from '@/components/k8s/namespaces/PaneK8sNamespaces';
+import PaneK8sDaemonSet from '@/components/k8s/daemonSets/PaneK8sDaemonSets';
+import PaneK8sStatefulSet from '@/components/k8s/statefulSets/PaneK8sStatefulSets';
+import PaneK8sReplicaSet from '@/components/k8s/replicaSets/PaneK8sReplicaSets';
+import PaneK8sReplicationController from '@/components/k8s/replicationControllers/PaneK8sReplicationControllers';
+import PaneK8sJob from '@/components/k8s/jobs/PaneK8sJobs';
+import PaneK8sCronJob from '@/components/k8s/cronJobs/PaneK8sCronJobs';
+import PaneK8sConfigMap from '@/components/k8s/configMaps/PaneK8sConfigMaps';
+import PaneK8sSecret from '@/components/k8s/secrets/PaneK8sSecrets';
+import PaneK8sResourceQuota from '@/components/k8s/resourceQuotas/PaneK8sResourceQuotas';
+import PaneK8sLimitRanges from '@/components/k8s/limitRanges/PaneK8sLimitRanges';
+import PaneK8sHorizontalPodAutoscalers from '@/components/k8s/horizontalPodAutoscalers/PaneK8sHorizontalPodAutoscalers';
+import PaneK8sPodDisruptionBudgets from '@/components/k8s/podDisruptionBudgets/PaneK8sPodDisruptionBudgets';
+import PaneK8sDeployment from '@/components/k8s/deployments/PaneK8sDeployments';
+import { SidebarMenu } from '@/components/k8s/shared/SidebarMenu';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';
 import { ALL_NAMESPACES } from '@/constants/k8s';
-import PaneK8sConfigMap from '@/components/custom/PaneK8sConfigMaps';
-import PaneK8sSecret from '@/components/custom/PaneK8sSecrets';
-import PaneK8sResourceQuota from '@/components/custom/PaneK8sResourceQuotas';
-import PaneK8sLimitRanges from '@/components/custom/PaneK8sLimitRanges';
-import PaneK8sHorizontalPodAutoscalers from '@/components/custom/PaneK8sHorizontalPodAutoscalers';
-import PaneK8sPodDisruptionBudgets from '@/components/custom/PaneK8sPodDisruptionBudgets';
-import { Toaster } from 'sonner';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -85,7 +84,7 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-neutral-950 text-white">
       <aside className="w-64 flex-shrink-0 overflow-y-auto border-r border-white/10">
-        <Sidebar
+        <SidebarMenu
           contexts={contexts}
           selected={selected ?? undefined}
           onSelectContext={(c) => {

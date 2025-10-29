@@ -1,21 +1,21 @@
 import { useState, useCallback } from 'react';
 import { V1Deployment } from '@kubernetes/client-node';
-import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
-import { SidebarK8sDeployment } from './SidebarK8sDeployment';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listDeployments, watchDeployments, deleteDeployments } from '@/api/k8s/deployments';
-import { ColumnDef, TableHeader } from './TableHeader';
 import { Td } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import AgeCell from '@/components/custom/AgeCell';
-import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
 import { BadgeVariant } from '@/types/variant';
+import { SidebarK8sDeployment } from './SidebarK8sDeployment';
+import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
+import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
+import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
+import AgeCell from '@/components/custom/AgeCell';
 
 export default function PaneK8sDeployments({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

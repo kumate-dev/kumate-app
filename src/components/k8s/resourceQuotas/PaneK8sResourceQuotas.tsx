@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Td } from '@/components/ui/table';
-import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
@@ -11,8 +11,8 @@ import {
 } from '@/api/k8s/resourceQuotas';
 import { V1ResourceQuota } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { ColumnDef, TableHeader } from './TableHeader';
-import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import { ColumnDef, TableHeader } from '../../custom/TableHeader';
+import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
 import AgeCell from '@/components/custom/AgeCell';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';

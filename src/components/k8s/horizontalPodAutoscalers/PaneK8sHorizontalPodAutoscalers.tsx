@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { V1HorizontalPodAutoscaler } from '@kubernetes/client-node';
-import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
+import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
@@ -9,12 +9,12 @@ import {
   watchHorizontalPodAutoscalers,
   deleteHorizontalPodAutoscalers,
 } from '@/api/k8s/horizontalPodAutoscalers';
-import { ColumnDef, TableHeader } from './TableHeader';
+import { ColumnDef, TableHeader } from '../../custom/TableHeader';
 import { Td } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
+import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 

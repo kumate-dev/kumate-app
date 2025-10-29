@@ -6,8 +6,8 @@ import { listNodes, watchNodes } from '@/api/k8s/nodes';
 import { V1Node } from '@kubernetes/client-node';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
-import { ColumnDef, TableHeader } from './TableHeader';
-import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
+import { ColumnDef, TableHeader } from '../../custom/TableHeader';
+import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
 
 export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
   const { items, loading, error } = useListK8sResources<V1Node>(listNodes, watchNodes, context);

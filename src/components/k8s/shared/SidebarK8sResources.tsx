@@ -1,8 +1,8 @@
 import { useState, useEffect, ReactNode, useRef } from 'react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BubbleTrash } from './BubbleTrash';
-import { ModalConfirmDelete } from './ModalConfirmDelete';
+import { BubbleTrash } from '../../custom/BubbleTrash';
+import { ModalConfirmDelete } from '../../custom/ModalConfirmDelete';
 
 export interface SidebarK8sResourcesProps<T> {
   item: T | null;

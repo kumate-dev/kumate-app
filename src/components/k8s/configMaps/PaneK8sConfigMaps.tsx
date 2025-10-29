@@ -1,49 +1,47 @@
 import { useState, useCallback } from 'react';
-import { V1CronJob } from '@kubernetes/client-node';
-import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
+import { V1ConfigMap } from '@kubernetes/client-node';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listCronJobs, watchCronJobs, deleteCronJobs } from '@/api/k8s/cronJobs';
-import { ColumnDef, TableHeader } from './TableHeader';
+import { listConfigMaps, watchConfigMaps, deleteConfigMaps } from '@/api/k8s/configMaps';
 import { Td } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
-import { EventType } from '@/types/k8sEvent';
+import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
+import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
+import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
 
-export default function PaneK8sCronJobs({ context }: PaneK8sResourceContextProps) {
+export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
 
-  const { items, loading, error } = useListK8sResources<V1CronJob>(
-    listCronJobs,
-    watchCronJobs,
+  const { items, loading, error } = useListK8sResources<V1ConfigMap>(
+    listConfigMaps,
+    watchConfigMaps,
     context,
     selectedNamespaces
   );
 
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1CronJob>('metadata');
+  const [sortBy, setSortBy] = useState<keyof V1ConfigMap>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1CronJob[]>([]);
+  const [selectedItems, setSelectedItems] = useState<V1ConfigMap[]>([]);
 
   const filtered = useFilteredItems(
     items,
     selectedNamespaces,
     q,
-    ['metadata.name', 'metadata.namespace', 'spec.schedule', 'spec.suspend'],
+    ['metadata.name', 'metadata.namespace', 'data'],
     'metadata.name',
     'asc'
   );
 
-  const { handleDeleteResources } = useDeleteK8sResources<V1CronJob>(deleteCronJobs, context);
+  const { handleDeleteResources } = useDeleteK8sResources<V1ConfigMap>(deleteConfigMaps, context);
 
-  const toggleItem = useCallback((item: V1CronJob) => {
+  const toggleItem = useCallback((item: V1ConfigMap) => {
     setSelectedItems((prev) =>
       prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
@@ -57,24 +55,15 @@ export default function PaneK8sCronJobs({ context }: PaneK8sResourceContextProps
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (selectedItems.length === 0) return toast.error('No CronJobs selected');
+    if (selectedItems.length === 0) return toast.error('No ConfigMaps selected');
     await handleDeleteResources(selectedItems);
     setSelectedItems([]);
   }, [selectedItems, handleDeleteResources]);
 
-  const suspendVariant = (suspend?: boolean) => {
-    if (suspend === true) return 'warning';
-    if (suspend === false) return 'success';
-    return 'default';
-  };
-
-  const columns: ColumnDef<keyof V1CronJob | ''>[] = [
+  const columns: ColumnDef<keyof V1ConfigMap | ''>[] = [
     { label: 'Name', key: 'metadata' },
-    { label: '', key: '', sortable: false },
     { label: 'Namespace', key: 'metadata' },
-    { label: 'Schedule', key: 'spec' },
-    { label: 'Suspend', key: 'spec' },
-    { label: 'Last Schedule', key: 'status' },
+    { label: 'Keys', key: 'data' },
     { label: 'Age', key: 'metadata' },
   ];
 
@@ -91,25 +80,24 @@ export default function PaneK8sCronJobs({ context }: PaneK8sResourceContextProps
     />
   );
 
-  const renderRow = (cj: V1CronJob) => (
+  const renderRow = (cm: V1ConfigMap) => (
     <>
       <Td className="max-w-truncate align-middle">
-        <span className="block truncate" title={cj.metadata?.name ?? ''}>
-          {cj.metadata?.name}
+        <span className="block truncate" title={cm.metadata?.name ?? ''}>
+          {cm.metadata?.name}
         </span>
       </Td>
-      <Td className="text-center align-middle">
-        {cj.spec?.suspend && <span className="inline-block h-3 w-3 rounded-full bg-yellow-500" />}
-      </Td>
       <Td>
-        <BadgeK8sNamespaces name={cj.metadata?.namespace ?? ''} />
+        <BadgeK8sNamespaces name={cm.metadata?.namespace ?? ''} />
       </Td>
-      <Td>{cj.spec?.schedule ?? '-'}</Td>
-      <Td>
-        <Badge variant={suspendVariant(cj.spec?.suspend)}>{String(cj.spec?.suspend)}</Badge>
+      <Td className="max-w-truncate align-middle" title={Object.keys(cm.data || {}).join(', ')}>
+        {cm.data && Object.keys(cm.data).length > 0 ? (
+          Object.keys(cm.data).join(', ')
+        ) : (
+          <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
+        )}
       </Td>
-      <AgeCell timestamp={cj.status?.lastScheduleTime ?? ''} />
-      <AgeCell timestamp={cj.metadata?.creationTimestamp ?? ''} />
+      <AgeCell timestamp={cm.metadata?.creationTimestamp} />
       <Td>
         <button className="text-white/60 hover:text-white/80">⋮</button>
       </Td>

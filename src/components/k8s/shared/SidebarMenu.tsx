@@ -23,7 +23,7 @@ export interface PageItem {
   title?: string;
 }
 
-export interface SidebarProps {
+export interface SidebarMenuProps {
   contexts?: K8sContext[];
   selected?: K8sContext;
   onSelectContext?: (ctx?: K8sContext) => void;
@@ -31,7 +31,7 @@ export interface SidebarProps {
   onSelectPage?: (page: PageKey) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+export const SidebarMenu: React.FC<SidebarMenuProps> = ({
   contexts = [],
   selected,
   onSelectContext,
