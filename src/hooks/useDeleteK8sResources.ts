@@ -10,6 +10,11 @@ export function useDeleteK8sResources<T>(
   context?: { name: string } | null
 ) {
   const handleDeleteResources = async (resources: T[]) => {
+    if (!context?.name) {
+      toast.error('Missing context name for deletion.');
+      return;
+    }
+
     const namespaceMap: Record<string, string[]> = {};
 
     resources.forEach((r) => {
@@ -26,7 +31,7 @@ export function useDeleteK8sResources<T>(
     for (const ns in namespaceMap) {
       try {
         const results = await deleteFn({
-          name: context?.name!,
+          name: context.name,
           namespace: ns,
           resourceNames: [...namespaceMap[ns]],
         });
