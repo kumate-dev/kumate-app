@@ -1,73 +1,63 @@
 import { useState, useCallback, RefObject } from 'react';
-import { V1Deployment } from '@kubernetes/client-node';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listDeployments, watchDeployments, deleteDeployments } from '@/api/k8s/deployments';
+import { V1Deployment, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
 import { SidebarK8sDeployments } from './SidebarDeployments';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
-import { BadgeDeploymentStatus } from './BadgeDeploymentStatus';
+import { getDeploymentStatus } from '../utils/deploymentStatus';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
 
-export default function PaneDeployments({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PaneDeploymentsProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1Deployment[];
+  loading: boolean;
+  error: string;
+  onDeleteDeployments: (deployments: V1Deployment[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1Deployment>(
-    listDeployments,
-    watchDeployments,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneDeployments({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteDeployments,
+}: PaneDeploymentsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Deployment>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedDeployments, setSelectedDeployments] = useState<V1Deployment[]>([]);
-  const [selectedDeployment, setSelectedDeployment] = useState<V1Deployment | null>(null);
+  const [selectedItems, setSelectedItems] = useState<V1Deployment[]>([]);
+  const [selectedItem, setSelectedItem] = useState<V1Deployment | null>(null);
 
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace'],
-    'metadata.name',
-    'asc'
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1Deployment>(deleteDeployments, context);
-
-  const toggleDeployment = useCallback((dep: V1Deployment) => {
-    setSelectedDeployments((prev) =>
+  const toggleItem = useCallback((dep: V1Deployment) => {
+    setSelectedItems((prev) =>
       prev.includes(dep) ? prev.filter((d) => d !== dep) : [...prev, dep]
     );
   }, []);
 
-  const toggleAllDeployments = useCallback(
+  const toggleAll = useCallback(
     (checked: boolean) => {
-      setSelectedDeployments(checked ? [...filtered] : []);
+      setSelectedItems(checked ? [...items] : []);
     },
-    [filtered]
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (selectedDeployments.length === 0) return toast.error('No deployments selected');
-    await handleDeleteResources(selectedDeployments);
-    setSelectedDeployments([]);
-    setSelectedDeployment(null);
-  }, [selectedDeployments, handleDeleteResources]);
+    if (selectedItems.length === 0) return;
+    await onDeleteDeployments(selectedItems);
+    setSelectedItems([]);
+    setSelectedItem(null);
+  }, [selectedItems, onDeleteDeployments]);
 
   const handleDeleteOne = async (item: V1Deployment) => {
-    await handleDeleteResources([item]);
-    setSelectedDeployment(null);
+    await onDeleteDeployments([item]);
+    setSelectedItem(null);
   };
 
   const columns: ColumnDef<keyof V1Deployment | ''>[] = [
@@ -86,9 +76,9 @@ export default function PaneDeployments({ context }: PaneResourceContextProps) {
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onToggleAll={toggleAllDeployments}
-      selectedItems={selectedDeployments}
-      totalItems={filtered}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={items}
     />
   );
 
@@ -112,7 +102,7 @@ export default function PaneDeployments({ context }: PaneResourceContextProps) {
       </Td>
       <AgeCell timestamp={dep.metadata?.creationTimestamp} />
       <Td>
-        <BadgeDeploymentStatus status={dep.status?.conditions?.[0]?.type} />
+        <BadgeStatus status={getDeploymentStatus(dep)} />
       </Td>
     </>
   );
@@ -120,7 +110,7 @@ export default function PaneDeployments({ context }: PaneResourceContextProps) {
   const renderSidebar = (item: V1Deployment, tableRef: RefObject<HTMLTableElement | null>) => (
     <SidebarK8sDeployments
       item={item}
-      setItem={setSelectedDeployment}
+      setItem={setSelectedItem}
       onDelete={handleDeleteOne}
       tableRef={tableRef}
     />
@@ -128,23 +118,22 @@ export default function PaneDeployments({ context }: PaneResourceContextProps) {
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
-      selectedItems={selectedDeployments}
-      onToggleItem={toggleDeployment}
-      onToggleAll={toggleAllDeployments}
+      onSelectNamespace={onSelectNamespace}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}
-      onRowClick={setSelectedDeployment}
+      onRowClick={setSelectedItem}
       renderRow={renderRow}
-      selectedItem={selectedDeployment}
+      selectedItem={selectedItem}
       renderSidebar={renderSidebar}
     />
   );

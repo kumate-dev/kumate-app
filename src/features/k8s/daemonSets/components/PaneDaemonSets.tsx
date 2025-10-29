@@ -1,11 +1,6 @@
 import { useState, useCallback } from 'react';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listDaemonSets, watchDaemonSets, deleteDaemonSets } from '@/api/k8s/daemonSets';
-import { V1DaemonSet } from '@kubernetes/client-node';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
+import { V1DaemonSet, V1Namespace } from '@kubernetes/client-node';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -13,60 +8,51 @@ import AgeCell from '@/components/common/AgeCell';
 import { readyVariant } from '@/utils/k8s';
 import { BadgeVariant } from '@/types/variant';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
-import { AlertTriangle } from 'lucide-react';
+import { daemonSetHasWarning } from '../utils/daemonSetHasWarning';
+import { Warning } from '@/components/common/Warning';
 
-type SortKey = keyof V1DaemonSet;
+export interface PaneDaemonSetsProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1DaemonSet[];
+  loading: boolean;
+  error: string;
+  onDeleteDaemonSets: (daemonSets: V1DaemonSet[]) => Promise<void>;
+}
 
-export default function PaneDaemonSets({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
-
-  const { items, loading, error } = useListK8sResources<V1DaemonSet>(
-    listDaemonSets,
-    watchDaemonSets,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneDaemonSets({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteDaemonSets,
+}: PaneDaemonSetsProps) {
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<SortKey>('metadata');
+  const [sortBy, setSortBy] = useState<keyof V1DaemonSet>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedDaemonSets, setSelectedDaemonSets] = useState<V1DaemonSet[]>([]);
+  const [selectedItems, setSelectedItems] = useState<V1DaemonSet[]>([]);
 
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace'],
-    sortBy,
-    sortOrder
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1DaemonSet>(deleteDaemonSets, context);
-
-  const toggleDaemonSet = useCallback((ds: V1DaemonSet) => {
-    setSelectedDaemonSets((prev) =>
-      prev.includes(ds) ? prev.filter((d) => d !== ds) : [...prev, ds]
-    );
+  const toggleItem = useCallback((ds: V1DaemonSet) => {
+    setSelectedItems((prev) => (prev.includes(ds) ? prev.filter((d) => d !== ds) : [...prev, ds]));
   }, []);
 
-  const toggleAllDaemonSets = useCallback(
+  const toggleAll = useCallback(
     (checked: boolean) => {
-      setSelectedDaemonSets(checked ? [...filtered] : []);
+      setSelectedItems(checked ? [...items] : []);
     },
-    [filtered]
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (selectedDaemonSets.length === 0) return toast.error('No DaemonSets selected');
-    await handleDeleteResources(selectedDaemonSets);
-    setSelectedDaemonSets([]);
-  }, [selectedDaemonSets, handleDeleteResources]);
+    if (selectedItems.length === 0) return;
+    await onDeleteDaemonSets(selectedItems);
+    setSelectedItems([]);
+  }, [selectedItems, onDeleteDaemonSets]);
 
-  const columns: ColumnDef<SortKey | ''>[] = [
+  const columns: ColumnDef<keyof V1DaemonSet | ''>[] = [
     { label: 'Name', key: 'metadata' },
     { label: '', key: '', sortable: false },
     { label: 'Namespace', key: 'metadata' },
@@ -81,14 +67,11 @@ export default function PaneDaemonSets({ context }: PaneResourceContextProps) {
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onToggleAll={toggleAllDaemonSets}
-      selectedItems={selectedDaemonSets}
-      totalItems={filtered}
+      onToggleAll={toggleAll}
+      selectedItems={selectedItems}
+      totalItems={items}
     />
   );
-
-  const hasWarning = (ds: V1DaemonSet) =>
-    (ds.status?.numberReady ?? 0) < (ds.status?.desiredNumberScheduled ?? 0);
 
   const renderRow = (ds: V1DaemonSet) => (
     <>
@@ -97,9 +80,7 @@ export default function PaneDaemonSets({ context }: PaneResourceContextProps) {
           {ds.metadata?.name}
         </span>
       </Td>
-      <Td className="text-center align-middle">
-        {hasWarning(ds) && <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />}
-      </Td>
+      <Td className="text-center align-middle">{daemonSetHasWarning(ds) && <Warning />}</Td>
       <Td>
         <BadgeNamespaces name={ds.metadata?.namespace ?? ''} />
       </Td>
@@ -123,17 +104,16 @@ export default function PaneDaemonSets({ context }: PaneResourceContextProps) {
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
-      selectedItems={selectedDaemonSets}
-      onToggleItem={toggleDaemonSet}
-      onToggleAll={toggleAllDaemonSets}
+      onSelectNamespace={onSelectNamespace}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}

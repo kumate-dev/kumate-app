@@ -1,52 +1,42 @@
 import { useState, useCallback, RefObject } from 'react';
-import { V1Pod } from '@kubernetes/client-node';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listPods, watchPods, deletePods } from '@/api/k8s/pods';
+import { V1Namespace, V1Pod } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { AlertTriangle } from 'lucide-react';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
 import { SidebarK8sPods } from './SidebarK8sPods';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
 import { podHasPodWarning } from '../utils/podHasWarning';
 import { podDots } from '../utils/podDots';
 import { podRestartCount } from '../utils/podRestartCount';
-import { BadgePodStatus } from './BadgePodStatus';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getPodStatus } from '../utils/podStatus';
+import { Warning } from '@/components/common/Warning';
 
-export default function PanePods({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PanePodsProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1Pod[];
+  loading: boolean;
+  error: string;
+  onDeletePods: (pods: V1Pod[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1Pod>(
-    listPods,
-    watchPods,
-    context,
-    selectedNamespaces
-  );
-
+export default function PanePods({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeletePods,
+}: PanePodsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Pod>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedPods, setSelectedPods] = useState<V1Pod[]>([]);
   const [selectedPod, setSelectedPod] = useState<V1Pod | null>(null);
-
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace'],
-    'metadata.name',
-    'asc'
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1Pod>(deletePods, context);
 
   const togglePod = useCallback((pod: V1Pod) => {
     setSelectedPods((prev) =>
@@ -56,20 +46,20 @@ export default function PanePods({ context }: PaneResourceContextProps) {
 
   const toggleAllPods = useCallback(
     (checked: boolean) => {
-      setSelectedPods(checked ? [...filtered] : []);
+      setSelectedPods(checked ? [...items] : []);
     },
-    [filtered]
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (selectedPods.length === 0) return toast.error('No pods selected');
-    await handleDeleteResources(selectedPods);
+    if (selectedPods.length === 0) return;
+    await onDeletePods(selectedPods);
     setSelectedPods([]);
     setSelectedPod(null);
-  }, [selectedPods, handleDeleteResources]);
+  }, [selectedPods, onDeletePods]);
 
   const handleDeleteOne = async (item: V1Pod) => {
-    await handleDeleteResources([item]);
+    await onDeletePods([item]);
     setSelectedPod(null);
   };
 
@@ -97,7 +87,7 @@ export default function PanePods({ context }: PaneResourceContextProps) {
       setSortOrder={setSortOrder}
       onToggleAll={toggleAllPods}
       selectedItems={selectedPods}
-      totalItems={filtered}
+      totalItems={items}
     />
   );
 
@@ -108,11 +98,7 @@ export default function PanePods({ context }: PaneResourceContextProps) {
           {pod.metadata?.name}
         </span>
       </Td>
-      <Td className="text-center align-middle">
-        {podHasPodWarning(pod) && (
-          <AlertTriangle className="inline-block h-4 w-4 text-yellow-400" />
-        )}
-      </Td>
+      <Td className="text-center align-middle">{podHasPodWarning(pod) && <Warning />}</Td>
       <Td>
         <BadgeNamespaces name={pod.metadata?.namespace ?? ''} />
       </Td>
@@ -140,7 +126,7 @@ export default function PanePods({ context }: PaneResourceContextProps) {
       <Td>{pod.status?.qosClass || '-'}</Td>
       <AgeCell timestamp={pod.metadata?.creationTimestamp} />
       <Td>
-        <BadgePodStatus status={pod.status?.phase} />
+        <BadgeStatus status={getPodStatus(pod)} />
       </Td>
     </>
   );
@@ -156,14 +142,14 @@ export default function PanePods({ context }: PaneResourceContextProps) {
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
+      onSelectNamespace={onSelectNamespace}
       selectedItems={selectedPods}
       onToggleItem={togglePod}
       onToggleAll={toggleAllPods}

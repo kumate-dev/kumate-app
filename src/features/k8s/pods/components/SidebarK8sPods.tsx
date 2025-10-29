@@ -4,7 +4,8 @@ import { SidebarK8sResources } from '../../common/components/SidebarGeneric';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
-import { BadgePodStatus } from './BadgePodStatus';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getPodStatus } from '../utils/podStatus';
 
 interface SidebarPodsProps {
   item: V1Pod | null;
@@ -72,7 +73,7 @@ export function SidebarK8sPods({ item, setItem, onDelete, tableRef }: SidebarPod
           <Tr>
             <Td>Status</Td>
             <Td>
-              <BadgePodStatus status={pod.status?.phase} />
+              <BadgeStatus status={getPodStatus(pod)} />
             </Td>
           </Tr>
         </Tbody>

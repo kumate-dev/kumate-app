@@ -4,7 +4,8 @@ import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { SidebarK8sResources } from '../../common/components/SidebarGeneric';
-import { BadgeDeploymentStatus } from './BadgeDeploymentStatus';
+import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { getDeploymentStatus } from '../utils/deploymentStatus';
 
 interface SidebarDeploymentsProps {
   item: V1Deployment | null;
@@ -68,7 +69,7 @@ export function SidebarK8sDeployments({
           <Tr>
             <Td>Status</Td>
             <Td>
-              <BadgeDeploymentStatus status={dep.status?.conditions?.[0]?.type} />
+              <BadgeStatus status={getDeploymentStatus(dep)} />
             </Td>
           </Tr>
         </Tbody>

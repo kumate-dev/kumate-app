@@ -7,9 +7,6 @@ import { ALL_NAMESPACES } from '@/constants/k8s';
 import Overview from '@/features/k8s/overview/components/Overview';
 import PaneNodes from '@/features/k8s/nodes/components/PaneNodes';
 import PaneNamespaces from '@/features/k8s/namespaces/components/PaneNamespaces';
-import PanePods from '@/features/k8s/pods/components/PanePods';
-import PaneDeployments from '@/features/k8s/deployments/components/PaneDeployments';
-import PaneConfigMaps from '@/features/k8s/configMaps/components/PaneConfigMaps';
 import PaneSecrets from '@/features/k8s/secrets/components/PaneSecrets';
 import PaneResourceQuotas from '@/features/k8s/resourceQuotas/components/PaneResourceQuotas';
 import PaneLimitRanges from '@/features/k8s/limitRanges/components/PaneLimitRanges';
@@ -17,10 +14,14 @@ import PaneHorizontalPodAutoscalers from '@/features/k8s/horizontalPodAutoscaler
 import PanePodDisruptionBudgets from '@/features/k8s/podDisruptionBudgets/components/PanePodDisruptionBudgets';
 import PaneReplicaSets from '@/features/k8s/replicaSets/components/PaneReplicaSets';
 import PaneStatefulSets from '@/features/k8s/statefulSets/components/PaneStatefulSets';
-import PaneDaemonSets from '@/features/k8s/daemonSets/components/PaneDaemonSets';
 import PaneJobs from '@/features/k8s/jobs/components/PaneJobs';
-import PaneCronJobs from '@/features/k8s/cronJobs/components/PaneCronJobs';
 import ComingSoon from './ComingSoon';
+import Pods from '@/features/k8s/pods/pages/Pods';
+import ConfigMaps from '@/features/k8s/configMaps/pages/ConfigMaps';
+import CronJobs from '@/features/k8s/cronJobs/pages/CronJobs';
+import DaemonSets from '@/features/k8s/daemonSets/pages/DaemonSets';
+import Deployments from '@/features/k8s/deployments/pages/Deployments';
+import HorizontalPodAutoscalers from '@/features/k8s/horizontalPodAutoscalers/pages/HorizontalPodAutoscalers';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -71,23 +72,23 @@ export default function Home() {
     if (selected?.name) resetNsToAll();
   }, [selected?.name]);
 
-  const pageComponents: Record<string, React.FC<{ context?: K8sContext }>> = {
+  const pageComponents: Record<string, React.FC<{ context?: K8sContext | null }>> = {
     overview: Overview,
     nodes: PaneNodes,
     namespaces: PaneNamespaces,
-    pods: PanePods,
-    deployments: PaneDeployments,
-    config_maps: PaneConfigMaps,
+    pods: Pods,
+    deployments: Deployments,
+    config_maps: ConfigMaps,
     secrets: PaneSecrets,
     resource_quotas: PaneResourceQuotas,
     limit_ranges: PaneLimitRanges,
-    horizontal_pod_autoscalers: PaneHorizontalPodAutoscalers,
+    horizontal_pod_autoscalers: HorizontalPodAutoscalers,
     pod_disruption_budgets: PanePodDisruptionBudgets,
     replica_sets: PaneReplicaSets,
     stateful_sets: PaneStatefulSets,
-    daemon_sets: PaneDaemonSets,
+    daemon_sets: DaemonSets,
     jobs: PaneJobs,
-    cron_jobs: PaneCronJobs,
+    cron_jobs: CronJobs,
   };
 
   const PageComponent = pageComponents[page] || ComingSoon;

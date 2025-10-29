@@ -1,53 +1,36 @@
 import { useState, useCallback } from 'react';
-import { V1HorizontalPodAutoscaler } from '@kubernetes/client-node';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import {
-  listHorizontalPodAutoscalers,
-  watchHorizontalPodAutoscalers,
-  deleteHorizontalPodAutoscalers,
-} from '@/api/k8s/horizontalPodAutoscalers';
+import { V1HorizontalPodAutoscaler, V1Namespace } from '@kubernetes/client-node';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
+import { BadgeStatus } from '@/features/k8s/common/components/BadgeStatus';
+import { getHorizontalPodAutoscalerStatus } from '../utils/horizontalPodAutoscalersStatus';
 
-export default function PaneHorizontalPodAutoscalers({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PaneHorizontalPodAutoscalersProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1HorizontalPodAutoscaler[];
+  loading: boolean;
+  error: string;
+  onDeleteHorizontalPodAutoscalers: (hpas: V1HorizontalPodAutoscaler[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1HorizontalPodAutoscaler>(
-    listHorizontalPodAutoscalers,
-    watchHorizontalPodAutoscalers,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneHorizontalPodAutoscalers({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteHorizontalPodAutoscalers,
+}: PaneHorizontalPodAutoscalersProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1HorizontalPodAutoscaler>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1HorizontalPodAutoscaler[]>([]);
-
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace', 'spec.scaleTargetRef.name'],
-    'metadata.name',
-    'asc'
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1HorizontalPodAutoscaler>(
-    deleteHorizontalPodAutoscalers,
-    context
-  );
 
   const toggleItem = useCallback((item: V1HorizontalPodAutoscaler) => {
     setSelectedItems((prev) =>
@@ -57,30 +40,16 @@ export default function PaneHorizontalPodAutoscalers({ context }: PaneResourceCo
 
   const toggleAll = useCallback(
     (checked: boolean) => {
-      setSelectedItems(checked ? [...filtered] : []);
+      setSelectedItems(checked ? [...items] : []);
     },
-    [filtered]
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (selectedItems.length === 0) return toast.error('No HPAs selected');
-    await handleDeleteResources(selectedItems);
+    if (selectedItems.length === 0) return;
+    await onDeleteHorizontalPodAutoscalers(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, handleDeleteResources]);
-
-  const statusVariant = (status?: string) => {
-    switch (status) {
-      case 'Active':
-      case 'AbleToScale':
-        return 'success';
-      case 'Error':
-      case 'Failed':
-        return 'error';
-      case 'Unknown':
-      default:
-        return 'default';
-    }
-  };
+  }, [selectedItems, onDeleteHorizontalPodAutoscalers]);
 
   const columns: ColumnDef<keyof V1HorizontalPodAutoscaler | ''>[] = [
     { label: 'Name', key: 'metadata' },
@@ -103,28 +72,9 @@ export default function PaneHorizontalPodAutoscalers({ context }: PaneResourceCo
       setSortOrder={setSortOrder}
       onToggleAll={toggleAll}
       selectedItems={selectedItems}
-      totalItems={filtered}
+      totalItems={items}
     />
   );
-
-  const status = (hpa: V1HorizontalPodAutoscaler): string => {
-    const conditions = (hpa.status as any)?.conditions as
-      | { type?: string; status?: string }[]
-      | undefined;
-    if (!conditions || conditions.length === 0) return 'Unknown';
-
-    for (const cond of conditions) {
-      const type = cond.type;
-      const status = cond.status;
-
-      if (type === 'ScalingActive' && status === 'True') return 'Active';
-      if (type === 'ScalingActive' && status === 'False') return 'Error';
-      if (type === 'AbleToScale' && status === 'True') return 'AbleToScale';
-      if (type === 'AbleToScale' && status === 'False') return 'Failed';
-    }
-
-    return 'Unknown';
-  };
 
   const renderRow = (hpa: V1HorizontalPodAutoscaler) => (
     <>
@@ -143,7 +93,7 @@ export default function PaneHorizontalPodAutoscalers({ context }: PaneResourceCo
       <Td>{hpa.status?.desiredReplicas ?? '-'}</Td>
       <AgeCell timestamp={hpa.metadata?.creationTimestamp ?? ''} />
       <Td>
-        <Badge variant={statusVariant(status(hpa))}>{status(hpa)}</Badge>
+        <BadgeStatus status={getHorizontalPodAutoscalerStatus(hpa)} />
       </Td>
       <Td>
         <button className="text-white/60 hover:text-white/80">⋮</button>
@@ -153,14 +103,14 @@ export default function PaneHorizontalPodAutoscalers({ context }: PaneResourceCo
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
+      onSelectNamespace={onSelectNamespace}
       selectedItems={selectedItems}
       onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}

@@ -1,6 +1,4 @@
 import { ReactNode, useRef, useState, useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { K8sContext } from '@/api/k8s/contexts';
 import { V1Namespace } from '@kubernetes/client-node';
 import { PaneTaskbar } from '@/components/common/Taskbar';
 import { PaneSearch } from '@/components/common/Search';
@@ -8,6 +6,8 @@ import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
+import { Skeleton } from '@/components/ui/skeleton';
+import { K8sContext } from '@/api/k8s/contexts';
 
 export interface PaneResourceContextProps {
   context?: K8sContext | null;

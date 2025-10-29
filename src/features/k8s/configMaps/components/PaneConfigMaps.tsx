@@ -1,45 +1,34 @@
 import { useState, useCallback } from 'react';
-import { V1ConfigMap } from '@kubernetes/client-node';
-import { useNamespaceStore } from '@/store/namespaceStore';
-import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
-import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listConfigMaps, watchConfigMaps, deleteConfigMaps } from '@/api/k8s/configMaps';
+import { V1ConfigMap, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
-import { toast } from 'sonner';
-import { PaneResource, PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
 
-export default function PaneConfigMaps({ context }: PaneResourceContextProps) {
-  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
-  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
-  const namespaceList = useSelectedNamespaces(context);
+export interface PaneConfigMapsProps {
+  selectedNamespaces: string[];
+  onSelectNamespace: (namespaces: string[]) => void;
+  namespaceList: V1Namespace[];
+  items: V1ConfigMap[];
+  loading: boolean;
+  error: string;
+  onDeleteConfigMaps: (configMaps: V1ConfigMap[]) => Promise<void>;
+}
 
-  const { items, loading, error } = useListK8sResources<V1ConfigMap>(
-    listConfigMaps,
-    watchConfigMaps,
-    context,
-    selectedNamespaces
-  );
-
+export default function PaneConfigMaps({
+  selectedNamespaces,
+  onSelectNamespace,
+  namespaceList,
+  items,
+  loading,
+  error,
+  onDeleteConfigMaps,
+}: PaneConfigMapsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1ConfigMap>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1ConfigMap[]>([]);
-
-  const filtered = useFilteredItems(
-    items,
-    selectedNamespaces,
-    q,
-    ['metadata.name', 'metadata.namespace', 'data'],
-    'metadata.name',
-    'asc'
-  );
-
-  const { handleDeleteResources } = useDeleteK8sResources<V1ConfigMap>(deleteConfigMaps, context);
 
   const toggleItem = useCallback((item: V1ConfigMap) => {
     setSelectedItems((prev) =>
@@ -49,16 +38,16 @@ export default function PaneConfigMaps({ context }: PaneResourceContextProps) {
 
   const toggleAll = useCallback(
     (checked: boolean) => {
-      setSelectedItems(checked ? [...filtered] : []);
+      setSelectedItems(checked ? [...items] : []);
     },
-    [filtered]
+    [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
-    if (selectedItems.length === 0) return toast.error('No ConfigMaps selected');
-    await handleDeleteResources(selectedItems);
+    if (selectedItems.length === 0) return;
+    await onDeleteConfigMaps(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, handleDeleteResources]);
+  }, [selectedItems, onDeleteConfigMaps]);
 
   const columns: ColumnDef<keyof V1ConfigMap | ''>[] = [
     { label: 'Name', key: 'metadata' },
@@ -76,7 +65,7 @@ export default function PaneConfigMaps({ context }: PaneResourceContextProps) {
       setSortOrder={setSortOrder}
       onToggleAll={toggleAll}
       selectedItems={selectedItems}
-      totalItems={filtered}
+      totalItems={items}
     />
   );
 
@@ -106,14 +95,14 @@ export default function PaneConfigMaps({ context }: PaneResourceContextProps) {
 
   return (
     <PaneResource
-      items={filtered}
+      items={items}
       loading={loading}
-      error={error ?? ''}
+      error={error}
       query={q}
       onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={setSelectedNamespaces}
+      onSelectNamespace={onSelectNamespace}
       selectedItems={selectedItems}
       onToggleItem={toggleItem}
       onDeleteSelected={handleDeleteSelected}

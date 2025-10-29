@@ -1,6 +1,8 @@
 import { BadgeVariant } from '@/types/variant';
+import { V1Pod } from '@kubernetes/client-node';
+import { K8sStatus } from '@/types/k8sStatus';
 
-export const podStatusVariant = (s?: string): BadgeVariant => {
+const podStatusVariant = (s?: string): BadgeVariant => {
   switch (s) {
     case 'Pending':
     case 'ContainerCreating':
@@ -18,4 +20,10 @@ export const podStatusVariant = (s?: string): BadgeVariant => {
     default:
       return 'default';
   }
+};
+
+export const getPodStatus = (pod: V1Pod): K8sStatus => {
+  const status = pod.status?.phase ?? 'Unknown';
+  const variant = podStatusVariant(status);
+  return { status, variant };
 };
