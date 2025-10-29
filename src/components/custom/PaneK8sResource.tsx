@@ -1,11 +1,11 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import { PaneTaskbar } from './PaneTaskbar';
 import { PaneSearch } from './PaneSearch';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { ErrorMessage } from './ErrorMessage';
 import { Checkbox } from '../ui/checkbox';
-import { K8sContext } from '@/services/contexts';
 import { ModalConfirmDelete } from './ModalConfirmDelete';
+import { K8sContext } from '@/services/contexts';
 
 export interface PaneK8sResourceContextProps {
   context?: K8sContext | null;
@@ -21,6 +21,7 @@ export interface PaneK8sResourceProps<T> {
   selectedNamespaces?: string[];
   onSelectNamespace?: (ns: string[]) => void;
   showNamespace?: boolean;
+  selectedItem?: T | null;
   selectedItems?: T[];
   onToggleItem?: (item: T) => void;
   onToggleAll?: (checked: boolean) => void;
@@ -30,6 +31,8 @@ export interface PaneK8sResourceProps<T> {
   emptyText?: string;
   colSpan?: number;
   tableHeader?: ReactNode;
+  renderSidebar?: (item: T, tableRef: React.RefObject<HTMLTableElement | null>) => ReactNode;
+  onCloseSidebar?: () => void;
 }
 
 export function PaneK8sResource<T>({
@@ -50,9 +53,12 @@ export function PaneK8sResource<T>({
   emptyText = 'No items',
   colSpan = 5,
   tableHeader,
+  selectedItem,
+  renderSidebar,
 }: PaneK8sResourceProps<T>) {
   const totalColSpan = (colSpan || 0) + (onToggleItem ? 1 : 0);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const handleDeleteClick = () => {
     if (!selectedItems || selectedItems.length === 0) return;
@@ -83,7 +89,7 @@ export function PaneK8sResource<T>({
       <div className="flex-1 overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
         <div className="h-full overflow-auto">
           <div className="min-w-max">
-            <Table>
+            <Table ref={tableRef}>
               {tableHeader}
               <Tbody>
                 {loading && (
@@ -130,6 +136,12 @@ export function PaneK8sResource<T>({
             </Table>
           </div>
         </div>
+
+        {selectedItem && renderSidebar && (
+          <div className="w-[550px] border-l border-white/10">
+            {renderSidebar(selectedItem, tableRef)}
+          </div>
+        )}
       </div>
 
       {onDeleteSelected && (

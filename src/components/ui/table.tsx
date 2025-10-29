@@ -12,7 +12,6 @@ export const Table = forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTML
   }
 );
 
-
 export function Thead({ className = '', ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return <thead className={`text-white/70 ${className}`} {...props} />;
 }

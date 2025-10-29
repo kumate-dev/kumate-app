@@ -6,15 +6,20 @@ import { k8sDeploymentStatusVariant } from '@/constants/variant';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { TableYamlRow } from './TableYamlRow';
 import { BadgeK8sNamespaces } from './BadgeK8sNamespaces';
-import { useRef } from 'react';
 
 interface SidebarDeploymentProps {
   item: V1Deployment | null;
   setItem: (item: V1Deployment | null) => void;
   onDelete?: (item: V1Deployment) => void;
+  tableRef?: React.RefObject<HTMLTableElement | null>;
 }
 
-export function SidebarK8sDeployment({ item, setItem, onDelete }: SidebarDeploymentProps) {
+export function SidebarK8sDeployment({
+  item,
+  setItem,
+  onDelete,
+  tableRef,
+}: SidebarDeploymentProps) {
   const getStatus = (dep: V1Deployment): string => {
     const available = dep.status?.availableReplicas ?? 0;
     const desired = dep.status?.replicas ?? 0;
@@ -97,6 +102,7 @@ export function SidebarK8sDeployment({ item, setItem, onDelete }: SidebarDeploym
       setItem={setItem}
       sections={sections}
       onDelete={onDelete}
+      tableRef={tableRef}
     />
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { V1Deployment } from '@kubernetes/client-node';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
 import { SidebarK8sDeployment } from './SidebarK8sDeployment';
@@ -130,14 +130,6 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
           {dep.status?.conditions?.[0]?.type ?? ''}
         </Badge>
       </Td>
-
-      {selectedDeployment && selectedDeployment.metadata?.uid === dep.metadata?.uid && (
-        <SidebarK8sDeployment
-          item={selectedDeployment}
-          setItem={setSelectedDeployment}
-          onDelete={handleDeleteOne}
-        />
-      )}
     </>
   );
 
@@ -157,8 +149,17 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
       onDeleteSelected={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}
-      onRowClick={(f) => setSelectedDeployment(f)}
+      onRowClick={setSelectedDeployment}
       renderRow={renderRow}
+      selectedItem={selectedDeployment}
+      renderSidebar={(item, tableRef) => (
+        <SidebarK8sDeployment
+          item={item}
+          setItem={setSelectedDeployment}
+          onDelete={handleDeleteOne}
+          tableRef={tableRef}
+        />
+      )}
     />
   );
 }

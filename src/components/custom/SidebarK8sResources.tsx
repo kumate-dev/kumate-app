@@ -90,7 +90,7 @@ export function SidebarK8sResources<T>({
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="absolute left-0 top-0 h-full w-1 cursor-ew-resize bg-transparent hover:bg-white/10 active:bg-white/20"
+          className="absolute top-0 left-0 h-full w-1 cursor-ew-resize bg-transparent hover:bg-white/10 active:bg-white/20"
           onMouseDown={startResizing}
         />
 
@@ -104,7 +104,7 @@ export function SidebarK8sResources<T>({
           {sections.map((section) => (
             <div key={section.key}>
               <h3
-                className="mb-2 flex cursor-pointer select-none items-center justify-between text-white/80"
+                className="mb-2 flex cursor-pointer items-center justify-between text-white/80 select-none"
                 onClick={() => toggleSection(section.key)}
               >
                 <span>{section.title}</span>
