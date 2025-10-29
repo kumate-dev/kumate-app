@@ -11,9 +11,9 @@ import {
 } from '@/api/k8s/podDisruptionBudgets';
 import { V1PodDisruptionBudget } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { ColumnDef, TableHeader } from '../../custom/TableHeader';
+import { ColumnDef, TableHeader } from '../../common/TableHeader';
 import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
-import AgeCell from '@/components/custom/AgeCell';
+import AgeCell from '@/components/common/AgeCell';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import { BadgeVariant } from '@/types/variant';

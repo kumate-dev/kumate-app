@@ -2,9 +2,9 @@ import type { V1Deployment } from '@kubernetes/client-node';
 import { Badge } from '@/components/ui/badge';
 import { k8sDeploymentStatusVariant } from '@/constants/variant';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
-import AgeCell from '@/components/custom/AgeCell';
+import AgeCell from '@/components/common/AgeCell';
 import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
-import { TableYamlRow } from '@/components/custom/TableYamlRow';
+import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { SidebarK8sResources } from '../shared/SidebarK8sResources';
 
 interface SidebarDeploymentProps {

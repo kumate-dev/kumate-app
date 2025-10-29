@@ -5,12 +5,12 @@ import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listConfigMaps, watchConfigMaps, deleteConfigMaps } from '@/api/k8s/configMaps';
 import { Td } from '@/components/ui/table';
-import AgeCell from '@/components/custom/AgeCell';
+import AgeCell from '@/components/common/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
-import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
+import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
 import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
 
 export default function PaneK8sConfigMaps({ context }: PaneK8sResourceContextProps) {

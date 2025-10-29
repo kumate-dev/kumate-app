@@ -13,9 +13,9 @@ import { AlertTriangle } from 'lucide-react';
 import { BadgeVariant } from '@/types/variant';
 import { SidebarK8sDeployment } from './SidebarK8sDeployment';
 import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
-import { ColumnDef, TableHeader } from '@/components/custom/TableHeader';
+import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
 import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
-import AgeCell from '@/components/custom/AgeCell';
+import AgeCell from '@/components/common/AgeCell';
 
 export default function PaneK8sDeployments({ context }: PaneK8sResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

@@ -1,7 +1,7 @@
 import { ALL_NAMESPACES } from '@/constants/k8s';
-import { PaneSearch } from '@/components/custom/PaneSearch';
+import { PaneSearch } from '@/components/common/PaneSearch';
 import { Check } from 'lucide-react';
-import { PaneDropdown } from '@/components/custom/PaneDropdown';
+import { PaneDropdown } from '@/components/common/PaneDropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
 import { BubbleTrash } from './BubbleTrash';
 import { V1Namespace } from '@kubernetes/client-node';

@@ -5,8 +5,8 @@ import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { listNodes, watchNodes } from '@/api/k8s/nodes';
 import { V1Node } from '@kubernetes/client-node';
 import { Badge } from '@/components/ui/badge';
-import AgeCell from '@/components/custom/AgeCell';
-import { ColumnDef, TableHeader } from '../../custom/TableHeader';
+import AgeCell from '@/components/common/AgeCell';
+import { ColumnDef, TableHeader } from '../../common/TableHeader';
 import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
 
 export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {

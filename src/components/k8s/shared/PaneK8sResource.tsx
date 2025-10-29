@@ -1,10 +1,10 @@
 import { ReactNode, useRef, useState } from 'react';
-import { PaneTaskbar } from '../../custom/PaneTaskbar';
-import { PaneSearch } from '../../custom/PaneSearch';
+import { PaneTaskbar } from '../../common/PaneTaskbar';
+import { PaneSearch } from '../../common/PaneSearch';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
-import { ErrorMessage } from '../../custom/ErrorMessage';
+import { ErrorMessage } from '../../common/ErrorMessage';
 import { Checkbox } from '../../ui/checkbox';
-import { ModalConfirmDelete } from '../../custom/ModalConfirmDelete';
+import { ModalConfirmDelete } from '../../common/ModalConfirmDelete';
 import { K8sContext } from '@/api/k8s/contexts';
 import { V1Namespace } from '@kubernetes/client-node';
 

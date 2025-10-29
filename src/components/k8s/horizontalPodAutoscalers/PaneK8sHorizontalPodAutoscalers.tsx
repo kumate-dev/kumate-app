@@ -9,10 +9,10 @@ import {
   watchHorizontalPodAutoscalers,
   deleteHorizontalPodAutoscalers,
 } from '@/api/k8s/horizontalPodAutoscalers';
-import { ColumnDef, TableHeader } from '../../custom/TableHeader';
+import { ColumnDef, TableHeader } from '../../common/TableHeader';
 import { Td } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import AgeCell from '@/components/custom/AgeCell';
+import AgeCell from '@/components/common/AgeCell';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
