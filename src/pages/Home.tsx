@@ -16,7 +16,7 @@ import PaneK8sLimitRanges from '@/components/k8s/limitRanges/PaneK8sLimitRanges'
 import PaneK8sHorizontalPodAutoscalers from '@/components/k8s/horizontalPodAutoscalers/PaneK8sHorizontalPodAutoscalers';
 import PaneK8sPodDisruptionBudgets from '@/components/k8s/podDisruptionBudgets/PaneK8sPodDisruptionBudgets';
 import PaneK8sDeployment from '@/components/k8s/deployments/PaneK8sDeployments';
-import { SidebarMenu } from '@/components/k8s/shared/SidebarMenu';
+import { SidebarMenu } from '@/components/k8s/menu/SidebarMenu';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';

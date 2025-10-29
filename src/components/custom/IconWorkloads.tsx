@@ -1,9 +1,0 @@
-import { Icon } from '@/components/ui/icon';
-
-export function IconWorkloads(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <Icon {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 8.25h12M6 12h12M6 15.75h12" />
-    </Icon>
-  );
-}

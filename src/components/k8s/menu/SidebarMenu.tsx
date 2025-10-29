@@ -1,14 +1,4 @@
 import React from 'react';
-import { IconWorkloads } from '@/components/custom/IconWorkloads';
-import { IconConfig } from '@/components/custom/IconConfig';
-import { IconNetwork } from '@/components/custom/IconNetwork';
-import { IconStorage } from '@/components/custom/IconStorage';
-import { IconNamespaces } from '@/components/custom/IconNamespaces';
-import { IconEvents } from '@/components/custom/IconEvents';
-import { IconHelm } from '@/components/custom/IconHelm';
-import { IconAccessControl } from '@/components/custom/IconAccessControl';
-import { IconNode } from '@/components/custom/IconNode';
-import { IconOverview } from '@/components/custom/IconOverview';
 import { PageKey } from '@/types/pageKey';
 import { K8sContext } from '@/api/k8s/contexts';
 
@@ -64,7 +54,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const categoryGroups: PageItem[] = [
     {
       title: 'Workloads',
-      icon: IconWorkloads,
       items: [
         { key: 'workloads_overview', label: 'Overview' },
         { key: 'pods', label: 'Pods' },
@@ -79,7 +68,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
     },
     {
       title: 'Config',
-      icon: IconConfig,
       items: [
         { key: 'config_maps', label: 'Config Maps' },
         { key: 'secrets', label: 'Secrets' },
@@ -96,7 +84,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
     },
     {
       title: 'Network',
-      icon: IconNetwork,
       items: [
         { key: 'services', label: 'Services' },
         { key: 'endpoints', label: 'Endpoints' },
@@ -108,7 +95,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
     },
     {
       title: 'Storage',
-      icon: IconStorage,
       items: [
         { key: 'persistent_volume_claims', label: 'Persistent Volume Claims' },
         { key: 'persistent_volumes', label: 'Persistent Volumes' },
@@ -117,7 +103,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
     },
     {
       title: 'Helm',
-      icon: IconHelm,
       items: [
         { key: 'helm_charts', label: 'Charts' },
         { key: 'helm_releases', label: 'Releases' },
@@ -125,7 +110,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
     },
     {
       title: 'Access Control',
-      icon: IconAccessControl,
       items: [
         { key: 'service_accounts', label: 'Service Accounts' },
         { key: 'cluster_roles', label: 'Cluster Roles' },
@@ -138,15 +122,14 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
 
   const groups: PageItem[] = selected
     ? [
-        { title: 'Overview', icon: IconOverview, items: [], navigateKey: 'overview' },
-        { title: 'Nodes', icon: IconNode, items: [], navigateKey: 'nodes' },
-        { title: 'Namespaces', icon: IconNamespaces, items: [], navigateKey: 'namespaces' },
+        { title: 'Overview', items: [], navigateKey: 'overview' },
+        { title: 'Nodes', items: [], navigateKey: 'nodes' },
+        { title: 'Namespaces', items: [], navigateKey: 'namespaces' },
         ...categoryGroups.map((cat) => ({
           title: cat.title,
-          icon: cat.icon,
           items: cat.items?.map((it) => ({ ...it, clusterName: selected.name })) || [],
         })),
-        { title: 'Events', icon: IconEvents, items: [], navigateKey: 'events' },
+        { title: 'Events', items: [], navigateKey: 'events' },
       ]
     : [];
 
