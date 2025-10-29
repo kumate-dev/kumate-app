@@ -1,5 +1,5 @@
 import { K8sContext } from '@/api/k8s/contexts';
-import PaneOverview from '@/components/common/PaneOverview';
+import PaneOverview from '@/components/k8s/overview/PaneOverview';
 
 interface OverviewProps {
   context?: K8sContext | null;

@@ -1,6 +1,6 @@
 import { ReactNode, useRef, useState } from 'react';
-import { PaneTaskbar } from '../../common/PaneTaskbar';
-import { PaneSearch } from '../../common/PaneSearch';
+import { PaneTaskbar } from '../../common/Taskbar';
+import { PaneSearch } from '../../common/Search';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { ErrorMessage } from '../../common/ErrorMessage';
 import { Checkbox } from '../../ui/checkbox';

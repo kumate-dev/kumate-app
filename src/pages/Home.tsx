@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import PaneOverview from '@/components/common/PaneOverview';
+import PaneOverview from '@/components/k8s/overview/PaneOverview';
 import PaneK8sPod from '@/components/k8s/pods/PaneK8sPods';
 import PaneK8sNode from '@/components/k8s/nodes/PaneK8sNodes';
 import PaneK8sNamespace from '@/components/k8s/namespaces/PaneK8sNamespaces';
