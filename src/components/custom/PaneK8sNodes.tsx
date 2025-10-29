@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Td, Tr } from '@/components/ui/table';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
-import { listNodes, watchNodes } from '@/services/nodes';
+import { listNodes, watchNodes } from '@/api/k8s/nodes';
 import { V1Node } from '@kubernetes/client-node';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/custom/AgeCell';

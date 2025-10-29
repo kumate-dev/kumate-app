@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity } from 'lucide-react';
-import { K8sContext } from '@/services/contexts';
+import { K8sContext } from '@/api/k8s/contexts';
 
 interface PlaceholderProps {
   title: string;

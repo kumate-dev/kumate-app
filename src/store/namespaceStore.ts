@@ -1,13 +1,13 @@
 import { create } from 'zustand';
-import { NamespaceItem } from '@/services/namespaces';
+import { V1Namespace } from '@kubernetes/client-node';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 
 interface NamespaceStore {
   selectedNamespaces: string[];
   setSelectedNamespaces: (ns: string[] | string) => void;
-  namespaces: Record<string, NamespaceItem[]>; // key = context.name
+  namespaces: Record<string, V1Namespace[]>;
   namespacesContext: string | null;
-  setNamespaces: (contextName: string | null, list: NamespaceItem[]) => void;
+  setNamespaces: (contextName: string | null, list: V1Namespace[]) => void;
 }
 
 export const useNamespaceStore = create<NamespaceStore>((set) => ({

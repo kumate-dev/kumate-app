@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { V1ConfigMap } from '@kubernetes/client-node';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
-import { useNamespaceStore } from '@/state/namespaceStore';
+import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listConfigMaps, watchConfigMaps, deleteConfigMaps } from '@/services/configMaps';
+import { listConfigMaps, watchConfigMaps, deleteConfigMaps } from '@/api/k8s/configMaps';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/custom/AgeCell';

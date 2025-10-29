@@ -3,15 +3,11 @@ import { PaneSearch } from '@/components/custom/PaneSearch';
 import { Check } from 'lucide-react';
 import { PaneDropdown } from '@/components/custom/PaneDropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
-import { Bubble } from '../ui/bubble';
 import { BubbleTrash } from './BubbleTrash';
-
-interface NamespaceOption {
-  name: string;
-}
+import { V1Namespace } from '@kubernetes/client-node';
 
 interface PaneTaskbarProps {
-  namespaceList?: NamespaceOption[];
+  namespaceList?: V1Namespace[];
   selectedNamespaces?: string[];
   onSelectNamespace?: (ns: string[]) => void;
   query: string;
@@ -55,7 +51,7 @@ export function PaneTaskbar({
     <div className="relative sticky top-0 z-0 mb-2 flex items-center gap-2 py-2">
       {showNamespace && onSelectNamespace && (
         <PaneDropdown trigger={<DropdownTrigger label={displayLabel} className="w-80" />}>
-          {[ALL_NAMESPACES, ...namespaceList.map((ns) => ns.name)].map((ns) => (
+          {[ALL_NAMESPACES, ...namespaceList.map((ns) => ns.metadata?.name ?? '')].map((ns) => (
             <div
               key={ns}
               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-white/10"

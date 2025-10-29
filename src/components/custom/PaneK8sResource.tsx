@@ -5,7 +5,8 @@ import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { ErrorMessage } from './ErrorMessage';
 import { Checkbox } from '../ui/checkbox';
 import { ModalConfirmDelete } from './ModalConfirmDelete';
-import { K8sContext } from '@/services/contexts';
+import { K8sContext } from '@/api/k8s/contexts';
+import { V1Namespace } from '@kubernetes/client-node';
 
 export interface PaneK8sResourceContextProps {
   context?: K8sContext | null;
@@ -17,7 +18,7 @@ export interface PaneK8sResourceProps<T> {
   error?: string | null;
   query: string;
   onQueryChange: (q: string) => void;
-  namespaceList?: { name: string }[];
+  namespaceList?: V1Namespace[];
   selectedNamespaces?: string[];
   onSelectNamespace?: (ns: string[]) => void;
   showNamespace?: boolean;

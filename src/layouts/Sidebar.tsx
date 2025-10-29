@@ -10,7 +10,7 @@ import { IconAccessControl } from '@/components/custom/IconAccessControl';
 import { IconNode } from '@/components/custom/IconNode';
 import { IconOverview } from '@/components/custom/IconOverview';
 import { PageKey } from '@/types/pageKey';
-import { K8sContext } from '@/services/contexts';
+import { K8sContext } from '@/api/k8s/contexts';
 
 export interface PageItem {
   key?: PageKey;

@@ -1,14 +1,14 @@
 import { useState, useCallback } from 'react';
 import { Td } from '@/components/ui/table';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
-import { useNamespaceStore } from '@/state/namespaceStore';
+import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
 import {
   listReplicationControllers,
   watchReplicationControllers,
   deleteReplicationControllers,
-} from '@/services/replicationControllers';
+} from '@/api/k8s/replicationControllers';
 import { V1ReplicationController } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { ColumnDef, TableHeader } from './TableHeader';

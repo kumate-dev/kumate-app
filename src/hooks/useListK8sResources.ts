@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { UnlistenFn } from '@tauri-apps/api/event';
 import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES } from '@/constants/k8s';
 import { WatchEvent } from '@/types/k8sEvent';
-import { unwatch } from '@/services/unwatch';
+import { unwatch } from '@/api/k8s/unwatch';
 
 export function useListK8sResources<T extends { metadata?: { name?: string; namespace?: string } }>(
   listFn: (params: { name: string; namespaces?: string[] }) => Promise<T[]>,

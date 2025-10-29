@@ -16,3 +16,21 @@ export const k8sDeploymentStatusVariant = (s: string): BadgeVariant => {
       return 'default';
   }
 };
+
+export const k8sPodStatusVariant = (s: string): BadgeVariant => {
+  switch (s) {
+    case 'Running':
+      return 'success';
+    case 'Pending':
+    case 'ContainerCreating':
+      return 'warning';
+    case 'Terminating':
+      return 'secondary';
+    case 'Failed':
+    case 'Error':
+    case 'CrashLoopBackOff':
+      return 'error';
+    default:
+      return 'default';
+  }
+};

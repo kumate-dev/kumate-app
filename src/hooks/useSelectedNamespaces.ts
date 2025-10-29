@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { listNamespaces } from '@/services/namespaces';
-import { useNamespaceStore } from '@/state/namespaceStore';
-import { K8sContext } from '@/services/contexts';
+import { listNamespaces } from '@/api/k8s/namespaces';
+import { useNamespaceStore } from '@/store/namespaceStore';
+import { K8sContext } from '@/api/k8s/contexts';
+import { V1Namespace } from '@kubernetes/client-node';
 
 export function useSelectedNamespaces(context?: K8sContext | null) {
   const namespaces = useNamespaceStore((s) => s.namespaces);
@@ -13,22 +14,23 @@ export function useSelectedNamespaces(context?: K8sContext | null) {
 
     async function list() {
       if (!context?.name) return;
+
       if (namespacesContext === context.name && (namespaces[context.name] || []).length > 0) return;
 
       try {
-        const res = await listNamespaces({ name: context.name });
+        const res: V1Namespace[] = await listNamespaces({ name: context.name });
         if (!active) return;
-        const nsNames = (res || []).map((n) => n.name).sort();
-        setNamespaces(
-          context.name,
-          nsNames.map((n) => ({ name: n }))
-        );
-      } catch {
-        // ignore
-      }
+
+        const sorted = (res || [])
+          .map((item) => ({ ...item, _name: item.metadata?.name || '' }))
+          .sort((a, b) => a._name.localeCompare(b._name));
+
+        setNamespaces(context.name, sorted);
+      } catch {}
     }
 
     list();
+
     return () => {
       active = false;
     };

@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { V1Pod } from '@kubernetes/client-node';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
-import { useNamespaceStore } from '@/state/namespaceStore';
+import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listPods, watchPods, deletePods } from '@/services/pods';
+import { listPods, watchPods, deletePods } from '@/api/k8s/pods';
 import { ColumnDef, TableHeader } from './TableHeader';
 import { Td } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';

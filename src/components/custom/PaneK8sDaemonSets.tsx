@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
-import { useNamespaceStore } from '@/state/namespaceStore';
+import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listDaemonSets, watchDaemonSets, deleteDaemonSets } from '@/services/daemonSets';
+import { listDaemonSets, watchDaemonSets, deleteDaemonSets } from '@/api/k8s/daemonSets';
 import { V1DaemonSet } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { ColumnDef, TableHeader } from './TableHeader';

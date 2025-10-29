@@ -1,14 +1,14 @@
 import { useState, useCallback } from 'react';
 import { Td } from '@/components/ui/table';
 import { PaneK8sResource, PaneK8sResourceContextProps } from './PaneK8sResource';
-import { useNamespaceStore } from '@/state/namespaceStore';
+import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
 import {
   listResourceQuotas,
   watchResourceQuotas,
   deleteResourceQuotas,
-} from '@/services/resourceQuotas';
+} from '@/api/k8s/resourceQuotas';
 import { V1ResourceQuota } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { ColumnDef, TableHeader } from './TableHeader';
