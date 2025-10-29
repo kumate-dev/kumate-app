@@ -3,9 +3,9 @@ import { Badge } from '@/components/ui/badge';
 import { k8sDeploymentStatusVariant } from '@/constants/variant';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
+import { BadgeK8sNamespaces } from '../shared/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarK8sResources } from '../shared/SidebarK8sResources';
+import { SidebarK8sResources } from '../shared/SidebarGeneric';
 
 interface SidebarDeploymentProps {
   item: V1Deployment | null;

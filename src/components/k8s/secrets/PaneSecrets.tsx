@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Td } from '@/components/ui/table';
-import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
+import { PaneResource, PaneResourceContextProps } from '../shared/PaneGeneric';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
@@ -8,14 +8,14 @@ import { listSecrets, watchSecrets, deleteSecrets } from '@/api/k8s/secrets';
 import { V1Secret } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { ColumnDef, TableHeader } from '../../common/TableHeader';
-import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
+import { BadgeK8sNamespaces } from '../shared/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { Badge } from '@/components/ui/badge';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import { BadgeVariant } from '@/types/variant';
 
-export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps) {
+export default function PaneSecrets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
@@ -127,7 +127,7 @@ export default function PaneK8sSecrets({ context }: PaneK8sResourceContextProps)
   );
 
   return (
-    <PaneK8sResource
+    <PaneResource
       items={filtered}
       loading={loading}
       error={error ?? ''}

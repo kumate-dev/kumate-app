@@ -6,10 +6,10 @@ import { V1Namespace } from '@kubernetes/client-node';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef, TableHeader } from '../../common/TableHeader';
-import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
+import { PaneResource, PaneResourceContextProps } from '../shared/PaneGeneric';
 import { useState } from 'react';
 
-export default function PaneK8sNamespaces({ context }: PaneK8sResourceContextProps) {
+export default function PaneNamespaces({ context }: PaneResourceContextProps) {
   const { items, loading, error } = useListK8sResources<V1Namespace>(
     listNamespaces,
     watchNamespaces,
@@ -73,7 +73,7 @@ export default function PaneK8sNamespaces({ context }: PaneK8sResourceContextPro
   );
 
   return (
-    <PaneK8sResource
+    <PaneResource
       items={filtered}
       loading={loading}
       error={error ?? ''}

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
+import { PaneResource, PaneResourceContextProps } from '../shared/PaneGeneric';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
@@ -12,14 +12,14 @@ import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
 import { readyVariant } from '@/utils/k8s';
 import { BadgeVariant } from '@/types/variant';
-import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
+import { BadgeK8sNamespaces } from '../shared/BadgeNamespaces';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
 
 type SortKey = keyof V1DaemonSet;
 
-export default function PaneK8sDaemonSets({ context }: PaneK8sResourceContextProps) {
+export default function PaneDaemonSets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
@@ -122,7 +122,7 @@ export default function PaneK8sDaemonSets({ context }: PaneK8sResourceContextPro
   );
 
   return (
-    <PaneK8sResource
+    <PaneResource
       items={filtered}
       loading={loading}
       error={error ?? ''}

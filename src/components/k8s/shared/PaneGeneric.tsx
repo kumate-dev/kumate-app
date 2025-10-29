@@ -9,11 +9,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
 
-export interface PaneK8sResourceContextProps {
+export interface PaneResourceContextProps {
   context?: K8sContext | null;
 }
 
-export interface PaneK8sResourceProps<T> {
+export interface PaneResourceProps<T> {
   items: T[];
   loading: boolean;
   error?: string | null;
@@ -37,7 +37,7 @@ export interface PaneK8sResourceProps<T> {
   onCloseSidebar?: () => void;
 }
 
-export function PaneK8sResource<T>({
+export function PaneResource<T>({
   items,
   loading,
   error,
@@ -57,7 +57,7 @@ export function PaneK8sResource<T>({
   tableHeader,
   selectedItem,
   renderSidebar,
-}: PaneK8sResourceProps<T>) {
+}: PaneResourceProps<T>) {
   const totalColSpan = (colSpan || 0) + (onToggleItem ? 1 : 0);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);

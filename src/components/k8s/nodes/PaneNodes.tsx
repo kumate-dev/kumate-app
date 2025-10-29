@@ -7,9 +7,9 @@ import { V1Node } from '@kubernetes/client-node';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef, TableHeader } from '../../common/TableHeader';
-import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
+import { PaneResource, PaneResourceContextProps } from '../shared/PaneGeneric';
 
-export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
+export default function PaneNodes({ context }: PaneResourceContextProps) {
   const { items, loading, error } = useListK8sResources<V1Node>(listNodes, watchNodes, context);
 
   const [q, setQ] = useState('');
@@ -102,7 +102,7 @@ export default function PaneK8sNodes({ context }: PaneK8sResourceContextProps) {
   };
 
   return (
-    <PaneK8sResource
+    <PaneResource
       items={filtered}
       loading={loading}
       error={error ?? ''}

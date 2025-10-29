@@ -11,13 +11,13 @@ import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
 import { BadgeVariant } from '@/types/variant';
-import { SidebarK8sDeployment } from './SidebarK8sDeployment';
-import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
+import { SidebarK8sDeployment } from './SidebarDeployment';
+import { PaneResource, PaneResourceContextProps } from '../shared/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
-import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
+import { BadgeK8sNamespaces } from '../shared/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 
-export default function PaneK8sDeployments({ context }: PaneK8sResourceContextProps) {
+export default function PaneDeployments({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
@@ -134,7 +134,7 @@ export default function PaneK8sDeployments({ context }: PaneK8sResourceContextPr
   );
 
   return (
-    <PaneK8sResource
+    <PaneResource
       items={filtered}
       loading={loading}
       error={error ?? ''}

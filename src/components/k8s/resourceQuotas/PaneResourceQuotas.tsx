@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Td } from '@/components/ui/table';
-import { PaneK8sResource, PaneK8sResourceContextProps } from '../shared/PaneK8sResource';
+import { PaneResource, PaneResourceContextProps } from '../shared/PaneGeneric';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
@@ -12,12 +12,12 @@ import {
 import { V1ResourceQuota } from '@kubernetes/client-node';
 import { useFilteredItems } from '@/hooks/useFilteredItems';
 import { ColumnDef, TableHeader } from '../../common/TableHeader';
-import { BadgeK8sNamespaces } from '../shared/BadgeK8sNamespaces';
+import { BadgeK8sNamespaces } from '../shared/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 
-export default function PaneK8sResourceQuotas({ context }: PaneK8sResourceContextProps) {
+export default function PaneResourceQuotas({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
   const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
   const namespaceList = useSelectedNamespaces(context);
@@ -122,7 +122,7 @@ export default function PaneK8sResourceQuotas({ context }: PaneK8sResourceContex
   );
 
   return (
-    <PaneK8sResource
+    <PaneResource
       items={filtered}
       loading={loading}
       error={error ?? ''}

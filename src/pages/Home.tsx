@@ -5,21 +5,21 @@ import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 import Overview from '@/components/k8s/overview/Overview';
-import PaneK8sNodes from '@/components/k8s/nodes/PaneK8sNodes';
-import PaneK8sNamespaces from '@/components/k8s/namespaces/PaneK8sNamespaces';
-import PaneK8sPods from '@/components/k8s/pods/PaneK8sPods';
-import PaneK8sDeployments from '@/components/k8s/deployments/PaneK8sDeployments';
-import PaneK8sConfigMaps from '@/components/k8s/configMaps/PaneK8sConfigMaps';
-import PaneK8sSecrets from '@/components/k8s/secrets/PaneK8sSecrets';
-import PaneK8sResourceQuotas from '@/components/k8s/resourceQuotas/PaneK8sResourceQuotas';
-import PaneK8sLimitRanges from '@/components/k8s/limitRanges/PaneK8sLimitRanges';
-import PaneK8sHorizontalPodAutoscalers from '@/components/k8s/horizontalPodAutoscalers/PaneK8sHorizontalPodAutoscalers';
-import PaneK8sPodDisruptionBudgets from '@/components/k8s/podDisruptionBudgets/PaneK8sPodDisruptionBudgets';
-import PaneK8sReplicaSets from '@/components/k8s/replicaSets/PaneK8sReplicaSets';
-import PaneK8sStatefulSets from '@/components/k8s/statefulSets/PaneK8sStatefulSets';
-import PaneK8sDaemonSets from '@/components/k8s/daemonSets/PaneK8sDaemonSets';
-import PaneK8sJobs from '@/components/k8s/jobs/PaneK8sJobs';
-import PaneK8sCronJobs from '@/components/k8s/cronJobs/PaneK8sCronJobs';
+import PaneNodes from '@/components/k8s/nodes/PaneNodes';
+import PaneNamespaces from '@/components/k8s/namespaces/PaneNamespaces';
+import PanePods from '@/components/k8s/pods/PanePods';
+import PaneDeployments from '@/components/k8s/deployments/PaneDeployments';
+import PaneConfigMaps from '@/components/k8s/configMaps/PaneConfigMaps';
+import PaneSecrets from '@/components/k8s/secrets/PaneSecrets';
+import PaneResourceQuotas from '@/components/k8s/resourceQuotas/PaneResourceQuotas';
+import PaneLimitRanges from '@/components/k8s/limitRanges/PaneLimitRanges';
+import PaneHorizontalPodAutoscalers from '@/components/k8s/horizontalPodAutoscalers/PaneHorizontalPodAutoscalers';
+import PanePodDisruptionBudgets from '@/components/k8s/podDisruptionBudgets/PanePodDisruptionBudgets';
+import PaneReplicaSets from '@/components/k8s/replicaSets/PaneReplicaSets';
+import PaneStatefulSets from '@/components/k8s/statefulSets/PaneStatefulSets';
+import PaneDaemonSets from '@/components/k8s/daemonSets/PaneDaemonSets';
+import PaneJobs from '@/components/k8s/jobs/PaneJobs';
+import PaneCronJobs from '@/components/k8s/cronJobs/PaneCronJobs';
 import ComingSoon from './ComingSoon';
 
 export default function Home() {
@@ -73,21 +73,21 @@ export default function Home() {
 
   const pageComponents: Record<string, React.FC<{ context?: K8sContext }>> = {
     overview: Overview,
-    nodes: PaneK8sNodes,
-    namespaces: PaneK8sNamespaces,
-    pods: PaneK8sPods,
-    deployments: PaneK8sDeployments,
-    config_maps: PaneK8sConfigMaps,
-    secrets: PaneK8sSecrets,
-    resource_quotas: PaneK8sResourceQuotas,
-    limit_ranges: PaneK8sLimitRanges,
-    horizontal_pod_autoscalers: PaneK8sHorizontalPodAutoscalers,
-    pod_disruption_budgets: PaneK8sPodDisruptionBudgets,
-    replica_sets: PaneK8sReplicaSets,
-    stateful_sets: PaneK8sStatefulSets,
-    daemon_sets: PaneK8sDaemonSets,
-    jobs: PaneK8sJobs,
-    cron_jobs: PaneK8sCronJobs,
+    nodes: PaneNodes,
+    namespaces: PaneNamespaces,
+    pods: PanePods,
+    deployments: PaneDeployments,
+    config_maps: PaneConfigMaps,
+    secrets: PaneSecrets,
+    resource_quotas: PaneResourceQuotas,
+    limit_ranges: PaneLimitRanges,
+    horizontal_pod_autoscalers: PaneHorizontalPodAutoscalers,
+    pod_disruption_budgets: PanePodDisruptionBudgets,
+    replica_sets: PaneReplicaSets,
+    stateful_sets: PaneStatefulSets,
+    daemon_sets: PaneDaemonSets,
+    jobs: PaneJobs,
+    cron_jobs: PaneCronJobs,
   };
 
   const PageComponent = pageComponents[page] || ComingSoon;
