@@ -123,7 +123,10 @@ export function PaneResource<T>({
 
                 {!loading && items.length === 0 && (
                   <Tr className="text-center">
-                    <Td colSpan={totalColSpan} className="py-4 text-white/60">
+                    <Td
+                      colSpan={totalColSpan}
+                      className="absolute w-full py-4 text-center text-white/60"
+                    >
                       {emptyText}
                     </Td>
                   </Tr>
@@ -159,7 +162,7 @@ export function PaneResource<T>({
         </div>
 
         {selectedItem && renderSidebar && (
-          <div className="w-[550px] border-l border-white/10">
+          <div className="w-[550px]">
             {renderSidebar(selectedItem, tableRef)}
           </div>
         )}
