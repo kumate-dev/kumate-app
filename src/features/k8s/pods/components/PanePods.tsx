@@ -21,7 +21,7 @@ export interface PanePodsProps {
   loading: boolean;
   error: string;
   onDeletePods: (pods: V1Pod[]) => Promise<void>;
-  onCreatePod?: (pod: V1Pod) => Promise<void>;
+  onCreatePod?: (pod: V1Pod) => Promise<V1Pod | undefined>;
 }
 
 export default function PanePods({

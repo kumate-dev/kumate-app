@@ -2,17 +2,17 @@ import { useState } from 'react';
 import yaml from 'js-yaml';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
-interface CollapsibleYamlProps<T extends Record<string, any>> {
+interface YamlCollapsibleProps<T extends Record<string, any>> {
   label: string;
   data: T | string | null | undefined;
   truncateLength?: number;
 }
 
-export function CollapsibleYaml<T extends Record<string, any>>({
+export function YamlCollapsible<T extends Record<string, any>>({
   label,
   data,
   truncateLength = 40,
-}: CollapsibleYamlProps<T>) {
+}: YamlCollapsibleProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = () => setIsOpen((prev) => !prev);

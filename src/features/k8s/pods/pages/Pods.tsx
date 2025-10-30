@@ -8,6 +8,7 @@ import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PanePods from '../components/PanePods';
 import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
+import { useCreateK8sResource } from '@/hooks/useCreateK8sResource';
 
 export default function Pods({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -35,21 +36,7 @@ export default function Pods({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
-  const handleCreatePod = useCallback(
-    async (manifest: V1Pod) => {
-      try {
-        await createPod({
-          name: context?.name || 'default',
-          namespace: manifest.metadata?.namespace,
-          manifest: manifest,
-        });
-        toast.success('Pod created successfully');
-      } catch (error) {
-        toast.error(`Failed to create pod: ${error}`);
-      }
-    },
-    [context]
-  );
+  const { handleCreateResource } = useCreateK8sResource<V1Pod>(createPod, context);
 
   return (
     <PanePods
@@ -60,7 +47,7 @@ export default function Pods({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDeletePods={handleDeletePods}
-      onCreatePod={handleCreatePod}
+      onCreatePod={handleCreateResource}
     />
   );
 }
