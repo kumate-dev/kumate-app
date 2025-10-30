@@ -149,12 +149,12 @@ export function PaneGeneric<T>({
   const openCreateEditor = useCallback(() => {
     if (!yamlTemplate) return;
 
-    setEditorTitle(`Create ${columns[0]?.label || 'Resource'}`);
     const template = yamlTemplate(getDefaultNamespace());
+    setEditorTitle(`Create ${(template as any)?.kind || 'Resource'}`);
     setEditorYaml(template ? yaml.dump(template) : '');
     setEditorMode('create');
     setEditorOpen(true);
-  }, [yamlTemplate, getDefaultNamespace, columns]);
+  }, [yamlTemplate, getDefaultNamespace]);
 
   const openEditEditor = useCallback(
     (item: T) => {

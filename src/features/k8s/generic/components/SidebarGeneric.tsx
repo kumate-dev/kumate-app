@@ -5,7 +5,7 @@ import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
 import { ButtonEdit } from '@/components/common/ButtonEdit';
 import { ButtonTrash } from '@/components/common/ButtonTrash';
 
-export interface SidebarK8sResourcesProps<T> {
+export interface SidebarResourcesProps<T> {
   item: T | null;
   setItem: (item: T | null) => void;
   width?: number;
@@ -27,7 +27,7 @@ export function SidebarGeneric<T>({
   sections = [],
   onDelete,
   onEdit,
-}: SidebarK8sResourcesProps<T>) {
+}: SidebarResourcesProps<T>) {
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
   const [sectionsOpen, setSectionsOpen] = useState<Record<string, boolean>>({});
