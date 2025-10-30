@@ -2,11 +2,11 @@ import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React from 'react';
 
-interface BubbleTrashProps {
+interface ButtonDeleteProps {
   onDelete: () => void;
 }
 
-export const BubbleTrash: React.FC<BubbleTrashProps> = ({ onDelete }) => {
+export const ButtonDelete: React.FC<ButtonDeleteProps> = ({ onDelete }) => {
   return (
     <Button
       variant="destructive"

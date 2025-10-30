@@ -7,7 +7,7 @@ import { listSecrets, watchSecrets, deleteSecrets } from '@/api/k8s/secrets';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneSecrets from '../components/PaneSecrets';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function Secrets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

@@ -3,13 +3,13 @@ import { V1Namespace, V1Pod } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { SidebarK8sPods } from './SidebarPods';
-import { PaneResource } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
-import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
+import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { podHasPodWarning } from '../utils/podHasWarning';
 import { podDots } from '../utils/podDots';
 import { podRestartCount } from '../utils/podRestartCount';
-import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getPodStatus } from '../utils/podStatus';
 import { Warning } from '@/components/common/Warning';
 
@@ -21,6 +21,7 @@ export interface PanePodsProps {
   loading: boolean;
   error: string;
   onDeletePods: (pods: V1Pod[]) => Promise<void>;
+  onCreatePod?: (pod: V1Pod) => Promise<void>;
 }
 
 export default function PanePods({
@@ -31,6 +32,7 @@ export default function PanePods({
   loading,
   error,
   onDeletePods,
+  onCreatePod,
 }: PanePodsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Pod>('metadata');
@@ -61,6 +63,28 @@ export default function PanePods({
   const handleDeleteOne = async (item: V1Pod) => {
     await onDeletePods([item]);
     setSelectedPod(null);
+  };
+
+  const handleCreate = async () => {
+    if (!onCreatePod) return;
+
+    const defaultPodManifest: V1Pod = {
+      metadata: {
+        name: `pod-${Date.now()}`,
+        namespace: selectedNamespaces[0] !== 'all' ? selectedNamespaces[0] : 'default',
+      },
+      spec: {
+        containers: [
+          {
+            name: 'nginx',
+            image: 'nginx:latest',
+            ports: [{ containerPort: 80 }],
+          },
+        ],
+      },
+    };
+
+    await onCreatePod(defaultPodManifest);
   };
 
   const columns: ColumnDef<keyof V1Pod | ''>[] = [
@@ -154,6 +178,7 @@ export default function PanePods({
       onToggleItem={togglePod}
       onToggleAll={toggleAllPods}
       onDeleteSelected={handleDeleteSelected}
+      onCreate={onCreatePod ? handleCreate : undefined}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}
       renderRow={renderRow}

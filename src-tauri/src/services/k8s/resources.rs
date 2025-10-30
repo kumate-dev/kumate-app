@@ -5,7 +5,7 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::ObjectMeta, Metadata, Resource as K8sResource,
 };
 use kube::{
-    api::{Api, DeleteParams, ObjectList, WatchEvent, WatchParams},
+    api::{Api, DeleteParams, ObjectList, PostParams, WatchEvent, WatchParams},
     core::NamespaceResourceScope,
     Resource,
 };
@@ -37,6 +37,26 @@ where
             Some(v) if !v.is_empty() => v.into_iter().map(Some).collect(),
             _ => vec![None],
         }
+    }
+
+    pub async fn create(
+        context_name: String,
+        namespace: Option<String>,
+        manifest: Value,
+    ) -> Result<Value, String> {
+        let client: kube::Client = K8sClient::for_context(&context_name).await?;
+        let api: Api<T> = K8sClient::api::<T>(client, namespace.clone()).await;
+
+        let resource: T = serde_json::from_value(manifest)
+            .map_err(|e| format!("Failed to parse resource manifest: {}", e))?;
+
+        let pp: PostParams = PostParams::default();
+        let created: T = api
+            .create(&pp, &resource)
+            .await
+            .map_err(|e| Self::extract_error(&e, "create"))?;
+
+        serde_json::to_value(&created).map_err(|e| e.to_string())
     }
 
     pub async fn list(

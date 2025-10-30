@@ -7,7 +7,7 @@ import { listLimitRanges, watchLimitRanges, deleteLimitRanges } from '@/api/k8s/
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneLimitRanges from '../components/PaneLimitRanges';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function LimitRanges({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

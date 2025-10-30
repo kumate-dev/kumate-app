@@ -1,65 +1,65 @@
 import { useState, useCallback } from 'react';
-import { V1Secret, V1Namespace } from '@kubernetes/client-node';
+import { V1ResourceQuota, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import { PaneResource } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
-import { BadgeStatus } from '../../generic/components/BadgeStatus';
-import { getSecretTypeStatus } from '../utils/secretTypeStatus';
 
-export interface PaneSecretsProps {
+export interface PaneResourceQuotasProps {
   selectedNamespaces: string[];
   onSelectNamespace: (namespaces: string[]) => void;
   namespaceList: V1Namespace[];
-  items: V1Secret[];
+  items: V1ResourceQuota[];
   loading: boolean;
   error: string;
-  onDeleteSecrets: (secrets: V1Secret[]) => Promise<void>;
+  onDeleteResourceQuotas: (resourceQuotas: V1ResourceQuota[]) => Promise<void>;
 }
 
-export default function PaneSecrets({
+export default function PaneResourceQuotas({
   selectedNamespaces,
   onSelectNamespace,
   namespaceList,
   items,
   loading,
   error,
-  onDeleteSecrets,
-}: PaneSecretsProps) {
+  onDeleteResourceQuotas,
+}: PaneResourceQuotasProps) {
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1Secret>('metadata');
+  const [sortBy, setSortBy] = useState<keyof V1ResourceQuota>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1Secret[]>([]);
+  const [selectedItems, setSelectedItems] = useState<V1ResourceQuota[]>([]);
 
-  const toggleItem = useCallback((secret: V1Secret) => {
-    setSelectedItems((prev) =>
-      prev.includes(secret) ? prev.filter((s) => s !== secret) : [...prev, secret]
-    );
+  const toggleItem = useCallback((rq: V1ResourceQuota) => {
+    setSelectedItems((prev) => (prev.includes(rq) ? prev.filter((r) => r !== rq) : [...prev, rq]));
   }, []);
 
   const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
-    },
+    (checked: boolean) => setSelectedItems(checked ? [...items] : []),
     [items]
   );
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
-    await onDeleteSecrets(selectedItems);
+    await onDeleteResourceQuotas(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, onDeleteSecrets]);
+  }, [selectedItems, onDeleteResourceQuotas]);
 
-  const getDataKeys = (secret: V1Secret): string => {
-    return secret.data ? Object.keys(secret.data).join(', ') : '-';
+  const renderKeyValue = (
+    map?: Record<string, string | number>
+  ): { display: string; title: string } => {
+    if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
+    const text = Object.entries(map)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+    return { display: text, title: text };
   };
 
-  const columns: ColumnDef<keyof V1Secret | ''>[] = [
+  const columns: ColumnDef<keyof V1ResourceQuota | ''>[] = [
     { label: 'Name', key: 'metadata' },
     { label: 'Namespace', key: 'metadata' },
-    { label: 'Type', key: 'type' },
-    { label: 'Data Keys', key: 'data' },
+    { label: 'Hard', key: 'status' },
+    { label: 'Used', key: 'status' },
     { label: 'Age', key: 'metadata' },
   ];
 
@@ -76,28 +76,27 @@ export default function PaneSecrets({
     />
   );
 
-  const renderRow = (secret: V1Secret) => {
-    const dataKeys = getDataKeys(secret);
+  const renderRow = (rq: V1ResourceQuota) => {
+    const hardResources = renderKeyValue(rq.status?.hard as Record<string, string>);
+    const usedResources = renderKeyValue(rq.status?.used as Record<string, string>);
 
     return (
       <>
         <Td className="max-w-truncate align-middle">
-          <span className="block truncate" title={secret.metadata?.name}>
-            {secret.metadata?.name}
+          <span className="block truncate" title={rq.metadata?.name}>
+            {rq.metadata?.name}
           </span>
         </Td>
         <Td>
-          <BadgeNamespaces name={secret.metadata?.namespace ?? ''} />
+          <BadgeNamespaces name={rq.metadata?.namespace ?? ''} />
         </Td>
-        <Td>
-          <BadgeStatus status={getSecretTypeStatus(secret)} />
+        <Td className="max-w-truncate" title={hardResources.title}>
+          {hardResources.display}
         </Td>
-        <Td className="max-w-truncate">
-          <span className="block truncate" title={dataKeys}>
-            {dataKeys}
-          </span>
+        <Td className="max-w-truncate" title={usedResources.title}>
+          {usedResources.display}
         </Td>
-        <AgeCell timestamp={secret.metadata?.creationTimestamp ?? ''} />
+        <AgeCell timestamp={rq.metadata?.creationTimestamp ?? ''} />
       </>
     );
   };

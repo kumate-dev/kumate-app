@@ -1,10 +1,10 @@
 import type { V1Pod } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
-import { SidebarK8sResources } from '../../common/components/SidebarGeneric';
+import { SidebarK8sResources } from '../../generic/components/SidebarGeneric';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
-import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
+import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getPodStatus } from '../utils/podStatus';
 
 interface SidebarPodsProps {

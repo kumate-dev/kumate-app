@@ -4,9 +4,9 @@ import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
-import { PaneResource } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../generic/components/PaneGeneric';
 import { BadgeVariant } from '@/types/variant';
-import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNodeStatus } from '../utils/nodeStatus';
 
 export interface PaneNodesProps {

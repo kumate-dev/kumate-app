@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
 import { V1ReplicaSet, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
-import { PaneResource } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
-import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
+import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
-import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getReplicaSetStatus } from '../utils/replicaSetStatus';
 
 export interface PaneReplicaSetsProps {

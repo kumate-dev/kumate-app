@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { V1LimitRange, V1Namespace } from '@kubernetes/client-node';
-import { PaneResource } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
+import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 
 export interface PaneLimitRangesProps {
   selectedNamespaces: string[];

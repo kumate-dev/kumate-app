@@ -7,7 +7,7 @@ import { listDeployments, watchDeployments, deleteDeployments } from '@/api/k8s/
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneDeployments from '../components/PaneDeployments';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function Deployments({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

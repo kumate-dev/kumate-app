@@ -3,11 +3,11 @@ import { V1Pod } from '@kubernetes/client-node';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listPods, watchPods, deletePods } from '@/api/k8s/pods';
+import { listPods, watchPods, deletePods, createPod } from '@/api/k8s/pods';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PanePods from '../components/PanePods';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function Pods({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -35,6 +35,22 @@ export default function Pods({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreatePod = useCallback(
+    async (manifest: V1Pod) => {
+      try {
+        await createPod({
+          name: context?.name || 'default',
+          namespace: manifest.metadata?.namespace,
+          manifest: manifest,
+        });
+        toast.success('Pod created successfully');
+      } catch (error) {
+        toast.error(`Failed to create pod: ${error}`);
+      }
+    },
+    [context]
+  );
+
   return (
     <PanePods
       selectedNamespaces={selectedNamespaces}
@@ -44,6 +60,7 @@ export default function Pods({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDeletePods={handleDeletePods}
+      onCreatePod={handleCreatePod}
     />
   );
 }

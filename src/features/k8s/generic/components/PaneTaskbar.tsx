@@ -1,10 +1,11 @@
 import { ALL_NAMESPACES } from '@/constants/k8s';
-import { PaneSearch } from '@/components/common/Search';
+import { Search } from '@/components/common/Search';
 import { Check } from 'lucide-react';
 import { Dropdown } from '@/components/common/Dropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
-import { BubbleTrash } from './BubbleTrash';
+import { ButtonDelete } from '../../../../components/common/ButtonTrash';
 import { V1Namespace } from '@kubernetes/client-node';
+import { ButtonCreate } from '@/components/common/ButtonCreate';
 
 interface PaneTaskbarProps {
   namespaceList?: V1Namespace[];
@@ -15,17 +16,19 @@ interface PaneTaskbarProps {
   showNamespace?: boolean;
   selectedCount?: number;
   onDeleteSelected?: () => void;
+  onCreate?: () => void;
 }
 
 export function PaneTaskbar({
   namespaceList = [],
   selectedNamespaces = [ALL_NAMESPACES],
   onSelectNamespace,
-  selectedCount = 0,
-  onDeleteSelected,
   query,
   onQueryChange,
   showNamespace = true,
+  selectedCount = 0,
+  onDeleteSelected,
+  onCreate,
 }: PaneTaskbarProps) {
   const toggleNamespace = (ns: string) => {
     if (!onSelectNamespace) return;
@@ -68,17 +71,16 @@ export function PaneTaskbar({
         </Dropdown>
       )}
 
-      <PaneSearch
+      <Search
         query={query}
         onQueryChange={onQueryChange}
         className="max-w-xs min-w-0 flex-shrink"
       />
 
-      {selectedCount > 0 && onDeleteSelected && (
-        <div className="ml-auto">
-          <BubbleTrash onDelete={onDeleteSelected} />
-        </div>
-      )}
+      <div className="ml-auto flex items-center gap-2">
+        {selectedCount > 0 && onDeleteSelected && <ButtonDelete onDelete={onDeleteSelected} />}
+        {onCreate && <ButtonCreate onCreate={onCreate} />}
+      </div>
     </div>
   );
 }

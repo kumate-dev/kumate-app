@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactNode, useRef } from 'react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BubbleTrash } from '../../../../components/common/BubbleTrash';
+import { ButtonDelete } from '../../../../components/common/ButtonTrash';
 import { ModalConfirmDelete } from '../../../../components/common/ModalConfirmDelete';
 
 export interface SidebarK8sResourcesProps<T> {
@@ -123,7 +123,7 @@ export function SidebarK8sResources<T>({
         </div>
 
         <div className="flex flex-shrink-0 justify-end gap-2 border-t border-white/10 p-4">
-          {onDelete && <BubbleTrash onDelete={() => setOpenDeleteModal(true)} />}
+          {onDelete && <ButtonDelete onDelete={() => setOpenDeleteModal(true)} />}
         </div>
       </div>
 

@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
 import { V1HorizontalPodAutoscaler, V1Namespace } from '@kubernetes/client-node';
-import { PaneResource } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
-import { BadgeStatus } from '@/features/k8s/common/components/BadgeStatus';
+import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
+import { BadgeStatus } from '@/features/k8s/generic/components/BadgeStatus';
 import { getHorizontalPodAutoscalerStatus } from '../utils/horizontalPodAutoscalersStatus';
 
 export interface PaneHorizontalPodAutoscalersProps {

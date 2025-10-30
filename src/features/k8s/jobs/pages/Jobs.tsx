@@ -7,7 +7,7 @@ import { listJobs, watchJobs, deleteJobs } from '@/api/k8s/jobs';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneJobs from '../components/PaneJobs';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function Jobs({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

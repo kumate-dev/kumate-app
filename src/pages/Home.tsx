@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { SidebarMenu } from '@/features/k8s/common/components/SidebarMenu';
+import { SidebarMenu } from '@/features/k8s/generic/components/SidebarMenu';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';

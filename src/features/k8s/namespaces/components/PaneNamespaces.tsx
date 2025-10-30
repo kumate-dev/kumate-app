@@ -3,8 +3,8 @@ import { V1Namespace } from '@kubernetes/client-node';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
-import { PaneResource } from '../../common/components/PaneGeneric';
-import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { PaneResource } from '../../generic/components/PaneGeneric';
+import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNamespaceStatus } from '../utils/namespaceStatus';
 
 export interface PaneNamespacesProps {

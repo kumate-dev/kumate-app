@@ -7,7 +7,7 @@ import { listConfigMaps, watchConfigMaps, deleteConfigMaps } from '@/api/k8s/con
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneConfigMaps from '../components/PaneConfigMaps';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function ConfigMaps({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

@@ -7,7 +7,7 @@ import { listStatefulSets, watchStatefulSets, deleteStatefulSets } from '@/api/k
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneStatefulSets from '../components/PaneStatefulSets';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function StatefulSets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

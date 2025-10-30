@@ -7,7 +7,7 @@ import { listCronJobs, watchCronJobs, deleteCronJobs } from '@/api/k8s/cronJobs'
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneCronJobs from '../components/PaneCronJobs';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function CronJobs({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

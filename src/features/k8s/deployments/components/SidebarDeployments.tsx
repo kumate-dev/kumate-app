@@ -1,10 +1,10 @@
 import type { V1Deployment } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
+import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarK8sResources } from '../../common/components/SidebarGeneric';
-import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { SidebarK8sResources } from '../../generic/components/SidebarGeneric';
+import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getDeploymentStatus } from '../utils/deploymentStatus';
 
 interface SidebarDeploymentsProps {

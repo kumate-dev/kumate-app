@@ -64,6 +64,7 @@ pub fn run() {
             namespaces::list_namespaces,
             namespaces::watch_namespaces,
             namespaces::delete_namespaces,
+            pods::create_pod,
             pods::list_pods,
             pods::watch_pods,
             pods::delete_pods,

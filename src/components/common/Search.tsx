@@ -1,12 +1,12 @@
 import { Input } from '@/components/ui/input';
 
-interface PaneSearchProps {
+interface SearchProps {
   query: string;
   onQueryChange: (q: string) => void;
   className?: string;
 }
 
-export function PaneSearch({ query, onQueryChange, className = 'max-w-xs' }: PaneSearchProps) {
+export function Search({ query, onQueryChange, className = 'max-w-xs' }: SearchProps) {
   return (
     <Input
       placeholder="Search..."

@@ -9,6 +9,18 @@ export interface PodEvent {
   object: V1Pod;
 }
 
+export async function createPod({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Pod;
+}): Promise<V1Pod> {
+  return await invoke<V1Pod>('create_pod', { name, namespace, manifest });
+}
+
 export async function listPods({
   name,
   namespaces,

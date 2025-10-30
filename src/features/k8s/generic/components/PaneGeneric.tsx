@@ -1,7 +1,7 @@
 import { ReactNode, useRef, useState, useEffect } from 'react';
 import { V1Namespace } from '@kubernetes/client-node';
-import { PaneTaskbar } from '@/components/common/Taskbar';
-import { PaneSearch } from '@/components/common/Search';
+import { PaneTaskbar } from '@/features/k8s/generic/components/PaneTaskbar';
+import { Search } from '@/components/common/Search';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
@@ -28,6 +28,7 @@ export interface PaneResourceProps<T> {
   onToggleItem?: (item: T) => void;
   onToggleAll?: (checked: boolean) => void;
   onDeleteSelected?: () => void;
+  onCreate?: () => void; // Thêm prop onCreate
   renderRow: (item: T) => ReactNode;
   onRowClick?: (item: T) => void;
   emptyText?: string;
@@ -50,6 +51,7 @@ export function PaneResource<T>({
   selectedItems = [],
   onToggleItem,
   onDeleteSelected,
+  onCreate,
   renderRow,
   onRowClick,
   emptyText = 'No items',
@@ -78,6 +80,12 @@ export function PaneResource<T>({
     setOpenDeleteModal(true);
   };
 
+  const handleCreate = () => {
+    if (onCreate) {
+      onCreate();
+    }
+  };
+
   return (
     <div className="flex h-full flex-col space-y-3">
       {(showNamespace && onSelectNamespace) || !showNamespace ? (
@@ -90,10 +98,11 @@ export function PaneResource<T>({
           showNamespace={showNamespace}
           selectedCount={selectedItems?.length || 0}
           onDeleteSelected={handleDeleteClick}
+          onCreate={onCreate ? handleCreate : undefined}
         />
       ) : (
         <div className="mb-4">
-          <PaneSearch query={query} onQueryChange={onQueryChange} />
+          <Search query={query} onQueryChange={onQueryChange} />
         </div>
       )}
 
@@ -162,9 +171,7 @@ export function PaneResource<T>({
         </div>
 
         {selectedItem && renderSidebar && (
-          <div className="w-[550px]">
-            {renderSidebar(selectedItem, tableRef)}
-          </div>
+          <div className="w-[550px]">{renderSidebar(selectedItem, tableRef)}</div>
         )}
       </div>
 

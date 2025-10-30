@@ -7,7 +7,7 @@ import { listDaemonSets, watchDaemonSets, deleteDaemonSets } from '@/api/k8s/dae
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneDaemonSets from '../components/PaneDaemonSets';
-import { PaneResourceContextProps } from '../../common/components/PaneGeneric';
+import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
 
 export default function DaemonSets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);

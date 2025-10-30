@@ -3,12 +3,12 @@ import { V1Deployment, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import { AlertTriangle } from 'lucide-react';
 import { SidebarK8sDeployments } from './SidebarDeployments';
-import { PaneResource } from '../../common/components/PaneGeneric';
+import { PaneResource } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
-import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
+import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { getDeploymentStatus } from '../utils/deploymentStatus';
-import { BadgeStatus } from '../../common/components/BadgeStatus';
+import { BadgeStatus } from '../../generic/components/BadgeStatus';
 
 export interface PaneDeploymentsProps {
   selectedNamespaces: string[];

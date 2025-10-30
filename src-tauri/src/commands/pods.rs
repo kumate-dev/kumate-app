@@ -8,6 +8,15 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_pod(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<Pod>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_pods(
     name: String,
     namespaces: Option<Vec<String>>,
