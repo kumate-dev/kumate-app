@@ -9,12 +9,12 @@ interface YamlEditorProps {
   onError?: (error: string | null) => void;
 }
 
-export function YamlEditor({ 
-  value, 
-  onChange, 
-  height = '400px', 
+export function YamlEditor({
+  value,
+  onChange,
+  height = '400px',
   readOnly = false,
-  onError 
+  onError,
 }: YamlEditorProps) {
   const [isValid, setIsValid] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -56,10 +56,10 @@ export function YamlEditor({
       const textarea = e.currentTarget as HTMLTextAreaElement;
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      
+
       const newValue = value.substring(0, start) + '  ' + value.substring(end);
       onChange(newValue);
-      
+
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.selectionStart = start + 2;
@@ -70,9 +70,9 @@ export function YamlEditor({
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div 
-        className={`flex-1 border rounded-md overflow-hidden ${
+    <div className="flex h-full w-full flex-col">
+      <div
+        className={`flex-1 overflow-hidden rounded-md border ${
           isValid ? 'border-white/20' : 'border-red-500'
         } ${readOnly ? 'opacity-70' : ''}`}
       >
@@ -82,7 +82,7 @@ export function YamlEditor({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           readOnly={readOnly}
-          className={`w-full h-full font-mono text-sm bg-neutral-800 text-white p-4 resize-none focus:outline-none ${
+          className={`h-full w-full resize-none bg-neutral-800 p-4 font-mono text-sm text-white focus:outline-none ${
             readOnly ? 'cursor-not-allowed' : ''
           }`}
           style={{ height }}
@@ -90,15 +90,15 @@ export function YamlEditor({
           spellCheck={false}
         />
       </div>
-      
+
       {errorMessage && (
-        <div className="mt-2 p-2 bg-red-900/50 border border-red-500 rounded text-red-200 text-sm">
+        <div className="mt-2 rounded border border-red-500 bg-red-900/50 p-2 text-sm text-red-200">
           {errorMessage}
         </div>
       )}
-      
+
       {!isValid && !readOnly && (
-        <div className="mt-2 text-yellow-400 text-sm">
+        <div className="mt-2 text-sm text-yellow-400">
           YAML syntax error. Please fix before saving.
         </div>
       )}

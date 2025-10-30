@@ -2,11 +2,7 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 
 export function useCreateK8sResource<T>(
-  createFn: (params: {
-    name: string;
-    namespace?: string;
-    manifest: T;
-  }) => Promise<T>,
+  createFn: (params: { name: string; namespace?: string; manifest: T }) => Promise<T>,
   context?: { name: string } | null
 ) {
   const [creating, setCreating] = useState(false);
@@ -18,7 +14,7 @@ export function useCreateK8sResource<T>(
       return;
     }
 
-    const resourceName = (manifest as any).kind
+    const resourceName = (manifest as any).kind;
 
     setCreating(true);
     try {
@@ -27,7 +23,7 @@ export function useCreateK8sResource<T>(
         namespace: (manifest as any).metadata?.namespace,
         manifest: manifest,
       });
-      
+
       toast.success(`${resourceName} ${name} created successfully`);
       return result;
     } catch (error) {
@@ -38,8 +34,8 @@ export function useCreateK8sResource<T>(
     }
   };
 
-  return { 
-    handleCreateResource, 
-    creating 
+  return {
+    handleCreateResource,
+    creating,
   };
 }
