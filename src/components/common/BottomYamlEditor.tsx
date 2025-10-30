@@ -3,15 +3,7 @@ import yaml from 'js-yaml';
 import { YamlEditor } from './YamlEditor';
 import { ButtonCancel } from './ButtonCancel';
 import { ButtonSave } from './ButtonSave';
-
-interface BottomYamlEditorProps {
-  open: boolean;
-  title?: string;
-  mode: 'create' | 'edit';
-  initialYaml: string;
-  onClose: () => void;
-  onSave: (manifest: any) => Promise<void> | void;
-}
+import { YamlEditorProps } from '@/types/yaml';
 
 export default function BottomYamlEditor({
   open,
@@ -20,7 +12,7 @@ export default function BottomYamlEditor({
   initialYaml,
   onClose,
   onSave,
-}: BottomYamlEditorProps) {
+}: YamlEditorProps) {
   const [yamlText, setYamlText] = useState(initialYaml);
   const [yamlError, setYamlError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);

@@ -8,11 +8,11 @@ import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { getDeploymentStatus } from '../utils/deploymentStatus';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
-import BottomYamlEditor from '@/components/common/BottomYamlEditor';
 import yaml from 'js-yaml';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 import { templateDeployment } from '../../templates/TemplateDeployment';
 import { toast } from 'sonner';
+import { YamlEditorProps } from '@/types/yaml';
 
 export interface PaneDeploymentsProps {
   selectedNamespaces: string[];
@@ -22,8 +22,8 @@ export interface PaneDeploymentsProps {
   loading: boolean;
   error: string;
   onDelete: (deployments: V1Deployment[]) => Promise<void>;
-  onCreateResource?: (manifest: V1Deployment) => Promise<V1Deployment | undefined>;
-  onUpdateResource?: (manifest: V1Deployment) => Promise<V1Deployment | undefined>;
+  onCreate?: (manifest: V1Deployment) => Promise<V1Deployment | undefined>;
+  onUpdate?: (manifest: V1Deployment) => Promise<V1Deployment | undefined>;
   contextName?: string;
 }
 
@@ -35,8 +35,8 @@ export default function PaneDeployments({
   loading,
   error,
   onDelete,
-  onCreateResource,
-  onUpdateResource,
+  onCreate,
+  onUpdate,
   contextName,
 }: PaneDeploymentsProps) {
   const [q, setQ] = useState('');
@@ -103,9 +103,9 @@ export default function PaneDeployments({
 
     try {
       if (editorMode === 'create') {
-        await onCreateResource?.(manifest as V1Deployment);
+        await onCreate?.(manifest as V1Deployment);
       } else {
-        await onUpdateResource?.(manifest as V1Deployment);
+        await onUpdate?.(manifest as V1Deployment);
       }
       setEditorOpen(false);
     } catch (err) {
@@ -160,36 +160,36 @@ export default function PaneDeployments({
     />
   );
 
+  const onYamlEditor: YamlEditorProps = {
+    open: editorOpen,
+    title: editorTitle,
+    mode: editorMode,
+    initialYaml: editorYaml,
+    onClose: () => setEditorOpen(false),
+    onSave: handleSave,
+  };
+
   return (
-    <>
-      <PaneGeneric
-        items={items}
-        loading={loading}
-        error={error}
-        query={q}
-        onQueryChange={setQ}
-        namespaceList={namespaceList}
-        selectedNamespaces={selectedNamespaces}
-        onSelectNamespace={onSelectNamespace}
-        selectedItems={selectedItems}
-        onToggleItem={toggleItem}
-        onCreate={openCreateEditor}
-        onDelete={handleDeleteSelected}
-        colSpan={columns.length + 1}
-        tableHeader={tableHeader}
-        onRowClick={setSelectedItem}
-        renderRow={renderRow}
-        selectedItem={selectedItem}
-        renderSidebar={renderSidebar}
-      />
-      <BottomYamlEditor
-        open={editorOpen}
-        title={editorTitle}
-        mode={editorMode}
-        initialYaml={editorYaml}
-        onClose={() => setEditorOpen(false)}
-        onSave={handleSave}
-      />
-    </>
+    <PaneGeneric
+      items={items}
+      loading={loading}
+      error={error}
+      query={q}
+      onQueryChange={setQ}
+      namespaceList={namespaceList}
+      selectedNamespaces={selectedNamespaces}
+      onSelectNamespace={onSelectNamespace}
+      selectedItems={selectedItems}
+      onToggleItem={toggleItem}
+      onCreate={openCreateEditor}
+      onDelete={handleDeleteSelected}
+      colSpan={columns.length + 1}
+      tableHeader={tableHeader}
+      onRowClick={setSelectedItem}
+      renderRow={renderRow}
+      selectedItem={selectedItem}
+      renderSidebar={renderSidebar}
+      onYamlEditor={onYamlEditor}
+    />
   );
 }

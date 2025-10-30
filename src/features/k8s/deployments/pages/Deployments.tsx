@@ -55,8 +55,8 @@ export default function Deployments({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDelete={handleDeleteDeployments}
-      onCreateResource={handleCreateResource}
-      onUpdateResource={handleUpdateResource}
+      onCreate={handleCreateResource}
+      onUpdate={handleUpdateResource}
       contextName={context?.name}
     />
   );

@@ -8,6 +8,8 @@ import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
 import { Skeleton } from '@/components/ui/skeleton';
 import { K8sContext } from '@/api/k8s/contexts';
+import BottomYamlEditor from '@/components/common/BottomYamlEditor';
+import { YamlEditorProps } from '@/types/yaml';
 
 export interface PaneResourceContextProps {
   context?: K8sContext | null;
@@ -36,6 +38,7 @@ export interface PaneResourceProps<T> {
   tableHeader?: ReactNode;
   renderSidebar?: (item: T, tableRef: React.RefObject<HTMLTableElement | null>) => ReactNode;
   onCloseSidebar?: () => void;
+  onYamlEditor?: YamlEditorProps;
 }
 
 export function PaneGeneric<T>({
@@ -59,6 +62,7 @@ export function PaneGeneric<T>({
   tableHeader,
   selectedItem,
   renderSidebar,
+  onYamlEditor,
 }: PaneResourceProps<T>) {
   const totalColSpan = (colSpan || 0) + (onToggleItem ? 1 : 0);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -177,6 +181,15 @@ export function PaneGeneric<T>({
           onConfirm={onDelete}
         />
       )}
+
+      <BottomYamlEditor
+        open={onYamlEditor?.open || false}
+        title={onYamlEditor?.title}
+        mode={onYamlEditor?.mode || 'create'}
+        initialYaml={onYamlEditor?.initialYaml || ''}
+        onClose={onYamlEditor?.onClose || (() => {})}
+        onSave={onYamlEditor?.onSave || (async () => {})}
+      />
     </div>
   );
 }
