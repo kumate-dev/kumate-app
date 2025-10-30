@@ -19,7 +19,7 @@ export interface SidebarK8sResourcesProps<T> {
   onEdit?: (item: T) => void;
 }
 
-export function SidebarK8sResources<T>({
+export function SidebarGeneric<T>({
   item,
   setItem,
   width = 550,

@@ -39,7 +39,6 @@ export interface PaneResourceProps<T> {
 
   // Yaml editor
   yamlTemplate?: (defaultNamespace?: string) => T;
-  onYamlSave?: (manifest: any, mode: 'create' | 'edit') => Promise<void>;
 
   // Optional overrides
   showNamespace?: boolean;
@@ -77,7 +76,6 @@ export function PaneGeneric<T>({
 
   // Yaml editor
   yamlTemplate,
-  onYamlSave,
 
   // Optional overrides
   showNamespace = true,

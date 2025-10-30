@@ -1,17 +1,18 @@
-import { useState, useCallback, RefObject } from 'react';
 import { V1Namespace, V1Pod } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { SidebarK8sPods } from './SidebarPods';
+import { SidebarPods } from './SidebarPods';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
-import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
+import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { podHasPodWarning } from '../utils/podHasWarning';
-import { podDots } from '../utils/podDots';
 import { podRestartCount } from '../utils/podRestartCount';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getPodStatus } from '../utils/podStatus';
 import { Warning } from '@/components/common/Warning';
+import { useCallback, RefObject } from 'react';
+import { templatePod } from '../../templates/pod';
+import { DotContainers } from './DotContainers';
 
 export interface PanePodsProps {
   selectedNamespaces: string[];
@@ -20,8 +21,10 @@ export interface PanePodsProps {
   items: V1Pod[];
   loading: boolean;
   error: string;
-  onDeletePods: (pods: V1Pod[]) => Promise<void>;
-  onCreatePod?: (pod: V1Pod) => Promise<V1Pod | undefined>;
+  onDelete: (pods: V1Pod[]) => Promise<void>;
+  onCreate?: (manifest: V1Pod) => Promise<V1Pod | undefined>;
+  onUpdate?: (manifest: V1Pod) => Promise<V1Pod | undefined>;
+  contextName?: string;
 }
 
 export default function PanePods({
@@ -31,63 +34,12 @@ export default function PanePods({
   items,
   loading,
   error,
-  onDeletePods,
-  onCreatePod,
+  onDelete,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PanePodsProps) {
-  const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1Pod>('metadata');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedPods, setSelectedPods] = useState<V1Pod[]>([]);
-  const [selectedPod, setSelectedPod] = useState<V1Pod | null>(null);
-
-  const togglePod = useCallback((pod: V1Pod) => {
-    setSelectedPods((prev) =>
-      prev.includes(pod) ? prev.filter((p) => p !== pod) : [...prev, pod]
-    );
-  }, []);
-
-  const toggleAllPods = useCallback(
-    (checked: boolean) => {
-      setSelectedPods(checked ? [...items] : []);
-    },
-    [items]
-  );
-
-  const handleDeleteSelected = useCallback(async () => {
-    if (selectedPods.length === 0) return;
-    await onDeletePods(selectedPods);
-    setSelectedPods([]);
-    setSelectedPod(null);
-  }, [selectedPods, onDeletePods]);
-
-  const handleDeleteOne = async (item: V1Pod) => {
-    await onDeletePods([item]);
-    setSelectedPod(null);
-  };
-
-  const handleCreate = async () => {
-    if (!onCreatePod) return;
-
-    const defaultPodManifest: V1Pod = {
-      metadata: {
-        name: `pod-${Date.now()}`,
-        namespace: selectedNamespaces[0] !== 'all' ? selectedNamespaces[0] : 'default',
-      },
-      spec: {
-        containers: [
-          {
-            name: 'nginx',
-            image: 'nginx:latest',
-            ports: [{ containerPort: 80 }],
-          },
-        ],
-      },
-    };
-
-    await onCreatePod(defaultPodManifest);
-  };
-
-  const columns: ColumnDef<keyof V1Pod | ''>[] = [
+  const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'metadata' },
     { label: '', key: '', sortable: false },
     { label: 'Namespace', key: 'metadata' },
@@ -102,19 +54,6 @@ export default function PanePods({
     { label: 'Status', key: 'status' },
   ];
 
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAllPods}
-      selectedItems={selectedPods}
-      totalItems={items}
-    />
-  );
-
   const renderRow = (pod: V1Pod) => (
     <>
       <Td className="max-w-truncate align-middle">
@@ -127,20 +66,10 @@ export default function PanePods({
         <BadgeNamespaces name={pod.metadata?.namespace ?? ''} />
       </Td>
       <Td className="align-middle">
-        <div className="inline-flex items-center gap-1">
-          {pod.status?.containerStatuses?.length
-            ? pod.status.containerStatuses.map((st, idx) => (
-                <span
-                  key={idx}
-                  className={`h-2.5 w-2.5 rounded-full ${podDots(
-                    st.state?.waiting?.reason || st.state?.terminated?.reason
-                  )}`}
-                />
-              ))
-            : Array.from({ length: pod.spec?.containers?.length || 0 }).map((_, idx) => (
-                <span key={idx} className="h-2.5 w-2.5 rounded-full bg-white/30" />
-              ))}
-        </div>
+        <DotContainers
+          containerStatuses={pod.status?.containerStatuses}
+          containersCount={pod.spec?.containers?.length}
+        />
       </Td>
       <Td>{pod.spec?.containers?.map((c) => c.resources?.requests?.cpu).join(', ') || '-'}</Td>
       <Td>{pod.spec?.containers?.map((c) => c.resources?.requests?.memory).join(', ') || '-'}</Td>
@@ -155,13 +84,25 @@ export default function PanePods({
     </>
   );
 
-  const renderSidebar = (item: V1Pod, tableRef: RefObject<HTMLTableElement | null>) => (
-    <SidebarK8sPods
-      item={item}
-      setItem={setSelectedPod}
-      onDelete={handleDeleteOne}
-      tableRef={tableRef}
-    />
+  const renderSidebar = useCallback(
+    (
+      item: V1Pod,
+      tableRef: RefObject<HTMLTableElement | null>,
+      actions: {
+        setItem: (item: V1Pod | null) => void;
+        onDelete?: (item: V1Pod) => void;
+        onEdit?: (item: V1Pod) => void;
+      }
+    ) => (
+      <SidebarPods
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+        tableRef={tableRef}
+      />
+    ),
+    []
   );
 
   return (
@@ -169,22 +110,18 @@ export default function PanePods({
       items={items}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedPods}
-      onToggleItem={togglePod}
-      onToggleAll={toggleAllPods}
-      onDelete={handleDeleteSelected}
-      onCreate={onCreatePod ? handleCreate : undefined}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
+      columns={columns}
       renderRow={renderRow}
-      onRowClick={setSelectedPod}
-      selectedItem={selectedPod}
+      emptyText="No pods found"
+      onDelete={onDelete}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      yamlTemplate={templatePod}
       renderSidebar={renderSidebar}
+      contextName={contextName}
     />
   );
 }

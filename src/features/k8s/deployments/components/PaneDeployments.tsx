@@ -7,7 +7,7 @@ import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { getDeploymentStatus } from '../utils/deploymentStatus';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
-import { templateDeployment } from '../../templates/TemplateDeployment';
+import { templateDeployment } from '../../templates/deployment';
 import { useCallback, RefObject } from 'react';
 
 export interface PaneDeploymentsProps {
@@ -80,39 +80,21 @@ export default function PaneDeployments({
     []
   );
 
-  const handleYamlSave = async (manifest: any, mode: 'create' | 'edit') => {
-    if (!contextName) {
-      throw new Error('Missing context name.');
-    }
-
-    if (mode === 'create') {
-      await onCreate?.(manifest);
-    } else {
-      await onUpdate?.(manifest);
-    }
-  };
-
   return (
     <PaneGeneric
-      // Data props
       items={items}
       loading={loading}
       error={error}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      // Table configuration
       columns={columns}
       renderRow={renderRow}
       emptyText="No deployments found"
-      // Action handlers
       onDelete={onDelete}
       onCreate={onCreate}
       onUpdate={onUpdate}
-      // Yaml editor
       yamlTemplate={templateDeployment}
-      onYamlSave={handleYamlSave}
-      // Sidebar
       renderSidebar={renderSidebar}
       contextName={contextName}
     />

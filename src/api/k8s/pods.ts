@@ -21,6 +21,18 @@ export async function createPod({
   return await invoke<V1Pod>('create_pod', { name, namespace, manifest });
 }
 
+export async function updatePod({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Pod;
+}): Promise<V1Pod> {
+  return await invoke<V1Pod>('update_pod', { name, namespace, manifest });
+}
+
 export async function listPods({
   name,
   namespaces,

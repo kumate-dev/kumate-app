@@ -3,7 +3,7 @@ import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarK8sResources } from '../../generic/components/SidebarGeneric';
+import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getDeploymentStatus } from '../utils/deploymentStatus';
 
@@ -90,7 +90,7 @@ export function SidebarK8sDeployments({
     : [];
 
   return (
-    <SidebarK8sResources
+    <SidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}

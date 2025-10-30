@@ -1,6 +1,6 @@
 import type { V1Pod } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
-import { SidebarK8sResources } from '../../generic/components/SidebarGeneric';
+import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
@@ -11,10 +11,11 @@ interface SidebarPodsProps {
   item: V1Pod | null;
   setItem: (item: V1Pod | null) => void;
   onDelete?: (item: V1Pod) => void;
+  onEdit?: (item: V1Pod) => void;
   tableRef?: React.RefObject<HTMLTableElement | null>;
 }
 
-export function SidebarK8sPods({ item, setItem, onDelete, tableRef }: SidebarPodsProps) {
+export function SidebarPods({ item, setItem, onDelete, onEdit, tableRef }: SidebarPodsProps) {
   const renderOverview = (pod: V1Pod) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -71,6 +72,21 @@ export function SidebarK8sPods({ item, setItem, onDelete, tableRef }: SidebarPod
           </Tr>
 
           <Tr>
+            <Td>Pod IP</Td>
+            <Td>{pod.status?.podIP ?? '-'}</Td>
+          </Tr>
+
+          <Tr>
+            <Td>Host IP</Td>
+            <Td>{pod.status?.hostIP ?? '-'}</Td>
+          </Tr>
+
+          <Tr>
+            <Td>Service Account</Td>
+            <Td>{pod.spec?.serviceAccountName ?? 'default'}</Td>
+          </Tr>
+
+          <Tr>
             <Td>Status</Td>
             <Td>
               <BadgeStatus status={getPodStatus(pod)} />
@@ -84,19 +100,20 @@ export function SidebarK8sPods({ item, setItem, onDelete, tableRef }: SidebarPod
   const sections = item
     ? [
         {
-          key: 'overview',
-          title: 'Overview',
+          key: 'properties',
+          title: 'Properties',
           content: (i: V1Pod) => renderOverview(i),
         },
       ]
     : [];
 
   return (
-    <SidebarK8sResources
+    <SidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}
       onDelete={onDelete}
+      onEdit={onEdit}
       tableRef={tableRef}
     />
   );
