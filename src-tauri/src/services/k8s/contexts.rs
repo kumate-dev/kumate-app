@@ -103,9 +103,8 @@ impl K8sContexts {
     async fn build_kubeconfig_from_home(name: &str) -> Result<String, String> {
         let home = dirs::home_dir().ok_or_else(|| "home dir not found".to_string())?;
         let kube_dir = home.join(".kube");
-        let mut rd: ReadDir = read_dir(&kube_dir)
-            .await
-            .map_err(|_| "~/.kube not found".to_string())?;
+        let mut rd: ReadDir =
+            read_dir(&kube_dir).await.map_err(|_| "~/.kube not found".to_string())?;
 
         while let Some(entry) = rd.next_entry().await.map_err(|e| e.to_string())? {
             let ft: FileType = entry.file_type().await.map_err(|e| e.to_string())?;
@@ -152,10 +151,7 @@ impl K8sContexts {
             if nc.name != name {
                 continue;
             }
-            let cluster_entry = clusters
-                .iter()
-                .find(|c| c.name == nc.context.cluster)
-                .cloned();
+            let cluster_entry = clusters.iter().find(|c| c.name == nc.context.cluster).cloned();
             let user_entry = nc
                 .context
                 .user
@@ -256,10 +252,8 @@ impl K8sContexts {
                     continue;
                 }
 
-                let cluster_entry: Option<KCNamedCluster> = clusters
-                    .iter()
-                    .find(|c| c.name == nc.context.cluster)
-                    .cloned();
+                let cluster_entry: Option<KCNamedCluster> =
+                    clusters.iter().find(|c| c.name == nc.context.cluster).cloned();
                 let user_entry: Option<KCNamedUser> = nc
                     .context
                     .user
@@ -326,10 +320,7 @@ impl K8sContexts {
     }
 
     pub fn list_contexts(app_state: &AppState) -> Result<Vec<K8sContext>, String> {
-        app_state
-            .k8s_contexts
-            .list_contexts()
-            .map_err(|e| e.to_string())
+        app_state.k8s_contexts.list_contexts().map_err(|e| e.to_string())
     }
 
     pub fn _add_context(
@@ -347,9 +338,6 @@ impl K8sContexts {
             avatar: None,
             created_at: Utc::now().timestamp(),
         };
-        app_state
-            .k8s_contexts
-            .add_context(&ctx)
-            .map_err(|e| e.to_string())
+        app_state.k8s_contexts.add_context(&ctx).map_err(|e| e.to_string())
     }
 }

@@ -64,9 +64,7 @@ where
                 .await
                 .map_err(|e| Self::extract_error(&e, "apply"))?
         } else {
-            api.create(&pp, &resource)
-                .await
-                .map_err(|e| Self::extract_error(&e, "create"))?
+            api.create(&pp, &resource).await.map_err(|e| Self::extract_error(&e, "create"))?
         };
 
         serde_json::to_value(&result).map_err(|e| e.to_string())
@@ -98,14 +96,10 @@ where
         let mut all: Vec<Value> = Vec::new();
         for ns in target_namespaces {
             let api: Api<T> = K8sClient::api::<T>(client.clone(), ns).await;
-            let list: ObjectList<T> = api
-                .list(&Default::default())
-                .await
-                .map_err(|e| e.to_string())?;
+            let list: ObjectList<T> =
+                api.list(&Default::default()).await.map_err(|e| e.to_string())?;
             all.extend(
-                list.items
-                    .into_iter()
-                    .map(|r| serde_json::to_value(&r).unwrap_or(Value::Null)),
+                list.items.into_iter().map(|r| serde_json::to_value(&r).unwrap_or(Value::Null)),
             );
         }
 

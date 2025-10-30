@@ -35,10 +35,7 @@ where
     pub async fn list(context_name: String) -> Result<Vec<Value>, String> {
         let client: kube::Client = K8sClient::for_context(&context_name).await?;
         let api: Api<T> = Api::all(client);
-        let list: ObjectList<T> = api
-            .list(&Default::default())
-            .await
-            .map_err(|e| e.to_string())?;
+        let list: ObjectList<T> = api.list(&Default::default()).await.map_err(|e| e.to_string())?;
 
         Ok(list
             .items

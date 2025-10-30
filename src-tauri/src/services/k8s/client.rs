@@ -71,10 +71,7 @@ impl K8sClient {
                 }
             }
             Err(e) => {
-                println!(
-                    "client_from_context: serde_yaml->Kubeconfig parse error: {}",
-                    e
-                );
+                println!("client_from_context: serde_yaml->Kubeconfig parse error: {}", e);
                 Ok(None)
             }
         }
@@ -82,9 +79,7 @@ impl K8sClient {
 
     async fn client_from_default_with_temp(name: &str, sanitized: &str) -> Result<Client, String> {
         let tmp_path: PathBuf = std::env::temp_dir().join(format!("kumate_ctx_{}.yaml", name));
-        tokio::fs::write(&tmp_path, sanitized)
-            .await
-            .map_err(|e| e.to_string())?;
+        tokio::fs::write(&tmp_path, sanitized).await.map_err(|e| e.to_string())?;
 
         let old_kubeconfig: Option<String> = std::env::var("KUBECONFIG").ok();
         std::env::set_var("KUBECONFIG", &tmp_path);
