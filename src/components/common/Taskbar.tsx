@@ -1,7 +1,7 @@
 import { ALL_NAMESPACES } from '@/constants/k8s';
 import { PaneSearch } from '@/components/common/Search';
 import { Check } from 'lucide-react';
-import { PaneDropdown } from '@/components/common/Dropdown';
+import { Dropdown } from '@/components/common/Dropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
 import { BubbleTrash } from './BubbleTrash';
 import { V1Namespace } from '@kubernetes/client-node';
@@ -48,9 +48,9 @@ export function PaneTaskbar({
     : selectedNamespaces.join(', ');
 
   return (
-    <div className="relative sticky top-0 z-0 mb-2 flex items-center gap-2 py-2">
+    <div className="relative sticky top-0 z-50 mb-2 flex items-center gap-2 py-2">
       {showNamespace && onSelectNamespace && (
-        <PaneDropdown trigger={<DropdownTrigger label={displayLabel} className="w-80" />}>
+        <Dropdown trigger={<DropdownTrigger label={displayLabel} className="w-80" />}>
           {[ALL_NAMESPACES, ...namespaceList.map((ns) => ns.metadata?.name ?? '')].map((ns) => (
             <div
               key={ns}
@@ -65,7 +65,7 @@ export function PaneTaskbar({
               <span className="truncate text-xs text-white">{ns}</span>
             </div>
           ))}
-        </PaneDropdown>
+        </Dropdown>
       )}
 
       <PaneSearch

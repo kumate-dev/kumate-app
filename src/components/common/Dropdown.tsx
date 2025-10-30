@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 
-interface PaneDropdownProps {
+interface DropdownProps {
   trigger: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }
 
-export function PaneDropdown({ trigger, children, className }: PaneDropdownProps) {
+export function Dropdown({ trigger, children, className }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
