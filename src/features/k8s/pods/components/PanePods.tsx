@@ -2,7 +2,7 @@ import { useState, useCallback, RefObject } from 'react';
 import { V1Namespace, V1Pod } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { SidebarK8sPods } from './SidebarK8sPods';
+import { SidebarK8sPods } from './SidebarPods';
 import { PaneResource } from '../../common/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../common/components/BadgeNamespaces';
