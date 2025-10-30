@@ -1,8 +1,10 @@
 import { useState, useEffect, ReactNode, useRef } from 'react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ButtonDelete } from '../../../../components/common/ButtonTrash';
-import { ModalConfirmDelete } from '../../../../components/common/ModalConfirmDelete';
+import { ButtonDelete } from '@/components/common/ButtonDelete';
+import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
+import { ButtonEdit } from '@/components/common/ButtonEdit';
+import { ButtonTrash } from '@/components/common/ButtonTrash';
 
 export interface SidebarK8sResourcesProps<T> {
   item: T | null;
@@ -15,6 +17,7 @@ export interface SidebarK8sResourcesProps<T> {
     content: (item: T) => ReactNode;
   }[];
   onDelete?: (item: T) => void;
+  onEdit?: (item: T) => void;
 }
 
 export function SidebarK8sResources<T>({
@@ -24,6 +27,7 @@ export function SidebarK8sResources<T>({
   tableRef,
   sections = [],
   onDelete,
+  onEdit,
 }: SidebarK8sResourcesProps<T>) {
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
@@ -122,8 +126,13 @@ export function SidebarK8sResources<T>({
           ))}
         </div>
 
-        <div className="flex flex-shrink-0 justify-end gap-2 border-t border-white/10 p-4">
-          {onDelete && <ButtonDelete onDelete={() => setOpenDeleteModal(true)} />}
+        <div className="flex flex-shrink-0 gap-2 border-t border-white/10 p-4 justify-between">
+          {onEdit && item && (
+            <ButtonEdit onEdit={() => onEdit(item)} />
+          )}
+          {onDelete && (
+            <ButtonTrash onDelete={() => setOpenDeleteModal(true)} />
+          )}
         </div>
       </div>
 

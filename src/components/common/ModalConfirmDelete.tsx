@@ -5,7 +5,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { ButtonCancel } from './ButtonCancel';
+import { ButtonDelete } from './ButtonDelete';
 
 interface ModalConfirmDeleteProps<T = unknown> {
   open: boolean;
@@ -41,18 +42,16 @@ export function ModalConfirmDelete<T>({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => {
+          <ButtonCancel
+            onCancel={() => setOpen(false)}
+            disabled={count === 0}
+          />
+          <ButtonDelete
+            onDelete={() => {
               onConfirm();
               setOpen(false);
             }}
-          >
-            Delete
-          </Button>
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

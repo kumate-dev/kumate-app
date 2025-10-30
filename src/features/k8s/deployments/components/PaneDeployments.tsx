@@ -18,6 +18,8 @@ export interface PaneDeploymentsProps {
   loading: boolean;
   error: string;
   onDeleteDeployments: (deployments: V1Deployment[]) => Promise<void>;
+  onCreate?: () => void;
+  onEdit?: (item: V1Deployment) => void;
 }
 
 export default function PaneDeployments({
@@ -28,6 +30,8 @@ export default function PaneDeployments({
   loading,
   error,
   onDeleteDeployments,
+  onCreate,
+  onEdit,
 }: PaneDeploymentsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Deployment>('metadata');
@@ -102,6 +106,7 @@ export default function PaneDeployments({
       item={item}
       setItem={setSelectedItem}
       onDelete={handleDeleteOne}
+      onEdit={onEdit}
       tableRef={tableRef}
     />
   );
@@ -125,6 +130,7 @@ export default function PaneDeployments({
       renderRow={renderRow}
       selectedItem={selectedItem}
       renderSidebar={renderSidebar}
+      onCreate={onCreate}
     />
   );
 }

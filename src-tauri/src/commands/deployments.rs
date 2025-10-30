@@ -8,6 +8,24 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_deployment(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<Deployment>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_deployment(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<Deployment>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_deployments(
     name: String,
     namespaces: Option<Vec<String>>,

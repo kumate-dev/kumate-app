@@ -1,13 +1,13 @@
 import { toast } from 'sonner';
 import { useState } from 'react';
 
-export function useCreateK8sResource<T>(
-  createFn: (params: { name: string; namespace?: string; manifest: T;}) => Promise<T>,
+export function useUpdateK8sResource<T>(
+  updateFn: (params: { name: string; namespace?: string; manifest: T;}) => Promise<T>,
   context?: { name: string } | null
 ) {
-  const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
-  const handleCreateResource = async (manifest: T) => {
+  const handleUpdateResource = async (manifest: T) => {  
     const name = context?.name;
     if (!name) {
       toast.error('Missing context name for application.');
@@ -16,25 +16,25 @@ export function useCreateK8sResource<T>(
 
     const resourceName = (manifest as any).kind;
 
-    setCreating(true);
+    setUpdating(true);
     try {
-      await createFn({
+      await updateFn({
         name: name,
         namespace: (manifest as any).metadata?.namespace,
         manifest: manifest,
       });
-      toast.success(`${resourceName} ${name} created successfully`);
+      toast.success(`${resourceName} ${name} updated successfully`);
       return manifest;
     } catch (error) {
-      toast.error(`Failed to create ${resourceName}: ${error}`);
+      toast.error(`Failed to update ${resourceName}: ${error}`);
       throw error;
     } finally {
-      setCreating(false);
+      setUpdating(false);
     }
   };
 
   return {
-    handleCreateResource,
-    creating,
+    handleUpdateResource,
+    updating,
   };
 }

@@ -3,7 +3,7 @@ import { Search } from '@/components/common/Search';
 import { Check } from 'lucide-react';
 import { Dropdown } from '@/components/common/Dropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
-import { ButtonDelete } from '../../../../components/common/ButtonTrash';
+import { ButtonTrash } from '../../../../components/common/ButtonTrash';
 import { V1Namespace } from '@kubernetes/client-node';
 import { ButtonCreate } from '@/components/common/ButtonCreate';
 
@@ -78,7 +78,7 @@ export function PaneTaskbar({
       />
 
       <div className="ml-auto flex items-center gap-2">
-        {selectedCount > 0 && onDeleteSelected && <ButtonDelete onDelete={onDeleteSelected} />}
+        {selectedCount > 0 && onDeleteSelected && <ButtonTrash onDelete={onDeleteSelected} />}
         {onCreate && <ButtonCreate onCreate={onCreate} />}
       </div>
     </div>

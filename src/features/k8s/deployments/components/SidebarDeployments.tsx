@@ -11,6 +11,7 @@ interface SidebarDeploymentsProps {
   item: V1Deployment | null;
   setItem: (item: V1Deployment | null) => void;
   onDelete?: (item: V1Deployment) => void;
+  onEdit?: (item: V1Deployment) => void;
   tableRef?: React.RefObject<HTMLTableElement | null>;
 }
 
@@ -18,6 +19,7 @@ export function SidebarK8sDeployments({
   item,
   setItem,
   onDelete,
+  onEdit,
   tableRef,
 }: SidebarDeploymentsProps) {
   const renderOverview = (dep: V1Deployment) => (
@@ -93,6 +95,7 @@ export function SidebarK8sDeployments({
       setItem={setItem}
       sections={sections}
       onDelete={onDelete}
+      onEdit={onEdit}
       tableRef={tableRef}
     />
   );

@@ -39,10 +39,11 @@ where
         }
     }
 
-    pub async fn create(
+    async fn upsert(
         context_name: String,
         namespace: Option<String>,
         manifest: Value,
+        is_apply: bool,
     ) -> Result<Value, String> {
         let client: kube::Client = K8sClient::for_context(&context_name).await?;
         let api: Api<T> = K8sClient::api::<T>(client, namespace.clone()).await;
@@ -50,13 +51,41 @@ where
         let resource: T = serde_json::from_value(manifest)
             .map_err(|e| format!("Failed to parse resource manifest: {}", e))?;
 
-        let pp: PostParams = PostParams::default();
-        let created: T = api
-            .create(&pp, &resource)
-            .await
-            .map_err(|e| Self::extract_error(&e, "create"))?;
+        let pp = PostParams::default();
 
-        serde_json::to_value(&created).map_err(|e| e.to_string())
+        let result = if is_apply {
+            let name = resource
+                .metadata()
+                .name
+                .clone()
+                .ok_or_else(|| "Missing metadata.name for apply".to_string())?;
+
+            api.replace(&name, &pp, &resource)
+                .await
+                .map_err(|e| Self::extract_error(&e, "apply"))?
+        } else {
+            api.create(&pp, &resource)
+                .await
+                .map_err(|e| Self::extract_error(&e, "create"))?
+        };
+
+        serde_json::to_value(&result).map_err(|e| e.to_string())
+    }
+
+    pub async fn create(
+        context_name: String,
+        namespace: Option<String>,
+        manifest: Value,
+    ) -> Result<Value, String> {
+        Self::upsert(context_name, namespace, manifest, false).await
+    }
+
+    pub async fn update(
+        context_name: String,
+        namespace: Option<String>,
+        manifest: Value,
+    ) -> Result<Value, String> {
+        Self::upsert(context_name, namespace, manifest, true).await
     }
 
     pub async fn list(
@@ -83,6 +112,25 @@ where
         Ok(all)
     }
 
+    pub async fn watch(
+        app_handle: AppHandle,
+        context_name: String,
+        namespaces: Option<Vec<String>>,
+        event_name: String,
+    ) -> Result<(), String> {
+        let client: kube::Client = K8sClient::for_context(&context_name).await?;
+        let target_namespaces: Vec<Option<String>> = Self::get_target_namespaces(namespaces);
+
+        for ns in target_namespaces {
+            let api: Api<T> = K8sClient::api::<T>(client.clone(), ns).await;
+            let stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<T>, kube::Error>> + Send>> =
+                Self::watch_stream(&api).await?;
+            Self::spawn_watch(app_handle.clone(), event_name.clone(), stream);
+        }
+
+        Ok(())
+    }
+
     pub async fn delete(
         context_name: String,
         namespace: Option<String>,
@@ -104,25 +152,6 @@ where
         });
 
         Ok(join_all(futures).await)
-    }
-
-    pub async fn watch(
-        app_handle: AppHandle,
-        context_name: String,
-        namespaces: Option<Vec<String>>,
-        event_name: String,
-    ) -> Result<(), String> {
-        let client: kube::Client = K8sClient::for_context(&context_name).await?;
-        let target_namespaces: Vec<Option<String>> = Self::get_target_namespaces(namespaces);
-
-        for ns in target_namespaces {
-            let api: Api<T> = K8sClient::api::<T>(client.clone(), ns).await;
-            let stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<T>, kube::Error>> + Send>> =
-                Self::watch_stream(&api).await?;
-            Self::spawn_watch(app_handle.clone(), event_name.clone(), stream);
-        }
-
-        Ok(())
     }
 
     async fn watch_stream(

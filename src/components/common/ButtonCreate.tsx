@@ -4,14 +4,15 @@ import React from 'react';
 
 interface ButtonCreateProps {
   onCreate: () => void;
+  className?: string;
 }
 
-export const ButtonCreate: React.FC<ButtonCreateProps> = ({ onCreate }) => {
+export const ButtonCreate: React.FC<ButtonCreateProps> = ({ onCreate, className }) => {
   return (
     <Button
       variant="secondary"
       size="sm"
-      className="ml-auto flex items-center gap-1 px-3"
+      className={`flex gap-1 px-3 ${className}`}
       onClick={onCreate}
       title="Create"
     >

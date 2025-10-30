@@ -17,6 +17,15 @@ pub async fn create_pod(
 }
 
 #[tauri::command]
+pub async fn update_pod(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<Pod>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_pods(
     name: String,
     namespaces: Option<Vec<String>>,

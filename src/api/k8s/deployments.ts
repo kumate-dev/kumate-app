@@ -52,3 +52,15 @@ export async function deleteDeployments({
 }): Promise<K8sResponse[]> {
   return await invoke<K8sResponse[]>('delete_deployments', { name, namespace, resourceNames });
 }
+
+export async function applyDeployment({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Deployment;
+}): Promise<V1Deployment> {
+  return await invoke<V1Deployment>('apply_deployment', { name, namespace, manifest });
+}

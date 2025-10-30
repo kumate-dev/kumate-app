@@ -1,22 +1,23 @@
-import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React from 'react';
 
-interface ButtonTrashProps {
+interface ButtonDeleteProps {
   onDelete: () => void;
+  disabled?: boolean;
   className?: string;
 }
 
-export const ButtonTrash: React.FC<ButtonTrashProps> = ({ onDelete, className }) => {
+export const ButtonDelete: React.FC<ButtonDeleteProps> = ({ onDelete, disabled, className }) => {
   return (
     <Button
       variant="destructive"
       size="sm"
       className={`flex gap-1 px-3 ${className}`}
       onClick={onDelete}
-      title="Delete selected"
+      title="Delete"
+      disabled={disabled}
     >
-      <Trash2 className="h-4 w-4" />
+      Delete
     </Button>
   );
 };
