@@ -104,7 +104,7 @@ export default function BottomYamlEditor({
 
       <div
         ref={editorRef}
-        className={`fixed right-0 bottom-0 left-0 z-[60] border-t border-white/10 bg-neutral-950 transition-transform duration-300 ${
+        className={`fixed right-0 bottom-0 left-0 z-[60] border-l border-white/10 bg-neutral-900/95 shadow-xl backdrop-blur-sm transition-transform duration-300 ${
           isResizing ? 'select-none' : ''
         }`}
         style={{ height: `${editorHeight}px` }}
@@ -115,15 +115,15 @@ export default function BottomYamlEditor({
           onMouseDown={startResizing}
         />
 
-        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2">
-          <div className="min-w-0 flex-1 truncate text-sm text-white/80">
+        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+          <div className="min-w-0 flex-1 truncate text-sm font-medium text-white/80">
             {title ?? 'YAML Editor'}
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-white/70 hover:text-white"
+              className="h-8 w-8 p-0 text-white/70 hover:bg-white/10 hover:text-white"
               onClick={toggleExpand}
             >
               {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -138,7 +138,7 @@ export default function BottomYamlEditor({
           </div>
         </div>
 
-        <div className="h-full p-3" style={{ height: `calc(100% - 41px)` }}>
+        <div className="h-full p-4" style={{ height: `calc(100% - 49px)` }}>
           <YamlEditor
             value={yamlText}
             onChange={setYamlText}
