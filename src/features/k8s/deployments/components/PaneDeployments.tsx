@@ -1,14 +1,18 @@
-import { useState, useCallback, RefObject } from 'react';
+import { useState, useCallback, RefObject, useMemo } from 'react';
 import { V1Deployment, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
-import { AlertTriangle } from 'lucide-react';
 import { SidebarK8sDeployments } from './SidebarDeployments';
-import { PaneResource } from '../../generic/components/PaneGeneric';
+import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { getDeploymentStatus } from '../utils/deploymentStatus';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
+import BottomYamlEditor from '@/components/common/BottomYamlEditor';
+import yaml from 'js-yaml';
+import { ALL_NAMESPACES } from '@/constants/k8s';
+import { templateDeployment } from '../../templates/TemplateDeployment';
+import { toast } from 'sonner';
 
 export interface PaneDeploymentsProps {
   selectedNamespaces: string[];
@@ -17,9 +21,10 @@ export interface PaneDeploymentsProps {
   items: V1Deployment[];
   loading: boolean;
   error: string;
-  onDeleteDeployments: (deployments: V1Deployment[]) => Promise<void>;
-  onCreate?: () => void;
-  onEdit?: (item: V1Deployment) => void;
+  onDelete: (deployments: V1Deployment[]) => Promise<void>;
+  onCreateResource?: (manifest: V1Deployment) => Promise<V1Deployment | undefined>;
+  onUpdateResource?: (manifest: V1Deployment) => Promise<V1Deployment | undefined>;
+  contextName?: string;
 }
 
 export default function PaneDeployments({
@@ -29,15 +34,27 @@ export default function PaneDeployments({
   items,
   loading,
   error,
-  onDeleteDeployments,
-  onCreate,
-  onEdit,
+  onDelete,
+  onCreateResource,
+  onUpdateResource,
+  contextName,
 }: PaneDeploymentsProps) {
   const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Deployment>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1Deployment[]>([]);
   const [selectedItem, setSelectedItem] = useState<V1Deployment | null>(null);
+
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorTitle, setEditorTitle] = useState<string>('');
+  const [editorYaml, setEditorYaml] = useState<string>('');
+  const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
+
+  const defaultNamespace = useMemo(() => {
+    if (!selectedNamespaces || selectedNamespaces.length === 0) return undefined;
+    const ns = selectedNamespaces[0];
+    return ns === ALL_NAMESPACES ? undefined : ns;
+  }, [selectedNamespaces]);
 
   const toggleItem = useCallback((dep: V1Deployment) => {
     setSelectedItems((prev) =>
@@ -54,14 +71,46 @@ export default function PaneDeployments({
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedItems.length === 0) return;
-    await onDeleteDeployments(selectedItems);
+    await onDelete(selectedItems);
     setSelectedItems([]);
     setSelectedItem(null);
-  }, [selectedItems, onDeleteDeployments]);
+  }, [selectedItems, onDelete]);
 
   const handleDeleteOne = async (item: V1Deployment) => {
-    await onDeleteDeployments([item]);
+    await onDelete([item]);
     setSelectedItem(null);
+  };
+
+  const openCreateEditor = () => {
+    setEditorTitle('Create Deployment');
+    setEditorYaml(yaml.dump(templateDeployment(defaultNamespace)));
+    setEditorMode('create');
+    setEditorOpen(true);
+  };
+
+  const openEditEditor = (item: V1Deployment) => {
+    setEditorTitle(`Edit Deployment: ${item.metadata?.name ?? ''}`);
+    setEditorYaml(yaml.dump(item));
+    setEditorMode('edit');
+    setEditorOpen(true);
+  };
+
+  const handleSave = async (manifest: any) => {
+    if (!contextName) {
+      toast.error('Missing context name.');
+      return;
+    }
+
+    try {
+      if (editorMode === 'create') {
+        await onCreateResource?.(manifest as V1Deployment);
+      } else {
+        await onUpdateResource?.(manifest as V1Deployment);
+      }
+      setEditorOpen(false);
+    } catch (err) {
+      throw err;
+    }
   };
 
   const columns: ColumnDef<keyof V1Deployment | ''>[] = [
@@ -106,31 +155,41 @@ export default function PaneDeployments({
       item={item}
       setItem={setSelectedItem}
       onDelete={handleDeleteOne}
-      onEdit={onEdit}
+      onEdit={openEditEditor}
       tableRef={tableRef}
     />
   );
 
   return (
-    <PaneResource
-      items={items}
-      loading={loading}
-      error={error}
-      query={q}
-      onQueryChange={setQ}
-      namespaceList={namespaceList}
-      selectedNamespaces={selectedNamespaces}
-      onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
-      onDeleteSelected={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
-      onRowClick={setSelectedItem}
-      renderRow={renderRow}
-      selectedItem={selectedItem}
-      renderSidebar={renderSidebar}
-      onCreate={onCreate}
-    />
+    <>
+      <PaneGeneric
+        items={items}
+        loading={loading}
+        error={error}
+        query={q}
+        onQueryChange={setQ}
+        namespaceList={namespaceList}
+        selectedNamespaces={selectedNamespaces}
+        onSelectNamespace={onSelectNamespace}
+        selectedItems={selectedItems}
+        onToggleItem={toggleItem}
+        onCreate={openCreateEditor}
+        onDelete={handleDeleteSelected}
+        colSpan={columns.length + 1}
+        tableHeader={tableHeader}
+        onRowClick={setSelectedItem}
+        renderRow={renderRow}
+        selectedItem={selectedItem}
+        renderSidebar={renderSidebar}
+      />
+      <BottomYamlEditor
+        open={editorOpen}
+        title={editorTitle}
+        mode={editorMode}
+        initialYaml={editorYaml}
+        onClose={() => setEditorOpen(false)}
+        onSave={handleSave}
+      />
+    </>
   );
 }

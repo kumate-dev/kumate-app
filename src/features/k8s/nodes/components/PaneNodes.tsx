@@ -4,7 +4,7 @@ import { Td, Tr } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
-import { PaneResource } from '../../generic/components/PaneGeneric';
+import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { BadgeVariant } from '@/types/variant';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNodeStatus } from '../utils/nodeStatus';
@@ -81,7 +81,7 @@ export default function PaneNodes({ items, loading, error }: PaneNodesProps) {
   };
 
   return (
-    <PaneResource
+    <PaneGeneric
       items={items}
       loading={loading}
       error={error}

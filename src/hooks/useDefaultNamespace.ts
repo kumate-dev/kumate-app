@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
 export function useDefaultNamespace(
   selectedNamespaces?: string[],
-  allNamespacesKey = "ALL_NAMESPACES"
+  allNamespacesKey = 'ALL_NAMESPACES'
 ): string | undefined {
   return useMemo(() => {
     if (!selectedNamespaces || selectedNamespaces.length === 0) return undefined;

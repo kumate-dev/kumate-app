@@ -3,7 +3,7 @@ import { V1Namespace } from '@kubernetes/client-node';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
-import { PaneResource } from '../../generic/components/PaneGeneric';
+import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNamespaceStatus } from '../utils/namespaceStatus';
 
@@ -71,7 +71,7 @@ export default function PaneNamespaces({
   );
 
   return (
-    <PaneResource
+    <PaneGeneric
       items={items}
       loading={loading}
       error={error}
@@ -80,7 +80,7 @@ export default function PaneNamespaces({
       showNamespace={false}
       selectedItems={selectedItems}
       onToggleItem={toggleItem}
-      onDeleteSelected={onDeleteNamespaces ? handleDeleteSelected : undefined}
+      onDelete={onDeleteNamespaces ? handleDeleteSelected : undefined}
       colSpan={columns.length}
       tableHeader={tableHeader}
       renderRow={renderRow}

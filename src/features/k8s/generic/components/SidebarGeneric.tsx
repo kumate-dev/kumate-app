@@ -1,7 +1,6 @@
 import { useState, useEffect, ReactNode, useRef } from 'react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ButtonDelete } from '@/components/common/ButtonDelete';
 import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
 import { ButtonEdit } from '@/components/common/ButtonEdit';
 import { ButtonTrash } from '@/components/common/ButtonTrash';
@@ -126,13 +125,16 @@ export function SidebarK8sResources<T>({
           ))}
         </div>
 
-        <div className="flex flex-shrink-0 gap-2 border-t border-white/10 p-4 justify-between">
+        <div className="flex flex-shrink-0 justify-between gap-2 border-t border-white/10 p-4">
           {onEdit && item && (
-            <ButtonEdit onEdit={() => onEdit(item)} />
+            <ButtonEdit
+              onEdit={() => {
+                onEdit(item);
+                closeSidebar();
+              }}
+            />
           )}
-          {onDelete && (
-            <ButtonTrash onDelete={() => setOpenDeleteModal(true)} />
-          )}
+          {onDelete && <ButtonTrash onDelete={() => setOpenDeleteModal(true)} />}
         </div>
       </div>
 

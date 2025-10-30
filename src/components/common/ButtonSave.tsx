@@ -1,29 +1,24 @@
 import { Button } from '@/components/ui/button';
 import React from 'react';
 
-interface ButtonDeleteProps {
-  onDelete: () => void;
+interface ButtonSaveProps {
+  onSave: () => void;
   disabled?: boolean;
   className?: string;
   text?: string;
 }
 
-export const ButtonDelete: React.FC<ButtonDeleteProps> = ({
-  onDelete,
-  disabled,
-  className,
-  text,
-}) => {
+export const ButtonSave: React.FC<ButtonSaveProps> = ({ onSave, disabled, text, className }) => {
   return (
     <Button
-      variant="destructive"
+      variant="secondary"
       size="sm"
       className={`flex gap-1 px-3 ${className}`}
-      onClick={onDelete}
-      title="Delete"
+      onClick={onSave}
+      title="Save"
       disabled={disabled}
     >
-      {text ?? 'Delete'}
+      {text ?? 'Save'}
     </Button>
   );
 };

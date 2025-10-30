@@ -5,9 +5,15 @@ interface ButtonCancelProps {
   onCancel: () => void;
   disabled?: boolean;
   className?: string;
+  text?: string;
 }
 
-export const ButtonCancel: React.FC<ButtonCancelProps> = ({ onCancel, disabled, className }) => {
+export const ButtonCancel: React.FC<ButtonCancelProps> = ({
+  onCancel,
+  disabled,
+  className,
+  text,
+}) => {
   return (
     <Button
       variant="outline"
@@ -17,7 +23,7 @@ export const ButtonCancel: React.FC<ButtonCancelProps> = ({ onCancel, disabled, 
       title="Cancel"
       disabled={disabled}
     >
-      Cancel
+      {text ?? 'Cancel'}
     </Button>
   );
 };

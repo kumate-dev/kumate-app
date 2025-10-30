@@ -3,7 +3,7 @@ import { V1Namespace, V1Pod } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { SidebarK8sPods } from './SidebarPods';
-import { PaneResource } from '../../generic/components/PaneGeneric';
+import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { podHasPodWarning } from '../utils/podHasWarning';
@@ -165,7 +165,7 @@ export default function PanePods({
   );
 
   return (
-    <PaneResource
+    <PaneGeneric
       items={items}
       loading={loading}
       error={error}
@@ -177,7 +177,7 @@ export default function PanePods({
       selectedItems={selectedPods}
       onToggleItem={togglePod}
       onToggleAll={toggleAllPods}
-      onDeleteSelected={handleDeleteSelected}
+      onDelete={handleDeleteSelected}
       onCreate={onCreatePod ? handleCreate : undefined}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}

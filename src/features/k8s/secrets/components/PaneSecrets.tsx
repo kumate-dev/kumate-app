@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { V1Secret, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
-import { PaneResource } from '../../generic/components/PaneGeneric';
+import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
@@ -103,7 +103,7 @@ export default function PaneSecrets({
   };
 
   return (
-    <PaneResource
+    <PaneGeneric
       items={items}
       loading={loading}
       error={error}
@@ -114,7 +114,7 @@ export default function PaneSecrets({
       onSelectNamespace={onSelectNamespace}
       selectedItems={selectedItems}
       onToggleItem={toggleItem}
-      onDeleteSelected={handleDeleteSelected}
+      onDelete={handleDeleteSelected}
       colSpan={columns.length + 1}
       tableHeader={tableHeader}
       renderRow={renderRow}

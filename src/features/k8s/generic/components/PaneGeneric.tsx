@@ -27,8 +27,8 @@ export interface PaneResourceProps<T> {
   selectedItems?: T[];
   onToggleItem?: (item: T) => void;
   onToggleAll?: (checked: boolean) => void;
-  onDeleteSelected?: () => void;
-  onCreate?: () => void; // Thêm prop onCreate
+  onCreate?: () => void;
+  onDelete?: () => void;
   renderRow: (item: T) => ReactNode;
   onRowClick?: (item: T) => void;
   emptyText?: string;
@@ -38,7 +38,7 @@ export interface PaneResourceProps<T> {
   onCloseSidebar?: () => void;
 }
 
-export function PaneResource<T>({
+export function PaneGeneric<T>({
   items,
   loading,
   error,
@@ -50,8 +50,8 @@ export function PaneResource<T>({
   showNamespace = true,
   selectedItems = [],
   onToggleItem,
-  onDeleteSelected,
   onCreate,
+  onDelete,
   renderRow,
   onRowClick,
   emptyText = 'No items',
@@ -80,12 +80,6 @@ export function PaneResource<T>({
     setOpenDeleteModal(true);
   };
 
-  const handleCreate = () => {
-    if (onCreate) {
-      onCreate();
-    }
-  };
-
   return (
     <div className="flex h-full flex-col space-y-3">
       {(showNamespace && onSelectNamespace) || !showNamespace ? (
@@ -97,8 +91,8 @@ export function PaneResource<T>({
           onQueryChange={onQueryChange}
           showNamespace={showNamespace}
           selectedCount={selectedItems?.length || 0}
-          onDeleteSelected={handleDeleteClick}
-          onCreate={onCreate ? handleCreate : undefined}
+          onCreate={onCreate}
+          onDelete={handleDeleteClick}
         />
       ) : (
         <div className="mb-4">
@@ -175,12 +169,12 @@ export function PaneResource<T>({
         )}
       </div>
 
-      {onDeleteSelected && (
+      {onDelete && (
         <ModalConfirmDelete
           open={openDeleteModal}
           setOpen={setOpenDeleteModal}
           items={selectedItems}
-          onConfirm={onDeleteSelected}
+          onConfirm={onDelete}
         />
       )}
     </div>

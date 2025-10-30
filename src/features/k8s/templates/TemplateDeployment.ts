@@ -24,4 +24,4 @@ export const templateDeployment = (namespace?: string): V1Deployment => ({
       },
     },
   },
-})
+});

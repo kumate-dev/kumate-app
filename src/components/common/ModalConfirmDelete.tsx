@@ -42,10 +42,7 @@ export function ModalConfirmDelete<T>({
         </div>
 
         <DialogFooter>
-          <ButtonCancel
-            onCancel={() => setOpen(false)}
-            disabled={count === 0}
-          />
+          <ButtonCancel onCancel={() => setOpen(false)} disabled={count === 0} />
           <ButtonDelete
             onDelete={() => {
               onConfirm();

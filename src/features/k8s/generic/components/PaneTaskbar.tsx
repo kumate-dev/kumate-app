@@ -3,9 +3,9 @@ import { Search } from '@/components/common/Search';
 import { Check } from 'lucide-react';
 import { Dropdown } from '@/components/common/Dropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
-import { ButtonTrash } from '../../../../components/common/ButtonTrash';
 import { V1Namespace } from '@kubernetes/client-node';
 import { ButtonCreate } from '@/components/common/ButtonCreate';
+import { ButtonTrash } from '@/components/common/ButtonTrash';
 
 interface PaneTaskbarProps {
   namespaceList?: V1Namespace[];
@@ -15,8 +15,9 @@ interface PaneTaskbarProps {
   onQueryChange: (q: string) => void;
   showNamespace?: boolean;
   selectedCount?: number;
-  onDeleteSelected?: () => void;
   onCreate?: () => void;
+  onUpdate?: () => void;
+  onDelete?: () => void;
 }
 
 export function PaneTaskbar({
@@ -27,8 +28,8 @@ export function PaneTaskbar({
   onQueryChange,
   showNamespace = true,
   selectedCount = 0,
-  onDeleteSelected,
   onCreate,
+  onDelete,
 }: PaneTaskbarProps) {
   const toggleNamespace = (ns: string) => {
     if (!onSelectNamespace) return;
@@ -78,7 +79,7 @@ export function PaneTaskbar({
       />
 
       <div className="ml-auto flex items-center gap-2">
-        {selectedCount > 0 && onDeleteSelected && <ButtonTrash onDelete={onDeleteSelected} />}
+        {selectedCount > 0 && onDelete && <ButtonTrash onDelete={onDelete} />}
         {onCreate && <ButtonCreate onCreate={onCreate} />}
       </div>
     </div>

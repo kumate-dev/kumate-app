@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 
 export function useCreateK8sResource<T>(
-  createFn: (params: { name: string; namespace?: string; manifest: T;}) => Promise<T>,
+  createFn: (params: { name: string; namespace?: string; manifest: T }) => Promise<T>,
   context?: { name: string } | null
 ) {
   const [creating, setCreating] = useState(false);

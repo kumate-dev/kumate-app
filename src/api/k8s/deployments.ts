@@ -9,6 +9,30 @@ export interface DeploymentEvent {
   object: V1Deployment;
 }
 
+export async function createDeployment({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Deployment;
+}): Promise<V1Deployment> {
+  return await invoke<V1Deployment>('create_deployment', { name, namespace, manifest });
+}
+
+export async function updateDeployment({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Deployment;
+}): Promise<V1Deployment> {
+  return await invoke<V1Deployment>('update_deployment', { name, namespace, manifest });
+}
+
 export async function listDeployments({
   name,
   namespaces,
@@ -51,16 +75,4 @@ export async function deleteDeployments({
   resourceNames: string[];
 }): Promise<K8sResponse[]> {
   return await invoke<K8sResponse[]>('delete_deployments', { name, namespace, resourceNames });
-}
-
-export async function applyDeployment({
-  name,
-  namespace,
-  manifest,
-}: {
-  name: string;
-  namespace?: string;
-  manifest: V1Deployment;
-}): Promise<V1Deployment> {
-  return await invoke<V1Deployment>('apply_deployment', { name, namespace, manifest });
 }

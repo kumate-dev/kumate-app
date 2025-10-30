@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { SquarePen } from 'lucide-react';
 import React from 'react';
 
 interface ButtonEditProps {
@@ -15,7 +16,7 @@ export const ButtonEdit: React.FC<ButtonEditProps> = ({ onEdit, className }) => 
       onClick={onEdit}
       title="Edit"
     >
-      Edit
+      <SquarePen className="h-4 w-4" />
     </Button>
   );
 };

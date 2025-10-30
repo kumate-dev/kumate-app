@@ -2,12 +2,12 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 
 export function useUpdateK8sResource<T>(
-  updateFn: (params: { name: string; namespace?: string; manifest: T;}) => Promise<T>,
+  updateFn: (params: { name: string; namespace?: string; manifest: T }) => Promise<T>,
   context?: { name: string } | null
 ) {
   const [updating, setUpdating] = useState(false);
 
-  const handleUpdateResource = async (manifest: T) => {  
+  const handleUpdateResource = async (manifest: T) => {
     const name = context?.name;
     if (!name) {
       toast.error('Missing context name for application.');
