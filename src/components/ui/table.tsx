@@ -4,7 +4,7 @@ export const Table = forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTML
   ({ className = '', ...props }, ref) => {
     return (
       <table
-        ref={ref} // 👈 forward ref
+        ref={ref}
         className={`w-full table-auto border-collapse text-left text-sm ${className}`}
         {...props}
       />

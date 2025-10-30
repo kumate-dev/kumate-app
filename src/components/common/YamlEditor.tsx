@@ -1,5 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import yaml from 'js-yaml';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { parse } from 'yaml';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-yaml';
+import '@/styles/yaml-dark.css';
 
 interface YamlEditorProps {
   value: string;
@@ -18,11 +21,34 @@ export function YamlEditor({
 }: YamlEditorProps) {
   const [isValid, setIsValid] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
     validateYaml(value);
   }, [value]);
+
+  const lines = useMemo(() => {
+    const lineCount = value.split('\n').length;
+    return Array.from({ length: Math.max(1, lineCount) }, (_, i) => i + 1);
+  }, [value]);
+
+  const highlightedHtml = useMemo(() => {
+    const code = value || '';
+    try {
+      return Prism.highlight(code, Prism.languages.yaml, 'yaml');
+    } catch (error) {
+      console.warn('Prism highlighting failed:', error);
+      return code;
+    }
+  }, [value]);
+
+  useEffect(() => {
+    if (highlightRef.current) {
+      highlightRef.current.innerHTML = highlightedHtml;
+    }
+  }, [highlightedHtml]);
 
   const validateYaml = (yamlString: string) => {
     if (!yamlString.trim()) {
@@ -33,7 +59,7 @@ export function YamlEditor({
     }
 
     try {
-      yaml.load(yamlString);
+      parse(yamlString);
       setIsValid(true);
       setErrorMessage(null);
       onError?.(null);
@@ -69,25 +95,84 @@ export function YamlEditor({
     }
   };
 
+  const handleFocus = () => setIsFocused(true);
+  const handleBlur = () => setIsFocused(false);
+
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (highlightRef.current) {
+      highlightRef.current.scrollTop = e.currentTarget.scrollTop;
+      highlightRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
   return (
     <div className="flex h-full w-full flex-col">
       <div
-        className={`flex-1 overflow-hidden rounded-md border ${
-          isValid ? 'border-white/20' : 'border-red-500'
+        className={`relative flex-1 overflow-hidden rounded-md border ${
+          isValid ? (isFocused ? 'border-blue-500' : 'border-white/20') : 'border-red-500'
         } ${readOnly ? 'opacity-70' : ''}`}
+        style={{ height }}
       >
+        <div
+          className="absolute top-0 left-0 h-full overflow-hidden bg-gray-900 text-right"
+          style={{
+            width: '4rem',
+            padding: '1rem 0.5rem',
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            color: '#6b7280',
+            userSelect: 'none',
+            zIndex: 5,
+          }}
+        >
+          {lines.map((line) => (
+            <div key={line} className="leading-6">
+              {line}
+            </div>
+          ))}
+        </div>
+
         <textarea
           ref={textareaRef}
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onScroll={handleScroll}
           readOnly={readOnly}
-          className={`h-full w-full resize-none bg-neutral-800 p-4 font-mono text-sm text-white focus:outline-none ${
+          className={`absolute inset-0 h-full w-full resize-none bg-transparent font-mono caret-white focus:outline-none ${
             readOnly ? 'cursor-not-allowed' : ''
           }`}
-          style={{ height }}
+          style={{
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            zIndex: 20,
+            color: 'transparent',
+            padding: '1rem 1rem 1rem 5rem',
+            whiteSpace: 'pre',
+            overflowWrap: 'normal',
+          }}
           placeholder="Enter YAML content..."
           spellCheck={false}
+        />
+
+        <pre
+          ref={highlightRef}
+          className="absolute inset-0 h-full w-full overflow-auto font-mono text-sm"
+          style={{
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            background: 'transparent',
+            pointerEvents: 'none',
+            padding: '1rem 1rem 1rem 5rem',
+            whiteSpace: 'pre',
+            overflowWrap: 'normal',
+            zIndex: 10,
+          }}
         />
       </div>
 

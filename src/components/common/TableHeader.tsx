@@ -10,7 +10,7 @@ export interface ColumnDef<SortKey extends string> {
   key: SortKey;
   sortable?: boolean;
   align?: 'left' | 'center' | 'right';
-  width?: string; // optional column width
+  width?: string;
 }
 
 interface TableHeaderProps<SortKey extends string> {

@@ -11,7 +11,7 @@ import { K8sContext } from '@/api/k8s/contexts';
 import BottomYamlEditor from '@/components/common/BottomYamlEditor';
 import { YamlEditorProps } from '@/types/yaml';
 import { TableHeader, ColumnDef } from '@/components/common/TableHeader';
-import yaml from 'js-yaml';
+import { stringify } from 'yaml';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 
 export interface PaneResourceContextProps {
@@ -151,7 +151,7 @@ export function PaneGeneric<T>({
 
     const template = yamlTemplate(getDefaultNamespace());
     setEditorTitle(`Create ${(template as any)?.kind || 'Resource'}`);
-    setEditorYaml(template ? yaml.dump(template) : '');
+    setEditorYaml(template ? stringify(template) : '');
     setEditorMode('create');
     setEditorOpen(true);
   }, [yamlTemplate, getDefaultNamespace]);
@@ -160,7 +160,7 @@ export function PaneGeneric<T>({
     (item: T) => {
       const itemName = (item as any).metadata?.name ?? '';
       setEditorTitle(`Edit ${columns[0]?.label || 'Resource'}: ${itemName}`);
-      setEditorYaml(yaml.dump(item));
+      setEditorYaml(stringify(item));
       setEditorMode('edit');
       setEditorOpen(true);
     },

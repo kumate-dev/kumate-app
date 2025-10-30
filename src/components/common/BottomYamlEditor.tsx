@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import yaml from 'js-yaml';
+import { parse } from 'yaml';
 import { YamlEditor } from './YamlEditor';
 import { ButtonCancel } from './ButtonCancel';
 import { ButtonSave } from './ButtonSave';
@@ -48,7 +48,7 @@ export default function BottomYamlEditor({
     if (!canSave) return;
     try {
       setSaving(true);
-      const manifest = yaml.load(yamlText);
+      const manifest = parse(yamlText);
       await onSave(manifest);
       onClose();
     } catch (err) {

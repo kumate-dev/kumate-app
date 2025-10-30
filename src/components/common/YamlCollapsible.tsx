@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import yaml from 'js-yaml';
+import { stringify } from 'yaml';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface YamlCollapsibleProps<T extends Record<string, any>> {
@@ -30,7 +30,7 @@ export function YamlCollapsible<T extends Record<string, any>>({
     }
 
     if (keys.length === 1) {
-      const val = yaml.dump({ [keys[0]]: data[keys[0]] });
+      const val = stringify({ [keys[0]]: data[keys[0]] });
       const truncated = val.length > truncateLength ? val.slice(0, truncateLength) + '…' : val;
       return <pre className="m-0 max-w-full truncate whitespace-pre">{truncated}</pre>;
     }
@@ -59,7 +59,7 @@ export function YamlCollapsible<T extends Record<string, any>>({
       <div>
         {isOpen || keys.length <= 1 ? (
           <pre className="max-w-full overflow-x-auto rounded bg-white/10 p-2 text-xs whitespace-pre text-white">
-            {typeof data === 'string' ? data : yaml.dump(data)}
+            {typeof data === 'string' ? data : stringify(data)}
           </pre>
         ) : !isObject ? (
           collapsedMessage()
