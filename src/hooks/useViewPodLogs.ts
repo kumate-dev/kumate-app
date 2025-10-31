@@ -40,6 +40,8 @@ export function useViewPodLogs({
   const [tailLines, setTailLines] = useState(initialTailLines);
 
   const unlistenRef = useRef<(() => void) | null>(null);
+  const isMountedRef = useRef(true);
+  const autoStreamStartedRef = useRef(false);
 
   const fetchLogs = useCallback(async () => {
     if (!contextName) {
@@ -81,6 +83,8 @@ export function useViewPodLogs({
         containerName,
         tailLines,
         onEvent: (event) => {
+          if (!isMountedRef.current) return;
+
           if (event.type === 'LOG_LINE' && event.log) {
             setLogs((prev) => prev + event.log + '\n');
           } else if (event.type === 'LOG_ERROR') {
@@ -107,6 +111,7 @@ export function useViewPodLogs({
       unlistenRef.current = null;
     }
     setIsStreaming(false);
+    setLoading(false);
   }, []);
 
   const downloadLogs = useCallback(() => {
@@ -130,18 +135,28 @@ export function useViewPodLogs({
   }, []);
 
   useEffect(() => {
-    if (open && contextName && autoStream) {
+    if (open && contextName && autoStream && !autoStreamStartedRef.current) {
+      autoStreamStartedRef.current = true;
       startStreaming();
     }
   }, [open, contextName, autoStream, startStreaming]);
 
   useEffect(() => {
     if (!open) {
+      autoStreamStartedRef.current = false;
       stopStreaming();
       setLogs('');
       setError(null);
     }
   }, [open, stopStreaming]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      stopStreaming();
+    };
+  }, [stopStreaming]);
 
   return {
     logs,

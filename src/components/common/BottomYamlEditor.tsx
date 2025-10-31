@@ -7,6 +7,7 @@ import { YamlEditorProps } from '@/types/yaml';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { startResizing } from '@/utils/resizing';
+import { ButtonExpand } from './ButtonExpand';
 
 export default function BottomYamlEditor({
   open,
@@ -111,21 +112,13 @@ export default function BottomYamlEditor({
             {title ?? 'YAML Editor'}
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-white/70 hover:bg-white/10 hover:text-white"
-              onClick={toggleExpand}
-            >
-              {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-
             <ButtonCancel onCancel={onClose} disabled={saving} />
             <ButtonSave
               onSave={handleSave}
               disabled={!canSave}
               text={saving ? 'Saving...' : 'Save'}
             />
+            <ButtonExpand onExpand={toggleExpand} isExpanded={isExpanded} />
           </div>
         </div>
 

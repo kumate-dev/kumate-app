@@ -126,26 +126,22 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: Si
                   key={container.name}
                   className="flex items-start justify-between rounded-lg border border-white/10 p-3"
                 >
-                  <div className="flex items-start gap-3 flex-1">
+                  <div className="flex flex-1 items-start gap-3">
                     <div
-                      className={`h-3 w-3 rounded-full mt-1.5 ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}
+                      className={`mt-1.5 h-3 w-3 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}
                       title={isReady ? 'Ready' : 'Not Ready'}
                     />
                     <div className="flex-1">
                       <div className="font-medium text-white">{container.name}</div>
-                      <div className="text-sm text-white/60">
-                        {container.image}
-                      </div>
+                      <div className="text-sm text-white/60">{container.image}</div>
                       {status?.message && (
-                        <div className="text-sm text-red-400 mt-1">
-                          {status.message}
-                        </div>
+                        <div className="mt-1 text-sm text-red-400">{status.message}</div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex gap-2 flex-shrink-0">
-                    <ButtonLog onViewLogs={() => handleViewLogs(container.name)}/>
+                  <div className="flex flex-shrink-0 gap-2">
+                    <ButtonLog onViewLogs={() => handleViewLogs(container.name)} />
                   </div>
                 </div>
               );

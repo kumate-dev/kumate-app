@@ -6,6 +6,7 @@ import { ButtonCancel } from './ButtonCancel';
 import { useViewPodLogs } from '@/hooks/useViewPodLogs';
 import { ButtonStop } from './ButtonStop';
 import { ButtonStart } from './ButtonStart';
+import { ButtonExpand } from './ButtonExpand';
 
 export interface LogViewerProps {
   open: boolean;
@@ -31,7 +32,7 @@ export default function BottomLogViewer({
   const [isResizing, setIsResizing] = useState(false);
   const [editorHeight, setEditorHeight] = useState(() => window.innerHeight * 0.5);
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const logEndRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -152,16 +153,9 @@ export default function BottomLogViewer({
               <ButtonStop onStop={stopStreaming} />
             )}
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-white/70 hover:bg-white/10 hover:text-white"
-              onClick={toggleExpand}
-            >
-              {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
+            <ButtonCancel onCancel={onClose} />
 
-            <ButtonCancel onCancel={onClose} disabled={isStreaming} />
+            <ButtonExpand onExpand={toggleExpand} isExpanded={isExpanded} />
           </div>
         </div>
 

@@ -7,11 +7,7 @@ interface ButtonLogProps {
   text?: string;
 }
 
-export const ButtonLog: React.FC<ButtonLogProps> = ({
-  onViewLogs,
-  className,
-  text,
-}) => {
+export const ButtonLog: React.FC<ButtonLogProps> = ({ onViewLogs, className, text }) => {
   return (
     <Button
       variant="outline"

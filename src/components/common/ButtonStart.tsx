@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Play } from 'lucide-react';
 import React from 'react';
@@ -9,11 +8,7 @@ interface ButtonStartProps {
   disabled?: boolean;
 }
 
-export const ButtonStart: React.FC<ButtonStartProps> = ({
-  onStart,
-  className,
-  disabled,
-}) => {
+export const ButtonStart: React.FC<ButtonStartProps> = ({ onStart, className, disabled }) => {
   return (
     <Button
       variant="ghost"
