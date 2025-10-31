@@ -8,7 +8,7 @@ import AgeCell from '@/components/common/AgeCell';
 import { getDeploymentStatus } from '../utils/deploymentStatus';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { templateDeployment } from '../../templates/deployment';
-import { useCallback, RefObject } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export interface PaneDeploymentsProps {
   selectedNamespaces: string[];
@@ -35,12 +35,51 @@ export default function PaneDeployments({
   onUpdate,
   contextName,
 }: PaneDeploymentsProps) {
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   const columns: ColumnDef<string>[] = [
-    { label: 'Name', key: 'metadata' },
-    { label: 'Namespace', key: 'metadata' },
-    { label: 'Ready', key: 'status' },
-    { label: 'Age', key: 'metadata' },
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Namespace', key: 'namespace', sortable: true },
+    { label: 'Ready', key: 'status', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
   ];
+
+  const sortedItems = useMemo(() => {
+    if (!items.length) return [];
+
+    const sorted = [...items].sort((a, b) => {
+      let aValue: any = '';
+      let bValue: any = '';
+
+      switch (sortBy) {
+        case 'name':
+          aValue = a.metadata?.name?.toLowerCase() || '';
+          bValue = b.metadata?.name?.toLowerCase() || '';
+          break;
+        case 'namespace':
+          aValue = a.metadata?.namespace?.toLowerCase() || '';
+          bValue = b.metadata?.namespace?.toLowerCase() || '';
+          break;
+        case 'status':
+          aValue = getDeploymentStatus(a);
+          bValue = getDeploymentStatus(b);
+          break;
+        case 'age':
+          aValue = new Date(a.metadata?.creationTimestamp || '').getTime();
+          bValue = new Date(b.metadata?.creationTimestamp || '').getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [items, sortBy, sortOrder]);
 
   const renderRow = (dep: V1Deployment) => (
     <>
@@ -80,7 +119,7 @@ export default function PaneDeployments({
 
   return (
     <PaneGeneric
-      items={items}
+      items={sortedItems}
       loading={loading}
       error={error}
       namespaceList={namespaceList}
@@ -95,6 +134,10 @@ export default function PaneDeployments({
       yamlTemplate={templateDeployment}
       renderSidebar={renderSidebar}
       contextName={contextName}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
     />
   );
 }

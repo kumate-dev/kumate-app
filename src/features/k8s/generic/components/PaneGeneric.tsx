@@ -1,4 +1,4 @@
-import { ReactNode, useRef, useState, useEffect, useCallback } from 'react';
+import { ReactNode, useState, useEffect, useCallback } from 'react';
 import { V1Namespace } from '@kubernetes/client-node';
 import { PaneTaskbar } from '@/features/k8s/generic/components/PaneTaskbar';
 import { Search } from '@/components/common/Search';
@@ -19,28 +19,23 @@ export interface PaneResourceContextProps {
 }
 
 export interface PaneResourceProps<T> {
-  // Data props
   items: T[];
   loading: boolean;
   error?: string | null;
   namespaceList?: V1Namespace[];
   selectedNamespaces?: string[];
   onSelectNamespace?: (ns: string[]) => void;
-
-  // Table configuration
   columns: ColumnDef<string>[];
   renderRow: (item: T) => ReactNode;
   emptyText?: string;
-
-  // Action handlers
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  setSortBy?: React.Dispatch<React.SetStateAction<string>>;
+  setSortOrder?: React.Dispatch<React.SetStateAction<'asc' | 'desc'>>;
   onDelete: (items: T[]) => Promise<void>;
   onCreate?: (manifest: T) => Promise<T | undefined>;
   onUpdate?: (manifest: T) => Promise<T | undefined>;
-
-  // Yaml editor
   yamlTemplate?: (defaultNamespace?: string) => T;
-
-  // Optional overrides
   showNamespace?: boolean;
   colSpan?: number;
   renderSidebar?: (
@@ -55,44 +50,35 @@ export interface PaneResourceProps<T> {
 }
 
 export function PaneGeneric<T>({
-  // Data props
   items,
   loading,
   error,
   namespaceList = [],
   selectedNamespaces = [],
   onSelectNamespace,
-
-  // Table configuration
   columns,
   renderRow,
   emptyText = 'No items',
-
-  // Action handlers
+  sortBy,
+  sortOrder,
+  setSortBy,
+  setSortOrder,
   onDelete,
   onCreate,
   onUpdate,
-
-  // Yaml editor
   yamlTemplate,
-
-  // Optional overrides
   showNamespace = true,
   colSpan,
   renderSidebar,
   contextName,
 }: PaneResourceProps<T>) {
   const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<string>('');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<T[]>([]);
   const [selectedItem, setSelectedItem] = useState<T | null>(null);
-
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorTitle, setEditorTitle] = useState<string>('');
   const [editorYaml, setEditorYaml] = useState<string>('');
   const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
-
   const totalColSpan = (colSpan || columns.length) + 1;
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
