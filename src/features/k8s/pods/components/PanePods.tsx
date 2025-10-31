@@ -9,11 +9,12 @@ import { podRestartCount } from '../utils/podRestartCount';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getPodStatus } from '../utils/podStatus';
 import { IconWarning } from '@/components/common/IconWarning';
-import { useCallback, RefObject } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { templatePod } from '../../templates/pod';
 import { DotContainers } from './DotContainers';
 import { getContainerStatuses } from '../utils/containerStatus';
 import { WarningPod } from './WarningPod';
+import { sortItems } from '@/utils/sort';
 
 export interface PanePodsProps {
   selectedNamespaces: string[];
@@ -40,20 +41,55 @@ export default function PanePods({
   onUpdate,
   contextName,
 }: PanePodsProps) {
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   const columns: ColumnDef<string>[] = [
-    { label: 'Name', key: 'metadata' },
-    { label: '', key: '', sortable: false },
-    { label: 'Namespace', key: 'metadata' },
-    { label: 'Containers', key: 'spec' },
-    { label: 'CPU', key: 'spec' },
-    { label: 'Memory', key: 'spec' },
-    { label: 'Restart', key: 'status' },
-    { label: 'Controlled By', key: 'metadata' },
-    { label: 'Node', key: 'spec' },
-    { label: 'QoS', key: 'status' },
-    { label: 'Age', key: 'metadata' },
-    { label: 'Status', key: 'status' },
+    { label: 'Name', key: 'name', sortable: true },
+    { label: '', key: 'warning', sortable: false },
+    { label: 'Namespace', key: 'namespace', sortable: true },
+    { label: 'Containers', key: 'containers', sortable: true },
+    { label: 'CPU', key: 'cpu', sortable: true },
+    { label: 'Memory', key: 'memory', sortable: true },
+    { label: 'Restart', key: 'restart', sortable: true },
+    { label: 'Controlled By', key: 'controlledBy', sortable: true },
+    { label: 'Node', key: 'node', sortable: true },
+    { label: 'QoS', key: 'qos', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
+    { label: 'Status', key: 'status', sortable: false },
   ];
+
+  const sortedItems = useMemo(() => {
+    const valueGetters = {
+      name: (item: V1Pod) => item.metadata?.name || '',
+      namespace: (item: V1Pod) => item.metadata?.namespace || '',
+      containers: (item: V1Pod) => item.spec?.containers?.length || 0,
+      cpu: (item: V1Pod) => {
+        const cpuRequests = item.spec?.containers
+          ?.map((c) => c.resources?.requests?.cpu)
+          .filter(Boolean);
+        return cpuRequests?.length || 0;
+      },
+      memory: (item: V1Pod) => {
+        const memoryRequests = item.spec?.containers
+          ?.map((c) => c.resources?.requests?.memory)
+          .filter(Boolean);
+        return memoryRequests?.length || 0;
+      },
+      restart: (item: V1Pod) => podRestartCount(item),
+      controlledBy: (item: V1Pod) => item.metadata?.ownerReferences?.[0]?.name || '',
+      node: (item: V1Pod) => item.spec?.nodeName || '',
+      qos: (item: V1Pod) => item.status?.qosClass || '',
+      age: (item: V1Pod) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+      status: (item: V1Pod) => getPodStatus(item),
+      warning: (item: V1Pod) => {
+        const containerStatuses = getContainerStatuses(item);
+        return containerStatuses.some((status) => !status.ready) ? 1 : 0;
+      },
+    };
+
+    return sortItems(items, sortBy, sortOrder, valueGetters);
+  }, [items, sortBy, sortOrder]);
 
   const renderRow = (pod: V1Pod) => {
     const containerStatuses = getContainerStatuses(pod);
@@ -115,7 +151,7 @@ export default function PanePods({
 
   return (
     <PaneGeneric
-      items={items}
+      items={sortedItems}
       loading={loading}
       error={error}
       namespaceList={namespaceList}
@@ -130,6 +166,10 @@ export default function PanePods({
       yamlTemplate={templatePod}
       renderSidebar={renderSidebar}
       contextName={contextName}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
     />
   );
 }

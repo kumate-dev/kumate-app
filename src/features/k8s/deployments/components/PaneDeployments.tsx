@@ -9,6 +9,7 @@ import { getDeploymentStatus } from '../utils/deploymentStatus';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { templateDeployment } from '../../templates/deployment';
 import { useCallback, useMemo, useState } from 'react';
+import { sortItems } from '@/utils/sort';
 
 export interface PaneDeploymentsProps {
   selectedNamespaces: string[];
@@ -46,39 +47,14 @@ export default function PaneDeployments({
   ];
 
   const sortedItems = useMemo(() => {
-    if (!items.length) return [];
+    const valueGetters = {
+      name: (item: V1Deployment) => item.metadata?.name || '',
+      namespace: (item: V1Deployment) => item.metadata?.namespace || '',
+      status: (item: V1Deployment) => getDeploymentStatus(item),
+      age: (item: V1Deployment) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+    };
 
-    const sorted = [...items].sort((a, b) => {
-      let aValue: any = '';
-      let bValue: any = '';
-
-      switch (sortBy) {
-        case 'name':
-          aValue = a.metadata?.name?.toLowerCase() || '';
-          bValue = b.metadata?.name?.toLowerCase() || '';
-          break;
-        case 'namespace':
-          aValue = a.metadata?.namespace?.toLowerCase() || '';
-          bValue = b.metadata?.namespace?.toLowerCase() || '';
-          break;
-        case 'status':
-          aValue = getDeploymentStatus(a);
-          bValue = getDeploymentStatus(b);
-          break;
-        case 'age':
-          aValue = new Date(a.metadata?.creationTimestamp || '').getTime();
-          bValue = new Date(b.metadata?.creationTimestamp || '').getTime();
-          break;
-        default:
-          return 0;
-      }
-
-      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return sorted;
+    return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder]);
 
   const renderRow = (dep: V1Deployment) => (
