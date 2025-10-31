@@ -12,10 +12,9 @@ interface SidebarPodsProps {
   setItem: (item: V1Pod | null) => void;
   onDelete?: (item: V1Pod) => void;
   onEdit?: (item: V1Pod) => void;
-  tableRef?: React.RefObject<HTMLTableElement | null>;
 }
 
-export function SidebarPods({ item, setItem, onDelete, onEdit, tableRef }: SidebarPodsProps) {
+export function SidebarPods({ item, setItem, onDelete, onEdit }: SidebarPodsProps) {
   const renderOverview = (pod: V1Pod) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -114,7 +113,6 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, tableRef }: Sideb
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
-      tableRef={tableRef}
     />
   );
 }

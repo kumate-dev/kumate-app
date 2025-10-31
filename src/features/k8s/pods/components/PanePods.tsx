@@ -97,7 +97,6 @@ export default function PanePods({
   const renderSidebar = useCallback(
     (
       item: V1Pod,
-      tableRef: RefObject<HTMLTableElement | null>,
       actions: {
         setItem: (item: V1Pod | null) => void;
         onDelete?: (item: V1Pod) => void;
@@ -109,7 +108,6 @@ export default function PanePods({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
-        tableRef={tableRef}
       />
     ),
     []

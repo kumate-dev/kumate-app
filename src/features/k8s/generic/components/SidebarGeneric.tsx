@@ -1,15 +1,15 @@
-import { useState, useEffect, ReactNode, useRef } from 'react';
+import { useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
 import { ButtonEdit } from '@/components/common/ButtonEdit';
 import { ButtonTrash } from '@/components/common/ButtonTrash';
+import { startResizing } from '@/utils/resizing';
 
 export interface SidebarResourcesProps<T> {
   item: T | null;
   setItem: (item: T | null) => void;
   width?: number;
-  tableRef?: React.RefObject<HTMLTableElement | null>;
   sections?: {
     key: string;
     title: string;
@@ -23,7 +23,6 @@ export function SidebarGeneric<T>({
   item,
   setItem,
   width = 550,
-  tableRef,
   sections = [],
   onDelete,
   onEdit,
@@ -45,29 +44,22 @@ export function SidebarGeneric<T>({
     setTimeout(() => setItem(null), 300);
   };
 
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-
-    const startX = e.clientX;
-    const startWidth = sidebarWidth;
-
-    const tableWidth = tableRef?.current?.offsetWidth ?? 1000;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = startWidth - (e.clientX - startX);
-      setSidebarWidth(Math.min(Math.max(newWidth, 300), tableWidth));
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
+  const onResize = useCallback(
+    (e: React.MouseEvent) => {
+      startResizing(
+        e,
+        {
+          getCurrentSize: () => sidebarWidth,
+          setSize: setSidebarWidth,
+          minSize: 200,
+          maxSize: window.innerWidth * 0.9,
+          axis: 'horizontal',
+        },
+        setIsResizing
+      );
+    },
+    [sidebarWidth]
+  );
 
   const toggleSection = (key: string) => {
     setSectionsOpen((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -94,7 +86,7 @@ export function SidebarGeneric<T>({
       >
         <div
           className="absolute top-0 left-0 h-full w-1 cursor-ew-resize bg-transparent hover:bg-white/10 active:bg-white/20"
-          onMouseDown={startResizing}
+          onMouseDown={onResize}
         />
 
         <div className="flex shrink-0 justify-end border-b border-white/10">

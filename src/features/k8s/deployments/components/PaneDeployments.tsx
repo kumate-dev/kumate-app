@@ -62,7 +62,6 @@ export default function PaneDeployments({
   const renderSidebar = useCallback(
     (
       item: V1Deployment,
-      tableRef: RefObject<HTMLTableElement | null>,
       actions: {
         setItem: (item: V1Deployment | null) => void;
         onDelete?: (item: V1Deployment) => void;
@@ -74,7 +73,6 @@ export default function PaneDeployments({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
-        tableRef={tableRef}
       />
     ),
     []

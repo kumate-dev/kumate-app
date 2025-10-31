@@ -45,7 +45,6 @@ export interface PaneResourceProps<T> {
   colSpan?: number;
   renderSidebar?: (
     item: T,
-    tableRef: React.RefObject<HTMLTableElement | null>,
     actions: {
       setItem: (item: T | null) => void;
       onDelete?: (item: T) => void;
@@ -97,7 +96,6 @@ export function PaneGeneric<T>({
   const totalColSpan = (colSpan || columns.length) + 1;
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
-  const tableRef = useRef<HTMLTableElement>(null);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -235,7 +233,7 @@ export function PaneGeneric<T>({
       <div className="flex-1 overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
         <div className="h-full overflow-auto">
           <div className="min-w-max">
-            <Table ref={tableRef}>
+            <Table>
               {tableHeader}
               <Tbody>
                 {showSkeleton &&
@@ -292,7 +290,7 @@ export function PaneGeneric<T>({
 
         {selectedItem && renderSidebar && (
           <div className="w-[550px]">
-            {renderSidebar(selectedItem, tableRef, {
+            {renderSidebar(selectedItem, {
               setItem: setSelectedItem,
               onDelete: handleDeleteOne,
               onEdit: openEditEditor,

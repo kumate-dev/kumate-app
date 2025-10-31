@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { parse } from 'yaml';
 import { YamlEditor } from './YamlEditor';
 import { ButtonCancel } from './ButtonCancel';
@@ -6,6 +6,7 @@ import { ButtonSave } from './ButtonSave';
 import { YamlEditorProps } from '@/types/yaml';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { startResizing } from '@/utils/resizing';
 
 export default function BottomYamlEditor({
   open,
@@ -22,7 +23,22 @@ export default function BottomYamlEditor({
   const [editorHeight, setEditorHeight] = useState(() => window.innerHeight * 0.5);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const editorRef = useRef<HTMLDivElement>(null);
+  const onResize = useCallback(
+    (e: React.MouseEvent) => {
+      startResizing(
+        e,
+        {
+          getCurrentSize: () => editorHeight,
+          setSize: setEditorHeight,
+          minSize: 200,
+          maxSize: window.innerHeight * 0.9,
+          axis: 'vertical',
+        },
+        setIsResizing
+      );
+    },
+    [editorHeight]
+  );
 
   useEffect(() => {
     if (open) {
@@ -58,30 +74,6 @@ export default function BottomYamlEditor({
     }
   };
 
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-
-    const startY = e.clientY;
-    const startHeight = editorHeight;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = startHeight + (startY - e.clientY);
-      const minHeight = 200;
-      const maxHeight = window.innerHeight * 0.9;
-      setEditorHeight(Math.min(Math.max(newHeight, minHeight), maxHeight));
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
   const toggleExpand = () => {
     if (isExpanded) {
       setEditorHeight(window.innerHeight * 0.5);
@@ -103,7 +95,6 @@ export default function BottomYamlEditor({
       />
 
       <div
-        ref={editorRef}
         className={`fixed right-0 bottom-0 left-0 z-[60] border-l border-white/10 bg-neutral-900/95 shadow-xl backdrop-blur-sm transition-transform duration-300 ${
           isResizing ? 'select-none' : ''
         }`}
@@ -112,7 +103,7 @@ export default function BottomYamlEditor({
       >
         <div
           className="absolute top-0 right-0 left-0 h-2 cursor-ns-resize bg-transparent hover:bg-white/10 active:bg-white/20"
-          onMouseDown={startResizing}
+          onMouseDown={onResize}
         />
 
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
