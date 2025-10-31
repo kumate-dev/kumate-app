@@ -5,7 +5,7 @@ import { ColumnDef, TableHeader } from '../../../../components/common/TableHeade
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
-import { Warning } from '@/components/common/Warning';
+import { Warning } from '@/components/common/IconWarning';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getDaemonSetStatus } from '../utils/daemonSetStatus';
 

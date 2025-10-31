@@ -1,8 +1,14 @@
-export function getContainerDotColor(containerStatus: any): string {
+import { ContainerStatusInfo } from './containerStatus';
+
+export function getContainerDotColor(containerStatus: ContainerStatusInfo): string {
   const { state, ready } = containerStatus;
 
+  if (!state) {
+    return 'bg-white/30';
+  }
+
   if (state.waiting) {
-    const reason = state.waiting.reason;
+    const reason = state.waiting.reason || '';
     const warningReasons = [
       'ContainerCreating',
       'PodInitializing',

@@ -5,14 +5,15 @@ import { SidebarPods } from './SidebarPods';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
-import { podHasPodWarning } from '../utils/podHasWarning';
 import { podRestartCount } from '../utils/podRestartCount';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getPodStatus } from '../utils/podStatus';
-import { Warning } from '@/components/common/Warning';
+import { IconWarning } from '@/components/common/IconWarning';
 import { useCallback, RefObject } from 'react';
 import { templatePod } from '../../templates/pod';
 import { DotContainers } from './DotContainers';
+import { getContainerStatuses } from '../utils/containerStatus';
+import { WarningPod } from './WarningPod';
 
 export interface PanePodsProps {
   selectedNamespaces: string[];
@@ -54,35 +55,44 @@ export default function PanePods({
     { label: 'Status', key: 'status' },
   ];
 
-  const renderRow = (pod: V1Pod) => (
-    <>
-      <Td className="max-w-truncate align-middle">
-        <span className="block truncate" title={pod.metadata?.name ?? ''}>
-          {pod.metadata?.name}
-        </span>
-      </Td>
-      <Td className="text-center align-middle">{podHasPodWarning(pod) && <Warning />}</Td>
-      <Td>
-        <BadgeNamespaces name={pod.metadata?.namespace ?? ''} />
-      </Td>
-      <Td className="align-middle">
-        <DotContainers
-          containerStatuses={pod.status?.containerStatuses}
-          containersCount={pod.spec?.containers?.length}
-        />
-      </Td>
-      <Td>{pod.spec?.containers?.map((c) => c.resources?.requests?.cpu).join(', ') || '-'}</Td>
-      <Td>{pod.spec?.containers?.map((c) => c.resources?.requests?.memory).join(', ') || '-'}</Td>
-      <Td>{podRestartCount(pod)}</Td>
-      <Td>{pod.metadata?.ownerReferences?.map((o) => o.name).join(', ') || '-'}</Td>
-      <Td>{pod.spec?.nodeName || '-'}</Td>
-      <Td>{pod.status?.qosClass || '-'}</Td>
-      <AgeCell timestamp={pod.metadata?.creationTimestamp} />
-      <Td>
-        <BadgeStatus status={getPodStatus(pod)} />
-      </Td>
-    </>
-  );
+  const renderRow = (pod: V1Pod) => {
+    const containerStatuses = getContainerStatuses(pod);
+    const hasWarning = containerStatuses.some((status) => !status.ready);
+    return (
+      <>
+        <Td className="max-w-truncate align-middle">
+          <span className="block truncate" title={pod.metadata?.name ?? ''}>
+            {pod.metadata?.name}
+          </span>
+        </Td>
+        <Td className="text-center align-middle">
+          {hasWarning ? (
+            <WarningPod warnings={containerStatuses}>
+              <div>
+                <IconWarning />
+              </div>
+            </WarningPod>
+          ) : null}
+        </Td>
+        <Td>
+          <BadgeNamespaces name={pod.metadata?.namespace ?? ''} />
+        </Td>
+        <Td className="align-middle">
+          <DotContainers containerStatuses={getContainerStatuses(pod)} />
+        </Td>
+        <Td>{pod.spec?.containers?.map((c) => c.resources?.requests?.cpu).join(', ') || '-'}</Td>
+        <Td>{pod.spec?.containers?.map((c) => c.resources?.requests?.memory).join(', ') || '-'}</Td>
+        <Td>{podRestartCount(pod)}</Td>
+        <Td>{pod.metadata?.ownerReferences?.map((o) => o.name).join(', ') || '-'}</Td>
+        <Td>{pod.spec?.nodeName || '-'}</Td>
+        <Td>{pod.status?.qosClass || '-'}</Td>
+        <AgeCell timestamp={pod.metadata?.creationTimestamp} />
+        <Td>
+          <BadgeStatus status={getPodStatus(pod)} />
+        </Td>
+      </>
+    );
+  };
 
   const renderSidebar = useCallback(
     (
