@@ -69,6 +69,8 @@ pub fn run() {
             pods::list_pods,
             pods::watch_pods,
             pods::delete_pods,
+            pods::get_pod_logs,
+            pods::watch_pod_logs,
             deployments::create_deployment,
             deployments::update_deployment,
             deployments::list_deployments,
