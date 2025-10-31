@@ -107,7 +107,6 @@ export function useViewPodLogs({
       unlistenRef.current = null;
     }
     setIsStreaming(false);
-    setLoading(false);
   }, []);
 
   const downloadLogs = useCallback(() => {
@@ -143,12 +142,6 @@ export function useViewPodLogs({
       setError(null);
     }
   }, [open, stopStreaming]);
-
-  useEffect(() => {
-    return () => {
-      stopStreaming();
-    };
-  }, [stopStreaming]);
 
   return {
     logs,
