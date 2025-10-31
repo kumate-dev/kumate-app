@@ -47,7 +47,7 @@ export const getHorizontalPodAutoscalerStatus = (hpa: V1HorizontalPodAutoscaler)
     }
   }
 
-  let variant: BadgeVariant = statusVariant(status);
+  const variant: BadgeVariant = statusVariant(status);
 
   return { status, variant };
 };

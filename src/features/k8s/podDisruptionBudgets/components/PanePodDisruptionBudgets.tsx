@@ -5,9 +5,6 @@ import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
-import { BadgeVariant } from '@/types/variant';
-import { Badge } from '@/components/ui/badge';
-import { K8sStatus } from '@/types/k8sStatus';
 import { getPodDisruptionBudgetsStatus } from '../utils/podDisruptionBudgetsStatus';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 

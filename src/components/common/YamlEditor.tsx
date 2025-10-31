@@ -26,8 +26,29 @@ export function YamlEditor({
   const highlightRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
+    const validateYaml = (yamlString: string) => {
+      if (!yamlString.trim()) {
+        setIsValid(true);
+        setErrorMessage(null);
+        onError?.(null);
+        return;
+      }
+
+      try {
+        parse(yamlString);
+        setIsValid(true);
+        setErrorMessage(null);
+        onError?.(null);
+      } catch (error) {
+        setIsValid(false);
+        const errorMsg = error instanceof Error ? error.message : 'Invalid YAML format';
+        setErrorMessage(errorMsg);
+        onError?.(errorMsg);
+      }
+    };
+
     validateYaml(value);
-  }, [value]);
+  }, [value, onError]);
 
   const lines = useMemo(() => {
     const lineCount = value.split('\n').length;
@@ -49,27 +70,6 @@ export function YamlEditor({
       highlightRef.current.innerHTML = highlightedHtml;
     }
   }, [highlightedHtml]);
-
-  const validateYaml = (yamlString: string) => {
-    if (!yamlString.trim()) {
-      setIsValid(true);
-      setErrorMessage(null);
-      onError?.(null);
-      return;
-    }
-
-    try {
-      parse(yamlString);
-      setIsValid(true);
-      setErrorMessage(null);
-      onError?.(null);
-    } catch (error) {
-      setIsValid(false);
-      const errorMsg = error instanceof Error ? error.message : 'Invalid YAML format';
-      setErrorMessage(errorMsg);
-      onError?.(errorMsg);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;

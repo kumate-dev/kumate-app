@@ -5,8 +5,6 @@ import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 import Overview from '@/features/k8s/overview/components/Overview';
-import PaneResourceQuotas from '@/features/k8s/resourceQuotas/components/PaneResourceQuotas';
-import PaneStatefulSets from '@/features/k8s/statefulSets/components/PaneStatefulSets';
 import ComingSoon from './ComingSoon';
 import Pods from '@/features/k8s/pods/pages/Pods';
 import ConfigMaps from '@/features/k8s/configMaps/pages/ConfigMaps';

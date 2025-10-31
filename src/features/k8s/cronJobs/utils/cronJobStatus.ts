@@ -10,7 +10,7 @@ const statusVariant = (status: string) => {
 
 export const getCronJobStatus = (cj: V1CronJob): K8sStatus => {
   const status = cj.spec?.suspend === true ? 'Suspend' : 'Active';
-  let variant: BadgeVariant = statusVariant(status);
+  const variant: BadgeVariant = statusVariant(status);
 
   return { status, variant };
 };
