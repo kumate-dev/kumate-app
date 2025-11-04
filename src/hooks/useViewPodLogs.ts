@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { getPodLogs, watchPodLogs } from '@/api/k8s/pods';
 import { unwatch } from '@/api/k8s/unwatch';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
 
 export interface UseViewPodLogsProps {
   open: boolean;
@@ -121,17 +123,18 @@ export function useViewPodLogs({
     setLoading(false);
   }, [contextName]);
 
-  const downloadLogs = useCallback(() => {
-    const blob = new Blob([logs], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${podName}-${containerName || 'logs'}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [logs, podName, containerName]);
+  const downloadLogs = useCallback(async () => {
+    try {
+      const filePath = await save({
+        defaultPath: `${podName}-${containerName || 'logs'}.log`,
+        filters: [{ name: 'Log', extensions: ['log'] }],
+      });
+      if (!filePath) return;
+      await writeTextFile(filePath, logs);
+    } catch (err) {
+      setError(`Download failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }, [logs, podName, containerName, setError]);
 
   const clearLogs = useCallback(() => {
     setLogs('');
