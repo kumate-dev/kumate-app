@@ -103,19 +103,19 @@ export default function BottomLogViewer({
       />
 
       <div
-        className={`fixed right-0 bottom-0 left-0 z-[60] border-l border-white/10 bg-neutral-900/95 shadow-xl backdrop-blur-sm transition-transform duration-300 ${
+        className={`fixed right-0 bottom-0 left-0 z-[60] border-l border-neutral-200 bg-white/95 shadow-xl backdrop-blur-sm transition-transform duration-300 dark:border-white/10 dark:bg-neutral-900/95 ${
           isResizing ? 'select-none' : ''
         }`}
         style={{ height: `${editorHeight}px` }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="absolute top-0 right-0 left-0 h-2 cursor-ns-resize bg-transparent hover:bg-white/10 active:bg-white/20"
+          className="absolute top-0 right-0 left-0 h-2 cursor-ns-resize bg-transparent hover:bg-neutral-200/60 active:bg-neutral-200/80 dark:hover:bg-white/10 dark:active:bg-white/20"
           onMouseDown={onResize}
         />
 
-        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-          <div className="min-w-0 flex-1 truncate text-sm font-medium text-white/80">
+        <div className="flex items-center gap-2 border-b border-neutral-200 px-4 py-3 dark:border-white/10">
+          <div className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-800 dark:text-white/80">
             {title ?? 'Pod Logs'}
           </div>
 
@@ -133,7 +133,7 @@ export default function BottomLogViewer({
               {[50, 100, 500, 1000, -1].map((val) => (
                 <div
                   key={val}
-                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-white/10"
+                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-neutral-100 dark:hover:bg-white/10"
                   onClick={() => {
                     setTailLines(val);
                     setSelectedTail(val);
@@ -144,7 +144,7 @@ export default function BottomLogViewer({
                       selectedTail === val ? 'opacity-100' : 'opacity-0'
                     }`}
                   />
-                  <span className="truncate text-xs text-white">
+                  <span className="truncate text-xs text-neutral-800 dark:text-white">
                     {val === -1 ? 'All' : `${val} lines`}
                   </span>
                 </div>
@@ -167,24 +167,24 @@ export default function BottomLogViewer({
         </div>
 
         <div className="h-[calc(100%-49px)] p-4">
-          <div className="relative h-full overflow-auto rounded-md border border-white/20 bg-black font-mono text-sm break-words whitespace-pre-wrap">
+          <div className="relative h-full overflow-auto rounded-md border border-neutral-200 bg-neutral-50 font-mono text-sm break-words whitespace-pre-wrap dark:border-white/20 dark:bg-black">
             {loading && !logs && (
-              <div className="flex h-full items-center justify-center text-white/60">
+              <div className="flex h-full items-center justify-center text-neutral-500 dark:text-white/60">
                 Loading logs...
               </div>
             )}
 
-            {error && <div className="mb-4 text-red-400">Error: {error}</div>}
+            {error && <div className="mb-4 text-red-600 dark:text-red-400">Error: {error}</div>}
 
             {logs && (
-              <div className="text-white/80">
+              <div className="text-neutral-800 dark:text-white/80">
                 {logs}
                 <div ref={logEndRef} />
               </div>
             )}
 
             {!loading && !error && !logs && (
-              <div className="flex h-full items-center justify-center text-white/60">
+              <div className="flex h-full items-center justify-center text-neutral-500 dark:text-white/60">
                 No logs available
               </div>
             )}
