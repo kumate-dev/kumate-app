@@ -45,8 +45,8 @@ export function SidebarK8sDeployments({
             </Td>
           </Tr>
 
-          <TableYamlRow label="Labels" data={dep.metadata?.labels} />
-          <TableYamlRow label="Annotations" data={dep.metadata?.annotations} />
+          <TableYamlRow label="Labels" data={dep.metadata?.labels} maxWidthClass="lg" />
+          <TableYamlRow label="Annotations" data={dep.metadata?.annotations} maxWidthClass="xl" />
 
           <Tr>
             <Td>Replicas</Td>
@@ -59,7 +59,7 @@ export function SidebarK8sDeployments({
             </Td>
           </Tr>
 
-          <TableYamlRow label="Selector" data={dep.spec?.selector?.matchLabels} />
+          <TableYamlRow label="Selector" data={dep.spec?.selector?.matchLabels} maxWidthClass="lg" />
 
           <Tr>
             <Td>Strategy Type</Td>

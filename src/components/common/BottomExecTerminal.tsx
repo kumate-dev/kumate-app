@@ -7,7 +7,6 @@ import type { ExecEvent } from '@/api/k8s/pods';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
-import '@/styles/xterm-overrides.css';
 
 export interface ExecTerminalProps {
   open: boolean;
@@ -44,7 +43,7 @@ export default function BottomExecTerminal({
   const [currentCommand, setCurrentCommand] = useState<string[]>(['bash', '-l']);
   const autoTriedRef = useRef<number>(0);
 
-  const { output, loading, error, isConnected, startSession, stopSession, sendInput, clearOutput } =
+  const { output, error, isConnected, startSession, stopSession, sendInput } =
     useExecTerminal({
       open,
       contextName,

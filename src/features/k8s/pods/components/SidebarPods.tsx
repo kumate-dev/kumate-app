@@ -74,7 +74,7 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: Si
               <AgeCell timestamp={pod.metadata?.creationTimestamp ?? ''} />
             </Tr>
 
-            <TableYamlRow label="Labels" data={pod.metadata?.labels} />
+            <TableYamlRow label="Labels" data={pod.metadata?.labels} maxWidthClass="lg" />
 
             <Tr>
               <Td>Node</Td>

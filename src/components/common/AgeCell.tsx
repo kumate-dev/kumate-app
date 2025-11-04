@@ -24,5 +24,5 @@ export default function AgeCell({ timestamp }: { timestamp?: string | Date }) {
     return () => clearInterval(id);
   }, [timestamp]);
 
-  return <Td ref={ref} className="text-white/80" style={{ minWidth: '70px' }} />;
+  return <Td ref={ref} className="min-w-[70px] text-white/80" />;
 }

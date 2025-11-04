@@ -126,7 +126,7 @@ export default function BottomYamlEditor({
           <YamlEditor
             value={yamlText}
             onChange={setYamlText}
-            height="100%"
+            heightClass="h-full"
             readOnly={false}
             onError={setYamlError}
           />

@@ -8,6 +8,7 @@ interface YamlEditorProps {
   value: string;
   onChange: (value: string) => void;
   height?: string;
+  heightClass?: string;
   readOnly?: boolean;
   onError?: (error: string | null) => void;
 }
@@ -16,6 +17,7 @@ export function YamlEditor({
   value,
   onChange,
   height = '400px',
+  heightClass,
   readOnly = false,
   onError,
 }: YamlEditorProps) {
@@ -110,8 +112,8 @@ export function YamlEditor({
       <div
         className={`relative flex-1 overflow-hidden rounded-md border bg-black ${
           isValid ? (isFocused ? 'border-blue-500' : 'border-white/20') : 'border-red-500'
-        } ${readOnly ? 'opacity-70' : ''}`}
-        style={{ height }}
+        } ${readOnly ? 'opacity-70' : ''} ${heightClass ?? ''}`}
+        style={!heightClass ? { height } : undefined}
       >
         <div className="absolute top-0 left-0 z-[5] h-full w-16 overflow-hidden bg-neutral-900 px-2 py-4 text-right font-mono text-[14px] leading-[1.5] text-gray-500 select-none">
           {lines.map((line) => (
