@@ -4,9 +4,10 @@ interface DropdownProps {
   trigger: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }
 
-export function Dropdown({ trigger, children, className }: DropdownProps) {
+export function Dropdown({ trigger, children, className, disabled = false }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -21,8 +22,12 @@ export function Dropdown({ trigger, children, className }: DropdownProps) {
   }, []);
 
   return (
-    <div className={`relative ${className}`} ref={ref}>
-      <div onClick={() => setOpen(!open)}>{trigger}</div>
+    <div
+      className={`relative ${className} ${disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : ''}`}
+      ref={ref}
+      aria-disabled={disabled}
+    >
+      <div onClick={() => !disabled && setOpen(!open)}>{trigger}</div>
       {open && (
         <div className="absolute z-30 mt-1 min-w-full rounded border border-white/20 bg-neutral-900 p-1 shadow-lg">
           <div className="whitespace-nowrap">{children}</div>

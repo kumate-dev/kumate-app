@@ -1,12 +1,15 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Maximize2, Minimize2, Play, Square, Download } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { startResizing } from '@/utils/resizing';
 import { ButtonCancel } from './ButtonCancel';
 import { useViewPodLogs } from '@/hooks/useViewPodLogs';
 import { ButtonStop } from './ButtonStop';
 import { ButtonStart } from './ButtonStart';
 import { ButtonExpand } from './ButtonExpand';
+import { Dropdown } from '@/components/common/Dropdown';
+import DropdownTrigger from '@/components/ui/dropdown';
+import { ButtonDownloadLog } from './ButtonDownloadLog';
+import { ButtonClear } from './ButtonClear';
 
 export interface LogViewerProps {
   open: boolean;
@@ -32,6 +35,7 @@ export default function BottomLogViewer({
   const [isResizing, setIsResizing] = useState(false);
   const [editorHeight, setEditorHeight] = useState(() => window.innerHeight * 0.5);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedTail, setSelectedTail] = useState<number>(50);
 
   const logEndRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +55,7 @@ export default function BottomLogViewer({
     namespace,
     contextName,
     containerName,
+    tailLines: selectedTail,
     autoStream,
   });
 
@@ -115,37 +120,39 @@ export default function BottomLogViewer({
           </div>
 
           <div className="flex items-center gap-2">
-            <select
-              onChange={(e) => setTailLines(Number(e.target.value))}
-              className="h-8 rounded border border-white/20 bg-white/10 px-2 text-sm text-white/80 focus:border-white/40 focus:ring-1 focus:ring-white/40 focus:outline-none"
+            <Dropdown
+              trigger={
+                <DropdownTrigger
+                  label={selectedTail === -1 ? 'All' : `${selectedTail} lines`}
+                  className="w-40"
+                  disabled={isStreaming}
+                />
+              }
               disabled={isStreaming}
             >
-              <option value={50}>50 lines</option>
-              <option value={100}>100 lines</option>
-              <option value={500}>500 lines</option>
-              <option value={1000}>1000 lines</option>
-              <option value={-1}>All</option>
-            </select>
+              {[50, 100, 500, 1000, -1].map((val) => (
+                <div
+                  key={val}
+                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-white/10"
+                  onClick={() => {
+                    setTailLines(val);
+                    setSelectedTail(val);
+                  }}
+                >
+                  <Check
+                    className={`h-4 w-4 text-green-400 ${
+                      selectedTail === val ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+                  <span className="truncate text-xs text-white">
+                    {val === -1 ? 'All' : `${val} lines`}
+                  </span>
+                </div>
+              ))}
+            </Dropdown>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-white/70 hover:bg-white/10 hover:text-white"
-              onClick={downloadLogs}
-              disabled={!logs}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-white/70 hover:bg-white/10 hover:text-white"
-              onClick={clearLogs}
-              disabled={!logs || isStreaming}
-            >
-              Clear
-            </Button>
+            <ButtonDownloadLog onDownloadLogs={downloadLogs} />
+            <ButtonClear onClearLogs={clearLogs} />
 
             {!isStreaming ? (
               <ButtonStart onStart={startStreaming} disabled={loading} />
