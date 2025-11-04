@@ -38,9 +38,11 @@ export default function BottomExecTerminal({
   const fitAddonRef = useRef<FitAddon | null>(null);
   const lastWrittenLenRef = useRef<number>(0);
   const disposeDataHandlerRef = useRef<(() => void) | null>(null);
-  const [shellMode, setShellMode] = useState<'auto' | 'bash' | 'sh' | 'ash' | 'zsh'>('auto');
+  const [shellMode] = useState<'auto' | 'bash' | 'sh' | 'ash' | 'zsh' | 'powershell' | 'cmd'>(
+    'auto'
+  );
   const [currentCommand, setCurrentCommand] = useState<string[]>(['bash', '-l']);
-  const autoTriedRef = useRef<number>(0); // index of auto candidates tried
+  const autoTriedRef = useRef<number>(0);
 
   const { output, loading, error, isConnected, startSession, stopSession, sendInput, clearOutput } =
     useExecTerminal({
@@ -152,7 +154,13 @@ export default function BottomExecTerminal({
     if (isConnected && termRef.current) {
       termRef.current.focus();
       const disposable = termRef.current.onData(async (data) => {
-        await sendInput(data, false);
+        const isWindowsShell =
+          currentCommand &&
+          currentCommand.length > 0 &&
+          (currentCommand[0].toLowerCase().includes('powershell') ||
+            currentCommand[0].toLowerCase().includes('cmd'));
+        const normalized = isWindowsShell ? data.replace(/\r/g, '\r\n') : data;
+        await sendInput(normalized, false);
       });
       disposeDataHandlerRef.current = () => disposable.dispose();
     } else {
@@ -216,6 +224,10 @@ export default function BottomExecTerminal({
       setCurrentCommand(['zsh', '-l']);
     } else if (shellMode === 'ash') {
       setCurrentCommand(['ash', '-l']);
+    } else if (shellMode === 'powershell') {
+      setCurrentCommand(['powershell.exe', '-NoLogo', '-NoProfile']);
+    } else if (shellMode === 'cmd') {
+      setCurrentCommand(['cmd.exe']);
     } else {
       setCurrentCommand(['sh', '-l']);
     }
@@ -227,11 +239,15 @@ export default function BottomExecTerminal({
     if (isConnected) return;
     if (!error) return;
     const candidates: string[][] = [
+      // Linux shells first
       ['bash', '-l'],
       ['zsh', '-l'],
       ['ash', '-l'],
       ['sh', '-l'],
       ['sh'],
+      // Windows shells as fallbacks
+      ['powershell.exe', '-NoLogo', '-NoProfile'],
+      ['cmd.exe'],
     ];
     const nextIdx = autoTriedRef.current + 1;
     if (nextIdx < candidates.length) {
