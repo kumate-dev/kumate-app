@@ -124,14 +124,11 @@ export async function watchPodLogs({
   tailLines?: number;
   onEvent?: EventHandler<LogEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = `pod-logs-${Date.now()}`;
-
-  await invoke<void>('watch_pod_logs', {
+  const eventName = await invoke<string>('watch_pod_logs', {
     context,
     namespace,
     podName,
     containerName,
-    eventName,
     tailLines,
   });
 

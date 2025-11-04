@@ -80,17 +80,31 @@ pub async fn watch_pod_logs(
     namespace: String,
     pod_name: String,
     container_name: Option<String>,
-    event_name: String,
     tail_lines: Option<i64>,
-) -> Result<(), String> {
-    PodResources::watch_logs(
+    state: tauri::State<'_, WatchManager>,
+) -> Result<String, String> {
+    let resource = match &container_name {
+        Some(c) => format!("pod_logs/{}/{}/{}", namespace, pod_name, c),
+        None => format!("pod_logs/{}/{}", namespace, pod_name),
+    };
+
+    watch(
         app_handle,
-        context,
-        namespace,
-        pod_name,
-        container_name,
-        event_name,
-        tail_lines,
+        context.clone(),
+        resource,
+        None,
+        state,
+        Arc::new(move |app_handle, name, _namespaces, event_name| {
+            let ns = namespace.clone();
+            let pod = pod_name.clone();
+            let container = container_name.clone();
+            let tails = tail_lines;
+
+            async move {
+                PodResources::watch_logs(app_handle, name, ns, pod, container, event_name, tails)
+                    .await
+            }
+        }),
     )
     .await
 }

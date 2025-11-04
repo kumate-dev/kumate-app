@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { getPodLogs, watchPodLogs } from '@/api/k8s/pods';
+import { unwatch } from '@/api/k8s/unwatch';
 
 export interface UseViewPodLogsProps {
   open: boolean;
@@ -40,6 +41,7 @@ export function useViewPodLogs({
   const [tailLines, setTailLines] = useState(initialTailLines);
 
   const unlistenRef = useRef<(() => void) | null>(null);
+  const eventNameRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
   const autoStreamStartedRef = useRef(false);
 
@@ -76,7 +78,7 @@ export function useViewPodLogs({
     setIsStreaming(true);
 
     try {
-      const { unlisten } = await watchPodLogs({
+      const { unlisten, eventName } = await watchPodLogs({
         context: contextName,
         namespace,
         podName,
@@ -97,6 +99,7 @@ export function useViewPodLogs({
       });
 
       unlistenRef.current = unlisten;
+      eventNameRef.current = eventName;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start log stream');
       setIsStreaming(false);
@@ -110,9 +113,13 @@ export function useViewPodLogs({
       unlistenRef.current();
       unlistenRef.current = null;
     }
+    if (contextName) {
+      unwatch({ name: contextName });
+    }
+    eventNameRef.current = null;
     setIsStreaming(false);
     setLoading(false);
-  }, []);
+  }, [contextName]);
 
   const downloadLogs = useCallback(() => {
     const blob = new Blob([logs], { type: 'text/plain' });

@@ -72,47 +72,45 @@ impl PodResources {
 
         let mut lines = reader.lines();
 
-        tokio::spawn(async move {
-            while let Some(line) = lines.next().await {
-                match line {
-                    Ok(log_line) => {
-                        let event_data: Value = serde_json::json!({
-                            "type": "LOG_LINE",
-                            "pod": pod_name,
-                            "namespace": namespace,
-                            "container": container_name,
-                            "log": log_line,
-                            "timestamp": chrono::Utc::now().to_rfc3339()
-                        });
+        while let Some(line) = lines.next().await {
+            match line {
+                Ok(log_line) => {
+                    let event_data: Value = serde_json::json!({
+                        "type": "LOG_LINE",
+                        "pod": pod_name,
+                        "namespace": namespace,
+                        "container": container_name,
+                        "log": log_line,
+                        "timestamp": chrono::Utc::now().to_rfc3339()
+                    });
 
-                        let _ = app_handle.emit(&event_name, event_data);
-                    }
-                    Err(e) => {
-                        let error_data: Value = serde_json::json!({
-                            "type": "LOG_ERROR",
-                            "pod": pod_name,
-                            "namespace": namespace,
-                            "container": container_name,
-                            "error": e.to_string(),
-                            "timestamp": chrono::Utc::now().to_rfc3339()
-                        });
+                    let _ = app_handle.emit(&event_name, event_data);
+                }
+                Err(e) => {
+                    let error_data: Value = serde_json::json!({
+                        "type": "LOG_ERROR",
+                        "pod": pod_name,
+                        "namespace": namespace,
+                        "container": container_name,
+                        "error": e.to_string(),
+                        "timestamp": chrono::Utc::now().to_rfc3339()
+                    });
 
-                        let _ = app_handle.emit(&event_name, error_data);
-                        break;
-                    }
+                    let _ = app_handle.emit(&event_name, error_data);
+                    break;
                 }
             }
+        }
 
-            let completed_data: Value = serde_json::json!({
-                "type": "LOG_COMPLETED",
-                "pod": pod_name,
-                "namespace": namespace,
-                "container": container_name,
-                "timestamp": chrono::Utc::now().to_rfc3339()
-            });
-
-            let _ = app_handle.emit(&event_name, completed_data);
+        let completed_data: Value = serde_json::json!({
+            "type": "LOG_COMPLETED",
+            "pod": pod_name,
+            "namespace": namespace,
+            "container": container_name,
+            "timestamp": chrono::Utc::now().to_rfc3339()
         });
+
+        let _ = app_handle.emit(&event_name, completed_data);
 
         Ok(())
     }
