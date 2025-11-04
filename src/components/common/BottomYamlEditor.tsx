@@ -122,7 +122,7 @@ export default function BottomYamlEditor({
           </div>
         </div>
 
-        <div className="h-full p-4" style={{ height: `calc(100% - 49px)` }}>
+        <div className="h-[calc(100%-49px)] p-4">
           <YamlEditor
             value={yamlText}
             onChange={setYamlText}

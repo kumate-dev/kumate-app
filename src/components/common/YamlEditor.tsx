@@ -108,24 +108,12 @@ export function YamlEditor({
   return (
     <div className="flex h-full w-full flex-col">
       <div
-        className={`relative flex-1 overflow-hidden rounded-md border ${
+        className={`relative flex-1 overflow-hidden rounded-md border bg-black ${
           isValid ? (isFocused ? 'border-blue-500' : 'border-white/20') : 'border-red-500'
         } ${readOnly ? 'opacity-70' : ''}`}
         style={{ height }}
       >
-        <div
-          className="absolute top-0 left-0 h-full overflow-hidden bg-gray-900 text-right"
-          style={{
-            width: '4rem',
-            padding: '1rem 0.5rem',
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            color: '#6b7280',
-            userSelect: 'none',
-            zIndex: 5,
-          }}
-        >
+        <div className="absolute top-0 left-0 z-[5] h-full w-16 overflow-hidden bg-neutral-900 px-2 py-4 text-right font-mono text-[14px] leading-[1.5] text-gray-500 select-none">
           {lines.map((line) => (
             <div key={line} className="leading-6">
               {line}
@@ -142,37 +130,16 @@ export function YamlEditor({
           onBlur={handleBlur}
           onScroll={handleScroll}
           readOnly={readOnly}
-          className={`absolute inset-0 h-full w-full resize-none bg-transparent font-mono caret-white focus:outline-none ${
+          className={`absolute inset-0 z-20 h-full w-full resize-none bg-transparent px-4 pt-4 pb-4 pl-20 font-mono text-[14px] leading-[1.5] whitespace-pre text-transparent caret-white focus:outline-none ${
             readOnly ? 'cursor-not-allowed' : ''
           }`}
-          style={{
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            zIndex: 20,
-            color: 'transparent',
-            padding: '1rem 1rem 1rem 5rem',
-            whiteSpace: 'pre',
-            overflowWrap: 'normal',
-          }}
           placeholder="Enter YAML content..."
           spellCheck={false}
         />
 
         <pre
           ref={highlightRef}
-          className="absolute inset-0 h-full w-full overflow-auto font-mono text-sm"
-          style={{
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            background: 'transparent',
-            pointerEvents: 'none',
-            padding: '1rem 1rem 1rem 5rem',
-            whiteSpace: 'pre',
-            overflowWrap: 'normal',
-            zIndex: 10,
-          }}
+          className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-auto bg-transparent px-4 pt-4 pb-4 pl-20 font-mono text-[14px] leading-[1.5] whitespace-pre"
         />
       </div>
 

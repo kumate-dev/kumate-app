@@ -332,7 +332,7 @@ export default function BottomExecTerminal({
           </div>
         </div>
 
-        <div className="h-full p-4" style={{ height: `calc(100% - 49px)` }}>
+        <div className="h-[calc(100%-49px)] p-4">
           <div className="relative h-full overflow-hidden rounded-md border border-white/20 bg-black">
             <div
               ref={terminalContainerRef}
@@ -343,7 +343,6 @@ export default function BottomExecTerminal({
               }}
               className="h-full w-full overflow-hidden font-mono text-sm text-white/80"
             />
-            {/* Status messages are now written directly into xterm; no overlays. */}
           </div>
         </div>
       </div>

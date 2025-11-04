@@ -159,30 +159,29 @@ export default function BottomLogViewer({
           </div>
         </div>
 
-        <div
-          className="h-full overflow-auto p-4 font-mono text-sm break-words whitespace-pre-wrap"
-          style={{ height: `calc(100% - 49px)` }}
-        >
-          {loading && !logs && (
-            <div className="flex h-full items-center justify-center text-white/60">
-              Loading logs...
-            </div>
-          )}
+        <div className="h-[calc(100%-49px)] p-4">
+          <div className="relative h-full overflow-auto rounded-md border border-white/20 bg-black font-mono text-sm break-words whitespace-pre-wrap">
+            {loading && !logs && (
+              <div className="flex h-full items-center justify-center text-white/60">
+                Loading logs...
+              </div>
+            )}
 
-          {error && <div className="mb-4 text-red-400">Error: {error}</div>}
+            {error && <div className="mb-4 text-red-400">Error: {error}</div>}
 
-          {logs && (
-            <div className="text-white/80">
-              {logs}
-              <div ref={logEndRef} />
-            </div>
-          )}
+            {logs && (
+              <div className="text-white/80">
+                {logs}
+                <div ref={logEndRef} />
+              </div>
+            )}
 
-          {!loading && !error && !logs && (
-            <div className="flex h-full items-center justify-center text-white/60">
-              No logs available
-            </div>
-          )}
+            {!loading && !error && !logs && (
+              <div className="flex h-full items-center justify-center text-white/60">
+                No logs available
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>
