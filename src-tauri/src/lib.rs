@@ -53,6 +53,7 @@ pub fn run() {
             Ok(())
         })
         .manage(WatchManager::default())
+        .manage(crate::utils::exec::ExecManager::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
@@ -73,6 +74,10 @@ pub fn run() {
             pods::delete_pods,
             pods::get_pod_logs,
             pods::watch_pod_logs,
+            pods::exec_pod,
+            pods::start_exec_pod,
+            pods::send_exec_input,
+            pods::stop_exec_pod,
             deployments::create_deployment,
             deployments::update_deployment,
             deployments::list_deployments,

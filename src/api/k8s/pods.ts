@@ -142,3 +142,87 @@ export async function watchPodLogs({
 
   return { eventName, unlisten };
 }
+
+export async function execPod({
+  context,
+  namespace,
+  podName,
+  containerName,
+  command,
+  tty,
+}: {
+  context: string;
+  namespace: string;
+  podName: string;
+  containerName?: string;
+  command: string[];
+  tty?: boolean;
+}): Promise<string> {
+  return await invoke<string>('exec_pod', {
+    context,
+    namespace,
+    podName,
+    containerName,
+    command,
+    tty,
+  });
+}
+
+export interface ExecEvent {
+  type: 'EXEC_STDOUT' | 'EXEC_STDERR' | 'EXEC_ERROR' | 'EXEC_COMPLETED';
+  pod: string;
+  namespace: string;
+  container?: string;
+  data?: string;
+  error?: string;
+  timestamp: string;
+}
+
+export async function startExecPodSession({
+  context,
+  namespace,
+  podName,
+  containerName,
+  command,
+  tty,
+  onEvent,
+}: {
+  context: string;
+  namespace: string;
+  podName: string;
+  containerName?: string;
+  command?: string[];
+  tty?: boolean;
+  onEvent?: EventHandler<ExecEvent>;
+}): Promise<{ eventName: string; sessionId: string; unlisten: UnlistenFn }> {
+  const { event_name, session_id } = await invoke<{ event_name: string; session_id: string }>(
+    'start_exec_pod',
+    { context, namespace, podName, containerName, command, tty }
+  );
+
+  const unlisten = await listen<ExecEvent>(event_name, (evt) => {
+    try {
+      onEvent?.(evt.payload);
+    } catch (err) {
+      console.error('Error in exec event handler:', err);
+    }
+  });
+
+  return { eventName: event_name, sessionId: session_id, unlisten };
+}
+
+export async function sendExecInput({
+  sessionId,
+  input,
+  appendNewline,
+}: {
+  sessionId: string;
+  input: string;
+  appendNewline?: boolean;
+}): Promise<void> {
+  await invoke<void>('send_exec_input', { sessionId, input, appendNewline });
+}
+
+export async function stopExecPodSession({ sessionId }: { sessionId: string }): Promise<void> {
+  await invoke<void>('stop_exec_pod', { sessionId });
+}

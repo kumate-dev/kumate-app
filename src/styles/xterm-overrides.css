@@ -1,0 +1,8 @@
+.xterm .xterm-viewport {
+  background-color: transparent;
+}
+
+/* add inner padding so the last line/cursor isn't clipped by borders */
+.xterm .xterm-rows {
+  padding: 8px 8px 10px 8px; /* top right bottom left */
+}

@@ -6,12 +6,13 @@ import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getPodStatus } from '../utils/podStatus';
-import { Button } from '@/components/ui/button';
-import { ScrollText } from 'lucide-react';
 import { getContainerStatuses } from '../utils/containerStatus';
 import { ButtonLog } from '@/components/common/ButtonLog';
+import BottomExecTerminal from '@/components/common/BottomExecTerminal';
+import { Terminal } from 'lucide-react';
 import { useState } from 'react';
 import BottomLogViewer from '@/components/common/BottomLogViewer';
+import { ButtonShell } from '@/components/common/ButtonShell';
 
 interface SidebarPodsProps {
   item: V1Pod | null;
@@ -25,6 +26,7 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: Si
   const containerStatuses = item ? getContainerStatuses(item) : [];
   const [logViewerOpen, setLogViewerOpen] = useState(false);
   const [selectedContainer, setSelectedContainer] = useState<string>('');
+  const [execOpen, setExecOpen] = useState(false);
 
   const handleViewLogs = (containerName?: string) => {
     setSelectedContainer(containerName || '');
@@ -33,6 +35,16 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: Si
 
   const handleCloseLogs = () => {
     setLogViewerOpen(false);
+    setSelectedContainer('');
+  };
+
+  const handleOpenExec = (containerName?: string) => {
+    setSelectedContainer(containerName || '');
+    setExecOpen(true);
+  };
+
+  const handleCloseExec = () => {
+    setExecOpen(false);
     setSelectedContainer('');
   };
 
@@ -142,6 +154,7 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: Si
 
                   <div className="flex flex-shrink-0 gap-2">
                     <ButtonLog onViewLogs={() => handleViewLogs(container.name)} />
+                    <ButtonShell onOpenShell={() => handleOpenExec(container.name)} />
                   </div>
                 </div>
               );
@@ -185,6 +198,18 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: Si
           contextName={contextName}
           containerName={selectedContainer || undefined}
           onClose={handleCloseLogs}
+        />
+      )}
+
+      {item && (
+        <BottomExecTerminal
+          open={execOpen}
+          title={`Shell: ${item.metadata?.name}${selectedContainer ? ` - ${selectedContainer}` : ''}`}
+          podName={item.metadata?.name || ''}
+          namespace={item.metadata?.namespace || ''}
+          contextName={contextName}
+          containerName={selectedContainer || undefined}
+          onClose={handleCloseExec}
         />
       )}
     </>

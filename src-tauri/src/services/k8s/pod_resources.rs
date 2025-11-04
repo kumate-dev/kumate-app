@@ -2,7 +2,7 @@ use crate::services::k8s::client::K8sClient;
 use futures_util::{AsyncBufReadExt, StreamExt};
 use k8s_openapi::{api::core::v1::Pod, chrono};
 use kube::{
-    api::{Api, LogParams},
+    api::{Api, AttachParams, LogParams},
     Client,
 };
 use serde_json::Value;
@@ -113,5 +113,55 @@ impl PodResources {
         let _ = app_handle.emit(&event_name, completed_data);
 
         Ok(())
+    }
+
+    pub async fn exec(
+        context_name: String,
+        namespace: String,
+        pod_name: String,
+        container_name: Option<String>,
+        command: Vec<String>,
+        tty: bool,
+    ) -> Result<String, String> {
+        let client: Client = K8sClient::for_context(&context_name).await?;
+        let api: Api<Pod> = K8sClient::api::<Pod>(client, Some(namespace)).await;
+
+        // Configure exec params using builder: no stdin, capture stdout; stderr only when not TTY
+        let mut params: AttachParams =
+            AttachParams::default().stdin(false).stdout(true).stderr(!tty).tty(tty);
+
+        if let Some(container) = container_name.clone() {
+            params = params.container(container);
+        }
+
+        let mut attached = api
+            .exec(&pod_name, command, &params)
+            .await
+            .map_err(|e| format!("Failed to exec in pod {}: {}", pod_name, e))?;
+
+        use tokio::io::AsyncReadExt;
+        let mut out = String::new();
+
+        if let Some(mut stdout) = attached.stdout().take() {
+            let mut buf: Vec<u8> = Vec::new();
+            stdout
+                .read_to_end(&mut buf)
+                .await
+                .map_err(|e| format!("Failed to read stdout: {}", e))?;
+            out.push_str(&String::from_utf8_lossy(&buf));
+        }
+
+        if !tty {
+            if let Some(mut stderr) = attached.stderr().take() {
+                let mut buf: Vec<u8> = Vec::new();
+                stderr
+                    .read_to_end(&mut buf)
+                    .await
+                    .map_err(|e| format!("Failed to read stderr: {}", e))?;
+                out.push_str(&String::from_utf8_lossy(&buf));
+            }
+        }
+
+        Ok(out)
     }
 }
