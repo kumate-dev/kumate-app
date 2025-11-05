@@ -9,11 +9,7 @@ export interface StorageClassEvent {
   object: V1StorageClass;
 }
 
-export async function listStorageClasses({
-  name,
-}: {
-  name: string;
-}): Promise<V1StorageClass[]> {
+export async function listStorageClasses({ name }: { name: string }): Promise<V1StorageClass[]> {
   return await invoke<V1StorageClass[]>('list_storage_classes', { name });
 }
 

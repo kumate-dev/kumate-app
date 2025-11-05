@@ -84,11 +84,14 @@ export default function PaneNetworkPolicies({
       </Td>
       <Td>{(np.spec?.policyTypes || []).join(', ') || '-'}</Td>
       <Td className="max-w-truncate align-middle">
-        <span className="block truncate" title={(() => {
-          const labels = np.spec?.podSelector?.matchLabels || {};
-          const entries = Object.entries(labels).map(([k, v]) => `${k}=${v}`);
-          return entries.join(', ');
-        })()}>
+        <span
+          className="block truncate"
+          title={(() => {
+            const labels = np.spec?.podSelector?.matchLabels || {};
+            const entries = Object.entries(labels).map(([k, v]) => `${k}=${v}`);
+            return entries.join(', ');
+          })()}
+        >
           {(() => {
             const labels = np.spec?.podSelector?.matchLabels || {};
             const entries = Object.entries(labels).map(([k, v]) => `${k}=${v}`);

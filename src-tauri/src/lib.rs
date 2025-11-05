@@ -14,13 +14,18 @@ mod state;
 mod types;
 mod utils;
 
+use crate::commands::cluster_role_bindings;
+use crate::commands::cluster_roles;
 use crate::commands::common;
 use crate::commands::config_maps;
 use crate::commands::contexts;
+use crate::commands::crd_definitions;
 use crate::commands::cron_jobs;
+use crate::commands::custom_resources;
 use crate::commands::daemon_sets;
 use crate::commands::deployments;
 use crate::commands::endpoints;
+use crate::commands::helm;
 use crate::commands::horizontal_pod_autoscalers;
 use crate::commands::ingress_classes;
 use crate::commands::ingresses;
@@ -39,18 +44,15 @@ use crate::commands::priority_classes;
 use crate::commands::replica_sets;
 use crate::commands::replication_controllers;
 use crate::commands::resource_quotas;
-use crate::commands::runtime_classes;
-use crate::commands::service_accounts;
-use crate::commands::storage_classes;
-use crate::commands::roles;
-use crate::commands::cluster_roles;
 use crate::commands::role_bindings;
-use crate::commands::cluster_role_bindings;
+use crate::commands::roles;
+use crate::commands::runtime_classes;
 use crate::commands::secrets;
+use crate::commands::service_accounts;
 use crate::commands::services;
 use crate::commands::stateful_sets;
+use crate::commands::storage_classes;
 use crate::commands::validating_webhooks;
-use crate::commands::helm;
 use crate::utils::watcher::WatchManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -252,6 +254,14 @@ pub fn run() {
             helm::helm_list_releases,
             helm::helm_uninstall_releases,
             helm::watch_helm_releases,
+            // Custom Resources (Dynamic)
+            custom_resources::create_custom_resource,
+            custom_resources::update_custom_resource,
+            custom_resources::list_custom_resources,
+            custom_resources::watch_custom_resources,
+            custom_resources::delete_custom_resources,
+            // Custom Resource Definitions
+            crd_definitions::list_custom_resource_definitions,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

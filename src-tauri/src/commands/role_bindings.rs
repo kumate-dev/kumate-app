@@ -8,17 +8,28 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
-pub async fn create_role_binding(name: String, namespace: Option<String>, manifest: Value) -> Result<Value, String> {
+pub async fn create_role_binding(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
     K8sResources::<RoleBinding>::create(name, namespace, manifest).await
 }
 
 #[tauri::command]
-pub async fn update_role_binding(name: String, namespace: Option<String>, manifest: Value) -> Result<Value, String> {
+pub async fn update_role_binding(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
     K8sResources::<RoleBinding>::update(name, namespace, manifest).await
 }
 
 #[tauri::command]
-pub async fn list_role_bindings(name: String, namespaces: Option<Vec<String>>) -> Result<Vec<Value>, String> {
+pub async fn list_role_bindings(
+    name: String,
+    namespaces: Option<Vec<String>>,
+) -> Result<Vec<Value>, String> {
     K8sResources::<RoleBinding>::list(name, namespaces).await
 }
 
@@ -41,6 +52,10 @@ pub async fn watch_role_bindings(
 }
 
 #[tauri::command]
-pub async fn delete_role_bindings(name: String, namespace: Option<String>, resource_names: Vec<String>) -> Result<Vec<Result<String, String>>, String> {
+pub async fn delete_role_bindings(
+    name: String,
+    namespace: Option<String>,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
     Ok(K8sResources::<RoleBinding>::delete(name, namespace, resource_names).await?)
 }

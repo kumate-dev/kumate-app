@@ -42,13 +42,16 @@ export default function ServiceAccounts({ context }: PaneResourceContextProps) {
     context
   );
 
-  const handleDeleteServiceAccounts = useCallback(async (sas: V1ServiceAccount[]) => {
-    if (sas.length === 0) {
-      toast.error('No ServiceAccounts selected');
-      return;
-    }
-    await handleDeleteResources(sas);
-  }, [handleDeleteResources]);
+  const handleDeleteServiceAccounts = useCallback(
+    async (sas: V1ServiceAccount[]) => {
+      if (sas.length === 0) {
+        toast.error('No ServiceAccounts selected');
+        return;
+      }
+      await handleDeleteResources(sas);
+    },
+    [handleDeleteResources]
+  );
 
   return (
     <PaneServiceAccounts

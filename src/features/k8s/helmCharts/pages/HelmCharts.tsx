@@ -1,7 +1,10 @@
 import { useCallback } from 'react';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listHelmCharts } from '@/api/k8s/helm';
-import { PaneGeneric, PaneResourceContextProps } from '@/features/k8s/generic/components/PaneGeneric';
+import {
+  PaneGeneric,
+  PaneResourceContextProps,
+} from '@/features/k8s/generic/components/PaneGeneric';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 

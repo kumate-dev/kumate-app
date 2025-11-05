@@ -27,13 +27,16 @@ export default function Roles({ context }: PaneResourceContextProps) {
   const { handleUpdateResource } = useUpdateK8sResource<V1Role>(updateRole, context);
   const { handleDeleteResources } = useDeleteK8sResources<V1Role>(deleteRoles, context);
 
-  const handleDeleteRoles = useCallback(async (roles: V1Role[]) => {
-    if (roles.length === 0) {
-      toast.error('No Roles selected');
-      return;
-    }
-    await handleDeleteResources(roles);
-  }, [handleDeleteResources]);
+  const handleDeleteRoles = useCallback(
+    async (roles: V1Role[]) => {
+      if (roles.length === 0) {
+        toast.error('No Roles selected');
+        return;
+      }
+      await handleDeleteResources(roles);
+    },
+    [handleDeleteResources]
+  );
 
   return (
     <PaneRoles

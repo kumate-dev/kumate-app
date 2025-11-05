@@ -86,26 +86,30 @@ export function SidebarPersistentVolumes({
             <TableYamlRow label="Node Affinity" data={pv.spec?.nodeAffinity} maxWidthClass="xl" />
             <TableYamlRow label="Mount Options" data={pv.spec?.mountOptions} maxWidthClass="xl" />
             <TableYamlRow label="Volume Source" data={pv.spec} maxWidthClass="xl" />
+            <TableYamlRow label="Spec" data={pv.spec} maxWidthClass="xl" />
           </Tbody>
         </Table>
       </div>
     );
   };
 
-  const renderSpec = (pv: V1PersistentVolume) => (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-      <TableYamlRow label="Spec" data={pv.spec} maxWidthClass="xl" />
-    </div>
-  );
-
   const sections = item
     ? [
-        { key: 'overview', title: 'Overview', content: (i: V1PersistentVolume) => renderOverview(i) },
-        { key: 'spec', title: 'Spec', content: (i: V1PersistentVolume) => renderSpec(i) },
+        {
+          key: 'properties',
+          title: 'Properties',
+          content: (i: V1PersistentVolume) => renderOverview(i),
+        },
       ]
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

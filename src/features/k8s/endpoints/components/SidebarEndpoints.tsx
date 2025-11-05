@@ -43,16 +43,9 @@ export function SidebarEndpoints({ item, setItem, onDelete, onEdit }: SidebarEnd
             </Tr>
             <TableYamlRow label="Labels" data={ep.metadata?.labels} maxWidthClass="lg" />
             <TableYamlRow label="Annotations" data={ep.metadata?.annotations} maxWidthClass="lg" />
+            <TableYamlRow label="Subsets" data={ep.subsets} maxWidthClass="xl" />
           </Tbody>
         </Table>
-      </div>
-    );
-  };
-
-  const renderSpec = (ep: V1Endpoints) => {
-    return (
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-        <TableYamlRow label="Subsets" data={ep.subsets} maxWidthClass="xl" />
       </div>
     );
   };
@@ -63,10 +56,7 @@ export function SidebarEndpoints({ item, setItem, onDelete, onEdit }: SidebarEnd
       setItem={setItem as any}
       onDelete={onDelete as any}
       onEdit={onEdit as any}
-      sections={[
-        { key: 'overview', title: 'Overview', content: renderOverview },
-        { key: 'spec', title: 'Spec', content: renderSpec },
-      ]}
+      sections={[{ key: 'properties', title: 'Properties', content: renderOverview }]}
     />
   );
 }

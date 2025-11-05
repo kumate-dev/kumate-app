@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch, manager::k8s::cluster_resources::K8sClusterResources, utils::watcher::WatchManager,
+    commands::common::watch, manager::k8s::cluster_resources::K8sClusterResources,
+    utils::watcher::WatchManager,
 };
 use k8s_openapi::api::rbac::v1::ClusterRoleBinding;
 use serde_json::Value;
@@ -42,6 +43,9 @@ pub async fn watch_cluster_role_bindings(
 }
 
 #[tauri::command]
-pub async fn delete_cluster_role_bindings(name: String, resource_names: Vec<String>) -> Result<Vec<Result<String, String>>, String> {
+pub async fn delete_cluster_role_bindings(
+    name: String,
+    resource_names: Vec<String>,
+) -> Result<Vec<Result<String, String>>, String> {
     Ok(K8sClusterResources::<ClusterRoleBinding>::delete(name, resource_names).await?)
 }

@@ -42,13 +42,17 @@ export default function PaneServiceAccounts({
     { key: 'metadata.creationTimestamp', label: 'Age' },
   ];
 
-  const valueGetters = {
-    secrets: (sa: V1ServiceAccount) => String(sa.secrets?.length ?? 0),
-  } as const;
+  const valueGetters = useMemo(
+    () =>
+      ({
+        secrets: (sa: V1ServiceAccount) => String(sa.secrets?.length ?? 0),
+      }) as const,
+    []
+  );
 
   const sortedItems = useMemo(() => {
     return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  }, [items, sortBy, sortOrder, valueGetters]);
 
   const handleDeleteSelected = useCallback(
     async (selected: V1ServiceAccount[]) => {

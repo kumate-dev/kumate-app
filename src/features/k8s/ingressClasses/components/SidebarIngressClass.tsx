@@ -46,13 +46,23 @@ export function SidebarIngressClass({ item, setItem, onDelete, onEdit }: Sidebar
     );
   };
 
+  const sections = item
+    ? [
+        {
+          key: 'properties',
+          title: 'Properties',
+          content: (i: V1IngressClass) => renderOverview(i),
+        },
+      ]
+    : [];
+
   return (
     <SidebarGeneric
       item={item}
       setItem={setItem as any}
       onDelete={onDelete as any}
       onEdit={onEdit as any}
-      sections={{ Overview: renderOverview }}
+      sections={sections}
     />
   );
 }

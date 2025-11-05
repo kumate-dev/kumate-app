@@ -68,9 +68,7 @@ export default function PanePersistentVolumes({
       <Td className="break-all text-white">{pv.metadata?.name ?? '-'}</Td>
       <Td className="break-all text-white">{pv.spec?.storageClassName ?? '-'}</Td>
       <Td className="break-all text-white">{(pv.spec?.capacity as any)?.storage || '-'}</Td>
-      <Td className="break-all text-white">
-        {(pv.spec?.accessModes || []).join(', ') || '-'}
-      </Td>
+      <Td className="break-all text-white">{(pv.spec?.accessModes || []).join(', ') || '-'}</Td>
       <Td className="break-all text-white">{pv.spec?.persistentVolumeReclaimPolicy ?? '-'}</Td>
       <Td className="break-all text-white">{pv.status?.phase ?? '-'}</Td>
       <AgeCell timestamp={pv.metadata?.creationTimestamp ?? ''} />

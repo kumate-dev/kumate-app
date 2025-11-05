@@ -35,13 +35,16 @@ export default function ClusterRoleBindings({ context }: PaneResourceContextProp
     context
   );
 
-  const handleDelete = useCallback(async (rbs: V1ClusterRoleBinding[]) => {
-    if (!rbs.length) {
-      toast.error('No ClusterRoleBindings selected');
-      return;
-    }
-    await handleDeleteResources(rbs);
-  }, [handleDeleteResources]);
+  const handleDelete = useCallback(
+    async (rbs: V1ClusterRoleBinding[]) => {
+      if (!rbs.length) {
+        toast.error('No ClusterRoleBindings selected');
+        return;
+      }
+      await handleDeleteResources(rbs);
+    },
+    [handleDeleteResources]
+  );
 
   return (
     <PaneClusterRoleBindings

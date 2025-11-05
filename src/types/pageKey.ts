@@ -39,4 +39,5 @@ export type PageKey =
   | 'cluster_roles'
   | 'roles'
   | 'cluster_role_bindings'
-  | 'role_bindings';
+  | 'role_bindings'
+  | 'custom_resource_definitions';

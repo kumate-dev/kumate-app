@@ -62,9 +62,7 @@ export default function HelmReleases({ context }: PaneResourceContextProps) {
       if (!context?.name) return;
       const ns = selectedNamespaces && selectedNamespaces[0];
       const namespace = !ns || ns === 'ALL_NAMESPACES' ? undefined : ns;
-      const names = sel
-        .map((i) => i.metadata?.name || i.name)
-        .filter(Boolean) as string[];
+      const names = sel.map((i) => i.metadata?.name || i.name).filter(Boolean) as string[];
 
       try {
         await uninstallHelmReleases({ name: context.name, namespace, releaseNames: names });

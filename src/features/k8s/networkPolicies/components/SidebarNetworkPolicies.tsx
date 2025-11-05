@@ -68,24 +68,21 @@ export function SidebarNetworkPolicies({
               <Td>Egress Rules</Td>
               <Td>{egress.length}</Td>
             </Tr>
+
+            <TableYamlRow label="Spec" data={np.spec} maxWidthClass="xl" />
           </Tbody>
         </Table>
       </div>
     );
   };
 
-  const renderSpec = (np: V1NetworkPolicy) => {
-    return (
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-        <TableYamlRow label="Spec" data={np.spec} maxWidthClass="xl" />
-      </div>
-    );
-  };
-
   const sections = item
     ? [
-        { key: 'overview', title: 'Overview', content: (i: V1NetworkPolicy) => renderOverview(i) },
-        { key: 'spec', title: 'Spec', content: (i: V1NetworkPolicy) => renderSpec(i) },
+        {
+          key: 'properties',
+          title: 'Properties',
+          content: (i: V1NetworkPolicy) => renderOverview(i),
+        },
       ]
     : [];
 

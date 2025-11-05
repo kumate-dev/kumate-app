@@ -43,14 +43,18 @@ export default function PaneRoleBindings({
     { key: 'metadata.creationTimestamp', label: 'Age' },
   ];
 
-  const valueGetters = {
-    subjects: (rb: V1RoleBinding) => String((rb.subjects || []).length),
-    roleRef: (rb: V1RoleBinding) => rb.roleRef?.name || '-',
-  } as const;
+  const valueGetters = useMemo(
+    () =>
+      ({
+        subjects: (rb: V1RoleBinding) => String((rb.subjects || []).length),
+        roleRef: (rb: V1RoleBinding) => rb.roleRef?.name || '-',
+      }) as const,
+    []
+  );
 
   const sortedItems = useMemo(() => {
     return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  }, [items, sortBy, sortOrder, valueGetters]);
 
   const handleDeleteSelected = useCallback(
     async (selected: V1RoleBinding[]) => {

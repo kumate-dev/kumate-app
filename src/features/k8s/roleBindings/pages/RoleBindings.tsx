@@ -29,26 +29,23 @@ export default function RoleBindings({ context }: PaneResourceContextProps) {
     selectedNamespaces
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1RoleBinding>(
-    createRoleBinding,
-    context
-  );
-  const { handleUpdateResource } = useUpdateK8sResource<V1RoleBinding>(
-    updateRoleBinding,
-    context
-  );
+  const { handleCreateResource } = useCreateK8sResource<V1RoleBinding>(createRoleBinding, context);
+  const { handleUpdateResource } = useUpdateK8sResource<V1RoleBinding>(updateRoleBinding, context);
   const { handleDeleteResources } = useDeleteK8sResources<V1RoleBinding>(
     deleteRoleBindings,
     context
   );
 
-  const handleDeleteRoleBindings = useCallback(async (rbs: V1RoleBinding[]) => {
-    if (rbs.length === 0) {
-      toast.error('No RoleBindings selected');
-      return;
-    }
-    await handleDeleteResources(rbs);
-  }, [handleDeleteResources]);
+  const handleDeleteRoleBindings = useCallback(
+    async (rbs: V1RoleBinding[]) => {
+      if (rbs.length === 0) {
+        toast.error('No RoleBindings selected');
+        return;
+      }
+      await handleDeleteResources(rbs);
+    },
+    [handleDeleteResources]
+  );
 
   return (
     <PaneRoleBindings

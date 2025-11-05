@@ -22,26 +22,23 @@ export default function ClusterRoles({ context }: PaneResourceContextProps) {
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1ClusterRole>(
-    createClusterRole,
-    context
-  );
-  const { handleUpdateResource } = useUpdateK8sResource<V1ClusterRole>(
-    updateClusterRole,
-    context
-  );
+  const { handleCreateResource } = useCreateK8sResource<V1ClusterRole>(createClusterRole, context);
+  const { handleUpdateResource } = useUpdateK8sResource<V1ClusterRole>(updateClusterRole, context);
   const { handleDeleteResources } = useDeleteK8sResources<V1ClusterRole>(
     deleteClusterRoles,
     context
   );
 
-  const handleDelete = useCallback(async (roles: V1ClusterRole[]) => {
-    if (!roles.length) {
-      toast.error('No ClusterRoles selected');
-      return;
-    }
-    await handleDeleteResources(roles);
-  }, [handleDeleteResources]);
+  const handleDelete = useCallback(
+    async (roles: V1ClusterRole[]) => {
+      if (!roles.length) {
+        toast.error('No ClusterRoles selected');
+        return;
+      }
+      await handleDeleteResources(roles);
+    },
+    [handleDeleteResources]
+  );
 
   return (
     <PaneClusterRoles

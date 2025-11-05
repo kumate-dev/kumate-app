@@ -34,13 +34,17 @@ export default function PaneClusterRoles({
     { key: 'metadata.creationTimestamp', label: 'Age' },
   ];
 
-  const valueGetters = {
-    rules: (r: V1ClusterRole) => String((r.rules || []).length),
-  } as const;
+  const valueGetters = useMemo(
+    () =>
+      ({
+        rules: (r: V1ClusterRole) => String((r.rules || []).length),
+      }) as const,
+    []
+  );
 
   const sortedItems = useMemo(() => {
     return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  }, [items, sortBy, sortOrder, valueGetters]);
 
   const handleDeleteSelected = useCallback(
     async (selected: V1ClusterRole[]) => {

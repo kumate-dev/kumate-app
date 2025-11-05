@@ -109,6 +109,10 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
       ],
     },
     {
+      title: 'Custom Resources',
+      items: [{ key: 'custom_resource_definitions', label: 'Definitions' }],
+    },
+    {
       title: 'Access Control',
       items: [
         { key: 'service_accounts', label: 'Service Accounts' },

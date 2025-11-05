@@ -64,20 +64,23 @@ export function SidebarStorageClasses({
     );
   };
 
-  const renderSpec = (sc: V1StorageClass) => (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-      <TableYamlRow label="Spec" data={sc} maxWidthClass="xl" />
-    </div>
-  );
-
   const sections = item
     ? [
-        { key: 'overview', title: 'Overview', content: (i: V1StorageClass) => renderOverview(i) },
-        { key: 'spec', title: 'Spec', content: (i: V1StorageClass) => renderSpec(i) },
+        {
+          key: 'properties',
+          title: 'Properties',
+          content: (i: V1StorageClass) => renderOverview(i),
+        },
       ]
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

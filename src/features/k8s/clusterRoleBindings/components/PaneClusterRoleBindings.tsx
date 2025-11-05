@@ -35,14 +35,18 @@ export default function PaneClusterRoleBindings({
     { key: 'metadata.creationTimestamp', label: 'Age' },
   ];
 
-  const valueGetters = {
-    subjects: (rb: V1ClusterRoleBinding) => String((rb.subjects || []).length),
-    roleRef: (rb: V1ClusterRoleBinding) => rb.roleRef?.name || '-',
-  } as const;
+  const valueGetters = useMemo(
+    () =>
+      ({
+        subjects: (rb: V1ClusterRoleBinding) => String((rb.subjects || []).length),
+        roleRef: (rb: V1ClusterRoleBinding) => rb.roleRef?.name || '-',
+      }) as const,
+    []
+  );
 
   const sortedItems = useMemo(() => {
     return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  }, [items, sortBy, sortOrder, valueGetters]);
 
   const handleDeleteSelected = useCallback(
     async (selected: V1ClusterRoleBinding[]) => {

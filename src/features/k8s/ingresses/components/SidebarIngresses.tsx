@@ -42,17 +42,22 @@ export function SidebarIngresses({ item, setItem, onDelete, onEdit }: SidebarIng
             </Tr>
             <TableYamlRow label="Labels" data={ing.metadata?.labels} maxWidthClass="lg" />
             <TableYamlRow label="Annotations" data={ing.metadata?.annotations} maxWidthClass="lg" />
+            <TableYamlRow label="Rules" data={ing.spec?.rules} maxWidthClass="xl" />
           </Tbody>
         </Table>
       </div>
     );
   };
 
-  const renderRules = (ing: V1Ingress) => (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-      <TableYamlRow label="Rules" data={ing.spec?.rules} maxWidthClass="xl" />
-    </div>
-  );
+  const sections = item
+    ? [
+        {
+          key: 'properties',
+          title: 'Properties',
+          content: (i: V1Ingress) => renderOverview(i),
+        },
+      ]
+    : [];
 
   return (
     <SidebarGeneric
@@ -60,7 +65,7 @@ export function SidebarIngresses({ item, setItem, onDelete, onEdit }: SidebarIng
       setItem={setItem as any}
       onDelete={onDelete as any}
       onEdit={onEdit as any}
-      sections={{ Overview: renderOverview, Rules: renderRules }}
+      sections={sections}
     />
   );
 }

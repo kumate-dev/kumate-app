@@ -9,7 +9,11 @@ export interface ClusterRoleBindingEvent {
   object: V1ClusterRoleBinding;
 }
 
-export async function listClusterRoleBindings({ name }: { name: string }): Promise<V1ClusterRoleBinding[]> {
+export async function listClusterRoleBindings({
+  name,
+}: {
+  name: string;
+}): Promise<V1ClusterRoleBinding[]> {
   return await invoke<V1ClusterRoleBinding[]>('list_cluster_role_bindings', { name });
 }
 
