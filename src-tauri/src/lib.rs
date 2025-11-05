@@ -19,20 +19,29 @@ use crate::commands::contexts;
 use crate::commands::cron_jobs;
 use crate::commands::daemon_sets;
 use crate::commands::deployments;
+use crate::commands::endpoints;
 use crate::commands::horizontal_pod_autoscalers;
+use crate::commands::ingress_classes;
+use crate::commands::ingresses;
 use crate::commands::jobs;
+use crate::commands::leases;
 use crate::commands::limit_ranges;
+use crate::commands::mutating_webhooks;
 use crate::commands::namespaces;
+use crate::commands::network_policies;
 use crate::commands::nodes;
 use crate::commands::persistent_volume_claims;
 use crate::commands::pod_disruption_budgets;
 use crate::commands::pods;
+use crate::commands::priority_classes;
 use crate::commands::replica_sets;
 use crate::commands::replication_controllers;
 use crate::commands::resource_quotas;
+use crate::commands::runtime_classes;
 use crate::commands::secrets;
 use crate::commands::services;
 use crate::commands::stateful_sets;
+use crate::commands::validating_webhooks;
 use crate::utils::watcher::WatchManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -80,6 +89,16 @@ pub fn run() {
             pods::start_exec_pod,
             pods::send_exec_input,
             pods::stop_exec_pod,
+            priority_classes::create_priority_class,
+            priority_classes::update_priority_class,
+            priority_classes::list_priority_classes,
+            priority_classes::watch_priority_classes,
+            priority_classes::delete_priority_classes,
+            runtime_classes::create_runtime_class,
+            runtime_classes::update_runtime_class,
+            runtime_classes::list_runtime_classes,
+            runtime_classes::watch_runtime_classes,
+            runtime_classes::delete_runtime_classes,
             deployments::create_deployment,
             deployments::update_deployment,
             deployments::list_deployments,
@@ -138,11 +157,48 @@ pub fn run() {
             services::list_services,
             services::watch_services,
             services::delete_services,
+            leases::create_lease,
+            leases::update_lease,
+            leases::list_leases,
+            leases::watch_leases,
+            leases::delete_leases,
+            mutating_webhooks::create_mutating_webhook,
+            mutating_webhooks::update_mutating_webhook,
+            mutating_webhooks::list_mutating_webhooks,
+            mutating_webhooks::watch_mutating_webhooks,
+            mutating_webhooks::delete_mutating_webhooks,
+            validating_webhooks::create_validating_webhook,
+            validating_webhooks::update_validating_webhook,
+            validating_webhooks::list_validating_webhooks,
+            validating_webhooks::watch_validating_webhooks,
+            validating_webhooks::delete_validating_webhooks,
             persistent_volume_claims::create_persistent_volume_claim,
             persistent_volume_claims::update_persistent_volume_claim,
             persistent_volume_claims::list_persistent_volume_claims,
             persistent_volume_claims::watch_persistent_volume_claims,
             persistent_volume_claims::delete_persistent_volume_claims,
+            // Endpoints
+            endpoints::create_endpoints,
+            endpoints::update_endpoints,
+            endpoints::list_endpoints,
+            endpoints::watch_endpoints,
+            endpoints::delete_endpoints,
+            // Ingresses
+            ingresses::create_ingress,
+            ingresses::update_ingress,
+            ingresses::list_ingresses,
+            ingresses::watch_ingresses,
+            ingresses::delete_ingresses,
+            ingress_classes::create_ingress_class,
+            ingress_classes::update_ingress_class,
+            ingress_classes::list_ingress_classes,
+            ingress_classes::watch_ingress_classes,
+            ingress_classes::delete_ingress_classes,
+            network_policies::create_network_policy,
+            network_policies::update_network_policy,
+            network_policies::list_network_policies,
+            network_policies::watch_network_policies,
+            network_policies::delete_network_policies,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

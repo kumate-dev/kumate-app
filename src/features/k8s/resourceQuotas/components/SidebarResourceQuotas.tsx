@@ -66,14 +66,29 @@ function renderOverview(rq: V1ResourceQuota) {
   );
 }
 
-export function SidebarResourceQuotas({ item, setItem, onDelete, onEdit }: SidebarResourceQuotasProps) {
+export function SidebarResourceQuotas({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+}: SidebarResourceQuotasProps) {
   const sections = item
     ? [
-        { key: 'properties', title: 'Properties', content: (i: V1ResourceQuota) => renderOverview(i) },
+        {
+          key: 'properties',
+          title: 'Properties',
+          content: (i: V1ResourceQuota) => renderOverview(i),
+        },
       ]
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

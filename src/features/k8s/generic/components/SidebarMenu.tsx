@@ -78,8 +78,8 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
         { key: 'priority_classes', label: 'Priority Classes' },
         { key: 'runtime_classes', label: 'Runtime Classes' },
         { key: 'leases', label: 'Leases' },
-        { key: 'mutating_webhooks', label: 'Mutating Webhook Configurations' },
-        { key: 'validating_webhooks', label: 'Validating Webhook Configurations' },
+        { key: 'mutating_webhooks', label: 'Mutating Webhook' },
+        { key: 'validating_webhooks', label: 'Validating Webhook' },
       ],
     },
     {

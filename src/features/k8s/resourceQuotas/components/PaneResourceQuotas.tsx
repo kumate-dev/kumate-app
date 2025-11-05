@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { V1ResourceQuota, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarResourceQuotas } from './SidebarResourceQuotas';
 import { ColumnDef } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
@@ -76,6 +77,25 @@ export default function PaneResourceQuotas({
     );
   };
 
+  const renderSidebar = useCallback(
+    (
+      item: V1ResourceQuota,
+      actions: {
+        setItem: (item: V1ResourceQuota | null) => void;
+        onDelete?: (item: V1ResourceQuota) => void;
+        onEdit?: (item: V1ResourceQuota) => void;
+      }
+    ) => (
+      <SidebarResourceQuotas
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+      />
+    ),
+    []
+  );
+
   return (
     <PaneGeneric
       items={items}
@@ -91,6 +111,7 @@ export default function PaneResourceQuotas({
       setSortOrder={setSortOrder}
       onDelete={handleDeleteSelected}
       renderRow={renderRow}
+      renderSidebar={renderSidebar}
       yamlTemplate={templateResourceQuota}
       onCreate={onCreate}
       onUpdate={onUpdate}

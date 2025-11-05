@@ -24,6 +24,14 @@ import StatefulSets from '@/features/k8s/statefulSets/pages/StatefulSets';
 import ResourceQuotas from '@/features/k8s/resourceQuotas/pages/ResourceQuotas';
 import Services from '@/features/k8s/services/pages/Services';
 import PersistentVolumeClaims from '@/features/k8s/persistentVolumeClaims/pages/PersistentVolumeClaims';
+import PriorityClasses from '@/features/k8s/priorityClasses/pages/PriorityClasses';
+import RuntimeClasses from '@/features/k8s/runtimeClasses/pages/RuntimeClasses';
+import Leases from '@/features/k8s/leases/pages/Leases';
+import MutatingWebhooks from '@/features/k8s/mutatingWebhooks/pages/MutatingWebhooks';
+import ValidatingWebhooks from '@/features/k8s/validatingWebhooks/pages/ValidatingWebhooks';
+import Endpoints from '@/features/k8s/endpoints/pages/Endpoints';
+import Ingresses from '@/features/k8s/ingresses/pages/Ingresses';
+import IngressClasses from '@/features/k8s/ingress-classes/pages/IngressClasses';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -96,7 +104,15 @@ export default function Home() {
     secrets: Secrets,
     resource_quotas: ResourceQuotas,
     limit_ranges: LimitRanges,
+    priority_classes: PriorityClasses,
+    runtime_classes: RuntimeClasses,
+    leases: Leases,
+    mutating_webhooks: MutatingWebhooks,
+    validating_webhooks: ValidatingWebhooks,
     services: Services,
+    endpoints: Endpoints,
+    ingresses: Ingresses,
+    ingress_classes: IngressClasses,
     persistent_volume_claims: PersistentVolumeClaims,
   };
 

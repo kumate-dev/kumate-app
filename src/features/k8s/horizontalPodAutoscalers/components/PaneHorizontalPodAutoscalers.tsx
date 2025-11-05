@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { V1HorizontalPodAutoscaler, V1Namespace } from '@kubernetes/client-node';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarHorizontalPodAutoscalers } from './SidebarHorizontalPodAutoscalers';
 import { ColumnDef } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -82,6 +83,25 @@ export default function PaneHorizontalPodAutoscalers({
     </>
   );
 
+  const renderSidebar = useCallback(
+    (
+      item: V1HorizontalPodAutoscaler,
+      actions: {
+        setItem: (item: V1HorizontalPodAutoscaler | null) => void;
+        onDelete?: (item: V1HorizontalPodAutoscaler) => void;
+        onEdit?: (item: V1HorizontalPodAutoscaler) => void;
+      }
+    ) => (
+      <SidebarHorizontalPodAutoscalers
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+      />
+    ),
+    []
+  );
+
   return (
     <PaneGeneric
       items={items}
@@ -100,6 +120,7 @@ export default function PaneHorizontalPodAutoscalers({
       yamlTemplate={templateHorizontalPodAutoscaler}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       contextName={contextName}
     />
   );

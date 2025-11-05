@@ -5,7 +5,7 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::ObjectMeta, Metadata, Resource as K8sResource,
 };
 use kube::{
-    api::{Api, DeleteParams, ObjectList, WatchEvent, WatchParams},
+    api::{Api, DeleteParams, ObjectList, PostParams, WatchEvent, WatchParams},
     Resource,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -32,6 +32,29 @@ where
         + 'static,
     <T as Resource>::DynamicType: Default,
 {
+    pub async fn create(context_name: String, manifest: Value) -> Result<Value, String> {
+        let client: kube::Client = K8sClient::for_context(&context_name).await?;
+        let api: Api<T> = Api::all(client);
+        let obj: T = serde_json::from_value(manifest).map_err(|e| e.to_string())?;
+        let pp: PostParams = PostParams::default();
+        let created: T = api.create(&pp, &obj).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::to_value(created).unwrap_or(Value::Null))
+    }
+
+    pub async fn update(context_name: String, manifest: Value) -> Result<Value, String> {
+        let client: kube::Client = K8sClient::for_context(&context_name).await?;
+        let api: Api<T> = Api::all(client);
+        let obj: T = serde_json::from_value(manifest.clone()).map_err(|e| e.to_string())?;
+        let name: String = obj
+            .metadata()
+            .name
+            .clone()
+            .ok_or_else(|| "Missing metadata.name for resource update".to_string())?;
+        let pp: PostParams = PostParams::default();
+        let updated: T = api.replace(&name, &pp, &obj).await.map_err(|e| e.to_string())?;
+        Ok(serde_json::to_value(updated).unwrap_or(Value::Null))
+    }
+
     pub async fn list(context_name: String) -> Result<Vec<Value>, String> {
         let client: kube::Client = K8sClient::for_context(&context_name).await?;
         let api: Api<T> = Api::all(client);

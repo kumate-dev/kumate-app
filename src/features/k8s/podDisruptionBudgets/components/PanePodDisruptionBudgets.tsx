@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { V1PodDisruptionBudget, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarPodDisruptionBudgets } from './SidebarPodDisruptionBudgets';
 import { ColumnDef } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
@@ -80,6 +81,25 @@ export default function PanePodDisruptionBudgets({
     );
   };
 
+  const renderSidebar = useCallback(
+    (
+      item: V1PodDisruptionBudget,
+      actions: {
+        setItem: (item: V1PodDisruptionBudget | null) => void;
+        onDelete?: (item: V1PodDisruptionBudget) => void;
+        onEdit?: (item: V1PodDisruptionBudget) => void;
+      }
+    ) => (
+      <SidebarPodDisruptionBudgets
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+      />
+    ),
+    []
+  );
+
   return (
     <PaneGeneric
       items={items}
@@ -98,6 +118,7 @@ export default function PanePodDisruptionBudgets({
       yamlTemplate={templatePodDisruptionBudget}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       contextName={contextName}
     />
   );

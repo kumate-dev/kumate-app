@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { V1LimitRange, V1Namespace } from '@kubernetes/client-node';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarLimitRanges } from './SidebarLimitRanges';
 import { ColumnDef } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -78,6 +79,25 @@ export default function PaneLimitRanges({
     </>
   );
 
+  const renderSidebar = useCallback(
+    (
+      item: V1LimitRange,
+      actions: {
+        setItem: (item: V1LimitRange | null) => void;
+        onDelete?: (item: V1LimitRange) => void;
+        onEdit?: (item: V1LimitRange) => void;
+      }
+    ) => (
+      <SidebarLimitRanges
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+      />
+    ),
+    []
+  );
+
   return (
     <PaneGeneric
       items={items}
@@ -93,6 +113,7 @@ export default function PaneLimitRanges({
       setSortOrder={setSortOrder}
       onDelete={handleDeleteSelected}
       renderRow={renderRow}
+      renderSidebar={renderSidebar}
       yamlTemplate={templateLimitRange}
       onCreate={onCreate}
       onUpdate={onUpdate}
