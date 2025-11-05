@@ -8,6 +8,7 @@ use tauri::Manager;
 mod commands;
 mod constants;
 mod databases;
+#[path = "manager/mod.rs"]
 mod manager;
 mod state;
 mod types;
@@ -31,6 +32,7 @@ use crate::commands::namespaces;
 use crate::commands::network_policies;
 use crate::commands::nodes;
 use crate::commands::persistent_volume_claims;
+use crate::commands::persistent_volumes;
 use crate::commands::pod_disruption_budgets;
 use crate::commands::pods;
 use crate::commands::priority_classes;
@@ -38,6 +40,12 @@ use crate::commands::replica_sets;
 use crate::commands::replication_controllers;
 use crate::commands::resource_quotas;
 use crate::commands::runtime_classes;
+use crate::commands::service_accounts;
+use crate::commands::storage_classes;
+use crate::commands::roles;
+use crate::commands::cluster_roles;
+use crate::commands::role_bindings;
+use crate::commands::cluster_role_bindings;
 use crate::commands::secrets;
 use crate::commands::services;
 use crate::commands::stateful_sets;
@@ -99,6 +107,41 @@ pub fn run() {
             runtime_classes::list_runtime_classes,
             runtime_classes::watch_runtime_classes,
             runtime_classes::delete_runtime_classes,
+            storage_classes::create_storage_class,
+            storage_classes::update_storage_class,
+            storage_classes::list_storage_classes,
+            storage_classes::watch_storage_classes,
+            storage_classes::delete_storage_classes,
+            // Service Accounts
+            service_accounts::create_service_account,
+            service_accounts::update_service_account,
+            service_accounts::list_service_accounts,
+            service_accounts::watch_service_accounts,
+            service_accounts::delete_service_accounts,
+            // Roles
+            roles::create_role,
+            roles::update_role,
+            roles::list_roles,
+            roles::watch_roles,
+            roles::delete_roles,
+            // Cluster Roles
+            cluster_roles::create_cluster_role,
+            cluster_roles::update_cluster_role,
+            cluster_roles::list_cluster_roles,
+            cluster_roles::watch_cluster_roles,
+            cluster_roles::delete_cluster_roles,
+            // Role Bindings
+            role_bindings::create_role_binding,
+            role_bindings::update_role_binding,
+            role_bindings::list_role_bindings,
+            role_bindings::watch_role_bindings,
+            role_bindings::delete_role_bindings,
+            // Cluster Role Bindings
+            cluster_role_bindings::create_cluster_role_binding,
+            cluster_role_bindings::update_cluster_role_binding,
+            cluster_role_bindings::list_cluster_role_bindings,
+            cluster_role_bindings::watch_cluster_role_bindings,
+            cluster_role_bindings::delete_cluster_role_bindings,
             deployments::create_deployment,
             deployments::update_deployment,
             deployments::list_deployments,
@@ -172,6 +215,11 @@ pub fn run() {
             validating_webhooks::list_validating_webhooks,
             validating_webhooks::watch_validating_webhooks,
             validating_webhooks::delete_validating_webhooks,
+            persistent_volumes::create_persistent_volume,
+            persistent_volumes::update_persistent_volume,
+            persistent_volumes::list_persistent_volumes,
+            persistent_volumes::watch_persistent_volumes,
+            persistent_volumes::delete_persistent_volumes,
             persistent_volume_claims::create_persistent_volume_claim,
             persistent_volume_claims::update_persistent_volume_claim,
             persistent_volume_claims::list_persistent_volume_claims,
@@ -183,7 +231,6 @@ pub fn run() {
             endpoints::list_endpoints,
             endpoints::watch_endpoints,
             endpoints::delete_endpoints,
-            // Ingresses
             ingresses::create_ingress,
             ingresses::update_ingress,
             ingresses::list_ingresses,

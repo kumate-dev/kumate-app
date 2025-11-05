@@ -31,8 +31,15 @@ import MutatingWebhooks from '@/features/k8s/mutatingWebhooks/pages/MutatingWebh
 import ValidatingWebhooks from '@/features/k8s/validatingWebhooks/pages/ValidatingWebhooks';
 import Endpoints from '@/features/k8s/endpoints/pages/Endpoints';
 import Ingresses from '@/features/k8s/ingresses/pages/Ingresses';
-import IngressClasses from '@/features/k8s/ingress-classes/pages/IngressClasses';
+import IngressClasses from '@/features/k8s/ingressClasses/pages/IngressClasses';
 import NetworkPolicies from '@/features/k8s/networkPolicies/pages/NetworkPolicies';
+import PersistentVolumes from '@/features/k8s/persistentVolumes/pages/PersistentVolumes';
+import StorageClasses from '@/features/k8s/storageClasses/pages/StorageClasses';
+import ServiceAccounts from '@/features/k8s/serviceAccounts/pages/ServiceAccounts';
+import Roles from '@/features/k8s/roles/pages/Roles';
+import RoleBindings from '@/features/k8s/roleBindings/pages/RoleBindings';
+import ClusterRoles from '@/features/k8s/clusterRoles/pages/ClusterRoles';
+import ClusterRoleBindings from '@/features/k8s/clusterRoleBindings/pages/ClusterRoleBindings';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -116,6 +123,14 @@ export default function Home() {
     ingress_classes: IngressClasses,
     network_policies: NetworkPolicies,
     persistent_volume_claims: PersistentVolumeClaims,
+    persistent_volumes: PersistentVolumes,
+    storage_classes: StorageClasses,
+    // Access Control
+    service_accounts: ServiceAccounts,
+    roles: Roles,
+    role_bindings: RoleBindings,
+    cluster_roles: ClusterRoles,
+    cluster_role_bindings: ClusterRoleBindings,
   };
 
   const PageComponent = pageComponents[page] || ComingSoon;
