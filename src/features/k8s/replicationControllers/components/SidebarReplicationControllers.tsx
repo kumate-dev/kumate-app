@@ -14,7 +14,12 @@ interface SidebarReplicationControllersProps {
   onEdit?: (item: V1ReplicationController) => void;
 }
 
-export function SidebarReplicationControllers({ item, setItem, onDelete, onEdit }: SidebarReplicationControllersProps) {
+export function SidebarReplicationControllers({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+}: SidebarReplicationControllersProps) {
   const renderOverview = (rc: V1ReplicationController) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -70,6 +75,12 @@ export function SidebarReplicationControllers({ item, setItem, onDelete, onEdit 
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

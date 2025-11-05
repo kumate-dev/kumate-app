@@ -9,6 +9,30 @@ export interface LimitRangeEvent {
   object: V1LimitRange;
 }
 
+export async function createLimitRange({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1LimitRange;
+}): Promise<V1LimitRange> {
+  return await invoke<V1LimitRange>('create_limit_range', { name, namespace, manifest });
+}
+
+export async function updateLimitRange({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1LimitRange;
+}): Promise<V1LimitRange> {
+  return await invoke<V1LimitRange>('update_limit_range', { name, namespace, manifest });
+}
+
 export async function listLimitRanges({
   name,
   namespaces,

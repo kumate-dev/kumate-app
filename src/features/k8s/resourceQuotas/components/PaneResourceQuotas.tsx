@@ -2,10 +2,11 @@ import { useState, useCallback } from 'react';
 import { V1ResourceQuota, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
-import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
+import { ColumnDef } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { renderKeyValue } from '../utils/renderKeyValue';
+import { templateResourceQuota } from '../../templates/resourceQuota';
 
 export interface PaneResourceQuotasProps {
   selectedNamespaces: string[];
@@ -15,6 +16,9 @@ export interface PaneResourceQuotasProps {
   loading: boolean;
   error: string;
   onDeleteResourceQuotas: (resourceQuotas: V1ResourceQuota[]) => Promise<void>;
+  onCreate?: (manifest: V1ResourceQuota) => Promise<V1ResourceQuota | undefined>;
+  onUpdate?: (manifest: V1ResourceQuota) => Promise<V1ResourceQuota | undefined>;
+  contextName?: string;
 }
 
 export default function PaneResourceQuotas({
@@ -25,47 +29,27 @@ export default function PaneResourceQuotas({
   loading,
   error,
   onDeleteResourceQuotas,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneResourceQuotasProps) {
-  const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1ResourceQuota>('metadata');
+  const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1ResourceQuota[]>([]);
-
-  const toggleItem = useCallback((rq: V1ResourceQuota) => {
-    setSelectedItems((prev) => (prev.includes(rq) ? prev.filter((r) => r !== rq) : [...prev, rq]));
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => setSelectedItems(checked ? [...items] : []),
-    [items]
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1ResourceQuota[]) => {
+      if (!toDelete.length) return;
+      await onDeleteResourceQuotas(toDelete);
+    },
+    [onDeleteResourceQuotas]
   );
 
-  const handleDeleteSelected = useCallback(async () => {
-    if (!selectedItems.length) return;
-    await onDeleteResourceQuotas(selectedItems);
-    setSelectedItems([]);
-  }, [selectedItems, onDeleteResourceQuotas]);
-
-  const columns: ColumnDef<keyof V1ResourceQuota | ''>[] = [
+  const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'metadata' },
     { label: 'Namespace', key: 'metadata' },
     { label: 'Hard', key: 'status' },
     { label: 'Used', key: 'status' },
     { label: 'Age', key: 'metadata' },
   ];
-
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAll}
-      selectedItems={selectedItems}
-      totalItems={items}
-    />
-  );
 
   const renderRow = (rq: V1ResourceQuota) => {
     const hardResources = renderKeyValue(rq.status?.hard as Record<string, string>);
@@ -97,17 +81,20 @@ export default function PaneResourceQuotas({
       items={items}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
+      columns={columns}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
       onDelete={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
       renderRow={renderRow}
+      yamlTemplate={templateResourceQuota}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
     />
   );
 }

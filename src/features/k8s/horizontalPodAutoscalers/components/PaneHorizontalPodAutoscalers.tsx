@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import { V1HorizontalPodAutoscaler, V1Namespace } from '@kubernetes/client-node';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
-import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
+import { ColumnDef } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { BadgeStatus } from '@/features/k8s/generic/components/BadgeStatus';
 import { getHorizontalPodAutoscalerStatus } from '../utils/horizontalPodAutoscalersStatus';
+import { templateHorizontalPodAutoscaler } from '../../templates/horizontalPodAutoscaler';
 
 export interface PaneHorizontalPodAutoscalersProps {
   selectedNamespaces: string[];
@@ -16,6 +17,13 @@ export interface PaneHorizontalPodAutoscalersProps {
   loading: boolean;
   error: string;
   onDeleteHorizontalPodAutoscalers: (hpas: V1HorizontalPodAutoscaler[]) => Promise<void>;
+  onCreate?: (
+    manifest: V1HorizontalPodAutoscaler
+  ) => Promise<V1HorizontalPodAutoscaler | undefined>;
+  onUpdate?: (
+    manifest: V1HorizontalPodAutoscaler
+  ) => Promise<V1HorizontalPodAutoscaler | undefined>;
+  contextName?: string;
 }
 
 export default function PaneHorizontalPodAutoscalers({
@@ -26,32 +34,21 @@ export default function PaneHorizontalPodAutoscalers({
   loading,
   error,
   onDeleteHorizontalPodAutoscalers,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneHorizontalPodAutoscalersProps) {
-  const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1HorizontalPodAutoscaler>('metadata');
+  const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1HorizontalPodAutoscaler[]>([]);
-
-  const toggleItem = useCallback((item: V1HorizontalPodAutoscaler) => {
-    setSelectedItems((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1HorizontalPodAutoscaler[]) => {
+      if (!toDelete.length) return;
+      await onDeleteHorizontalPodAutoscalers(toDelete);
     },
-    [items]
+    [onDeleteHorizontalPodAutoscalers]
   );
 
-  const handleDeleteSelected = useCallback(async () => {
-    if (selectedItems.length === 0) return;
-    await onDeleteHorizontalPodAutoscalers(selectedItems);
-    setSelectedItems([]);
-  }, [selectedItems, onDeleteHorizontalPodAutoscalers]);
-
-  const columns: ColumnDef<keyof V1HorizontalPodAutoscaler | ''>[] = [
+  const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'metadata' },
     { label: 'Namespace', key: 'metadata' },
     { label: 'Target', key: 'spec' },
@@ -62,19 +59,6 @@ export default function PaneHorizontalPodAutoscalers({
     { label: 'Age', key: 'metadata' },
     { label: 'Status', key: 'status' },
   ];
-
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAll}
-      selectedItems={selectedItems}
-      totalItems={items}
-    />
-  );
 
   const renderRow = (hpa: V1HorizontalPodAutoscaler) => (
     <>
@@ -103,17 +87,20 @@ export default function PaneHorizontalPodAutoscalers({
       items={items}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
+      columns={columns}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
       onDelete={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
       renderRow={renderRow}
+      yamlTemplate={templateHorizontalPodAutoscaler}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
     />
   );
 }

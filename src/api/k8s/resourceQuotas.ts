@@ -9,6 +9,30 @@ export interface ResourceQuotaEvent {
   object: V1ResourceQuota;
 }
 
+export async function createResourceQuota({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1ResourceQuota;
+}): Promise<V1ResourceQuota> {
+  return await invoke<V1ResourceQuota>('create_resource_quota', { name, namespace, manifest });
+}
+
+export async function updateResourceQuota({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1ResourceQuota;
+}): Promise<V1ResourceQuota> {
+  return await invoke<V1ResourceQuota>('update_resource_quota', { name, namespace, manifest });
+}
+
 export async function listResourceQuotas({
   name,
   namespaces,

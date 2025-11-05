@@ -28,7 +28,7 @@ pub async fn update_stateful_set(
 #[tauri::command]
 pub async fn list_stateful_sets(
     name: String,
-    namespaces: Option<Vec<String>>, 
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<Value>, String> {
     K8sResources::<StatefulSet>::list(name, namespaces).await
 }

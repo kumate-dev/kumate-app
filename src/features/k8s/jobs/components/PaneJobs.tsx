@@ -9,6 +9,8 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getJobStatus } from '../utils/jobStatus';
 import { sortItems } from '@/utils/sort';
 import { SidebarJobs } from './SidebarJobs';
+import { templateJob } from '../../templates/job';
+import { V1Job as Job } from '@kubernetes/client-node';
 
 export interface PaneJobsProps {
   selectedNamespaces: string[];
@@ -19,6 +21,8 @@ export interface PaneJobsProps {
   error: string;
   onDeleteJobs: (jobs: V1Job[]) => Promise<void>;
   contextName?: string;
+  onCreate?: (manifest: Job) => Promise<Job | undefined>;
+  onUpdate?: (manifest: Job) => Promise<Job | undefined>;
 }
 
 export default function PaneJobs({
@@ -29,21 +33,13 @@ export default function PaneJobs({
   loading,
   error,
   onDeleteJobs,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneJobsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1Job[]>([]);
-
-  const toggleItem = useCallback((job: V1Job) => {
-    setSelectedItems((prev) =>
-      prev.includes(job) ? prev.filter((j) => j !== job) : [...prev, job]
-    );
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => setSelectedItems(checked ? [...items] : []),
-    [items]
-  );
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
@@ -98,8 +94,7 @@ export default function PaneJobs({
         item={item}
         setItem={actions.setItem}
         onDelete={actions.onDelete}
-        // Jobs do not support edit via YAML yet
-        onEdit={undefined}
+        onEdit={actions.onEdit}
       />
     ),
     []
@@ -118,10 +113,14 @@ export default function PaneJobs({
       emptyText="No jobs found"
       onDelete={handleDeleteSelected}
       renderSidebar={renderSidebar}
+      yamlTemplate={templateJob}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      contextName={contextName}
     />
   );
 }

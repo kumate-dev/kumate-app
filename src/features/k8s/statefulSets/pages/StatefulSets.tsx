@@ -3,11 +3,19 @@ import { V1StatefulSet } from '@kubernetes/client-node';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listStatefulSets, watchStatefulSets, deleteStatefulSets } from '@/api/k8s/statefulSets';
+import {
+  listStatefulSets,
+  watchStatefulSets,
+  deleteStatefulSets,
+  createStatefulSet,
+  updateStatefulSet,
+} from '@/api/k8s/statefulSets';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneStatefulSets from '../components/PaneStatefulSets';
 import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
+import { useCreateK8sResource } from '@/hooks/useCreateK8sResource';
+import { useUpdateK8sResource } from '@/hooks/useUpdateK8sResource';
 
 export default function StatefulSets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -21,7 +29,8 @@ export default function StatefulSets({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-
+  const { handleCreateResource } = useCreateK8sResource<V1StatefulSet>(createStatefulSet, context);
+  const { handleUpdateResource } = useUpdateK8sResource<V1StatefulSet>(updateStatefulSet, context);
   const { handleDeleteResources } = useDeleteK8sResources<V1StatefulSet>(
     deleteStatefulSets,
     context
@@ -47,6 +56,9 @@ export default function StatefulSets({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDeleteStatefulSets={handleDeleteStatefulSets}
+      onCreate={handleCreateResource}
+      onUpdate={handleUpdateResource}
+      contextName={context?.name}
     />
   );
 }

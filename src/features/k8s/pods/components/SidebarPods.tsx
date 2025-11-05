@@ -9,7 +9,6 @@ import { getPodStatus } from '../utils/podStatus';
 import { getContainerStatuses } from '../utils/containerStatus';
 import { ButtonLog } from '@/components/common/ButtonLog';
 import BottomExecTerminal from '@/components/common/BottomExecTerminal';
-import { Terminal } from 'lucide-react';
 import { useState } from 'react';
 import BottomLogViewer from '@/components/common/BottomLogViewer';
 import { ButtonShell } from '@/components/common/ButtonShell';

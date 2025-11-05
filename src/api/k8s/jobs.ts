@@ -9,6 +9,30 @@ export interface JobEvent {
   object: V1Job;
 }
 
+export async function createJob({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Job;
+}): Promise<V1Job> {
+  return await invoke<V1Job>('create_job', { name, namespace, manifest });
+}
+
+export async function updateJob({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Job;
+}): Promise<V1Job> {
+  return await invoke<V1Job>('update_job', { name, namespace, manifest });
+}
+
 export async function listJobs({
   name,
   namespaces,

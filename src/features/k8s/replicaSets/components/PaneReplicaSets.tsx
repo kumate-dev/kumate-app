@@ -9,6 +9,8 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getReplicaSetStatus } from '../utils/replicaSetStatus';
 import { sortItems } from '@/utils/sort';
 import { SidebarReplicaSets } from './SidebarReplicaSets';
+import { templateReplicaSet } from '../../templates/replicaSet';
+import { V1ReplicaSet as ReplicaSet } from '@kubernetes/client-node';
 
 export interface PaneReplicaSetsProps {
   selectedNamespaces: string[];
@@ -18,6 +20,9 @@ export interface PaneReplicaSetsProps {
   loading: boolean;
   error: string;
   onDeleteReplicaSets: (replicaSets: V1ReplicaSet[]) => Promise<void>;
+  onCreate?: (manifest: ReplicaSet) => Promise<ReplicaSet | undefined>;
+  onUpdate?: (manifest: ReplicaSet) => Promise<ReplicaSet | undefined>;
+  contextName?: string;
 }
 
 export default function PaneReplicaSets({
@@ -28,21 +33,13 @@ export default function PaneReplicaSets({
   loading,
   error,
   onDeleteReplicaSets,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneReplicaSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1ReplicaSet[]>([]);
-
-  const toggleItem = useCallback((rs: V1ReplicaSet) => {
-    setSelectedItems((prev) => (prev.includes(rs) ? prev.filter((r) => r !== rs) : [...prev, rs]));
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
-    },
-    [items]
-  );
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
@@ -119,6 +116,10 @@ export default function PaneReplicaSets({
       emptyText="No replica sets found"
       onDelete={handleDeleteSelected}
       renderSidebar={renderSidebar}
+      yamlTemplate={templateReplicaSet}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

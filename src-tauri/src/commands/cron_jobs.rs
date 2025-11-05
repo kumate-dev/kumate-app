@@ -28,7 +28,7 @@ pub async fn update_cron_job(
 #[tauri::command]
 pub async fn list_cron_jobs(
     name: String,
-    namespaces: Option<Vec<String>>, 
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<Value>, String> {
     K8sResources::<CronJob>::list(name, namespaces).await
 }

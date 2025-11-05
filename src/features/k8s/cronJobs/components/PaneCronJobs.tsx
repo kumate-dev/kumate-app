@@ -9,6 +9,8 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getCronJobStatus } from '../utils/cronJobStatus';
 import { sortItems } from '@/utils/sort';
 import { SidebarCronJobs } from './SidebarCronJobs';
+import { templateCronJob } from '../../templates/cronJob';
+import { V1CronJob as CronJob } from '@kubernetes/client-node';
 
 export interface PaneCronJobsProps {
   selectedNamespaces: string[];
@@ -18,6 +20,9 @@ export interface PaneCronJobsProps {
   loading: boolean;
   error: string;
   onDeleteCronJobs: (cronJobs: V1CronJob[]) => Promise<void>;
+  onCreate?: (manifest: CronJob) => Promise<CronJob | undefined>;
+  onUpdate?: (manifest: CronJob) => Promise<CronJob | undefined>;
+  contextName?: string;
 }
 
 export default function PaneCronJobs({
@@ -28,23 +33,13 @@ export default function PaneCronJobs({
   loading,
   error,
   onDeleteCronJobs,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneCronJobsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1CronJob[]>([]);
-
-  const toggleItem = useCallback((item: V1CronJob) => {
-    setSelectedItems((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
-    },
-    [items]
-  );
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedItems.length === 0) return;
@@ -105,8 +100,7 @@ export default function PaneCronJobs({
         item={item}
         setItem={actions.setItem}
         onDelete={actions.onDelete}
-        // CronJobs do not support edit via YAML yet
-        onEdit={undefined}
+        onEdit={actions.onEdit}
       />
     ),
     []
@@ -125,10 +119,14 @@ export default function PaneCronJobs({
       emptyText="No cron jobs found"
       onDelete={handleDeleteSelected}
       renderSidebar={renderSidebar}
+      yamlTemplate={templateCronJob}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      contextName={contextName}
     />
   );
 }

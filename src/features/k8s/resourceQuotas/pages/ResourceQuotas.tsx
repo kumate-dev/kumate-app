@@ -8,10 +8,13 @@ import {
   watchResourceQuotas,
   deleteResourceQuotas,
 } from '@/api/k8s/resourceQuotas';
+import { createResourceQuota, updateResourceQuota } from '@/api/k8s/resourceQuotas';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneResourceQuotas from '../components/PaneResourceQuotas';
 import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
+import { useCreateK8sResource } from '@/hooks/useCreateK8sResource';
+import { useUpdateK8sResource } from '@/hooks/useUpdateK8sResource';
 
 export default function ResourceQuotas({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -25,7 +28,14 @@ export default function ResourceQuotas({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-
+  const { handleCreateResource } = useCreateK8sResource<V1ResourceQuota>(
+    createResourceQuota,
+    context
+  );
+  const { handleUpdateResource } = useUpdateK8sResource<V1ResourceQuota>(
+    updateResourceQuota,
+    context
+  );
   const { handleDeleteResources } = useDeleteK8sResources<V1ResourceQuota>(
     deleteResourceQuotas,
     context
@@ -51,6 +61,9 @@ export default function ResourceQuotas({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDeleteResourceQuotas={handleDeleteResourceQuotas}
+      onCreate={handleCreateResource}
+      onUpdate={handleUpdateResource}
+      contextName={context?.name}
     />
   );
 }

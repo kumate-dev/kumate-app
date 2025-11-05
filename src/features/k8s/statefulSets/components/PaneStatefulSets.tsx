@@ -9,6 +9,8 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getStatefulSetStatus } from '../utils/statefulSetStatus';
 import { sortItems } from '@/utils/sort';
 import { SidebarStatefulSets } from './SidebarStatefulSets';
+import { templateStatefulSet } from '../../templates/statefulSet';
+import { V1StatefulSet as StatefulSet } from '@kubernetes/client-node';
 
 export interface PaneStatefulSetsProps {
   selectedNamespaces: string[];
@@ -18,6 +20,9 @@ export interface PaneStatefulSetsProps {
   loading: boolean;
   error: string;
   onDeleteStatefulSets: (statefulSets: V1StatefulSet[]) => Promise<void>;
+  onCreate?: (manifest: StatefulSet) => Promise<StatefulSet | undefined>;
+  onUpdate?: (manifest: StatefulSet) => Promise<StatefulSet | undefined>;
+  contextName?: string;
 }
 
 export default function PaneStatefulSets({
@@ -28,21 +33,13 @@ export default function PaneStatefulSets({
   loading,
   error,
   onDeleteStatefulSets,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneStatefulSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1StatefulSet[]>([]);
-
-  const toggleItem = useCallback((ss: V1StatefulSet) => {
-    setSelectedItems((prev) => (prev.includes(ss) ? prev.filter((s) => s !== ss) : [...prev, ss]));
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
-    },
-    [items]
-  );
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
@@ -99,8 +96,7 @@ export default function PaneStatefulSets({
         item={item}
         setItem={actions.setItem}
         onDelete={actions.onDelete}
-        // StatefulSets do not support edit via YAML yet
-        onEdit={undefined}
+        onEdit={actions.onEdit}
       />
     ),
     []
@@ -119,6 +115,10 @@ export default function PaneStatefulSets({
       emptyText="No stateful sets found"
       onDelete={handleDeleteSelected}
       renderSidebar={renderSidebar}
+      yamlTemplate={templateStatefulSet}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

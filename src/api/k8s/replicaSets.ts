@@ -9,6 +9,30 @@ export interface ReplicaSetEvent {
   object: V1ReplicaSet;
 }
 
+export async function createReplicaSet({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1ReplicaSet;
+}): Promise<V1ReplicaSet> {
+  return await invoke<V1ReplicaSet>('create_replica_set', { name, namespace, manifest });
+}
+
+export async function updateReplicaSet({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1ReplicaSet;
+}): Promise<V1ReplicaSet> {
+  return await invoke<V1ReplicaSet>('update_replica_set', { name, namespace, manifest });
+}
+
 export async function listReplicaSets({
   name,
   namespaces,

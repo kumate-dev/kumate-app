@@ -9,6 +9,30 @@ export interface ConfigMapEvent {
   object: V1ConfigMap;
 }
 
+export async function createConfigMap({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1ConfigMap;
+}): Promise<V1ConfigMap> {
+  return await invoke<V1ConfigMap>('create_config_map', { name, namespace, manifest });
+}
+
+export async function updateConfigMap({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1ConfigMap;
+}): Promise<V1ConfigMap> {
+  return await invoke<V1ConfigMap>('update_config_map', { name, namespace, manifest });
+}
+
 export async function listConfigMaps({
   name,
   namespaces,

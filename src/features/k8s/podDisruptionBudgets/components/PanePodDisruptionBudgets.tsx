@@ -2,11 +2,12 @@ import { useState, useCallback } from 'react';
 import { V1PodDisruptionBudget, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
-import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
+import { ColumnDef } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { getPodDisruptionBudgetsStatus } from '../utils/podDisruptionBudgetsStatus';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
+import { templatePodDisruptionBudget } from '../../templates/podDisruptionBudget';
 
 export interface PanePodDisruptionBudgetsProps {
   selectedNamespaces: string[];
@@ -16,6 +17,9 @@ export interface PanePodDisruptionBudgetsProps {
   loading: boolean;
   error: string;
   onDeletePodDisruptionBudgets: (pdbs: V1PodDisruptionBudget[]) => Promise<void>;
+  onCreate?: (manifest: V1PodDisruptionBudget) => Promise<V1PodDisruptionBudget | undefined>;
+  onUpdate?: (manifest: V1PodDisruptionBudget) => Promise<V1PodDisruptionBudget | undefined>;
+  contextName?: string;
 }
 
 export default function PanePodDisruptionBudgets({
@@ -26,32 +30,21 @@ export default function PanePodDisruptionBudgets({
   loading,
   error,
   onDeletePodDisruptionBudgets,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PanePodDisruptionBudgetsProps) {
-  const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1PodDisruptionBudget>('metadata');
+  const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1PodDisruptionBudget[]>([]);
-
-  const toggleItem = useCallback((pdb: V1PodDisruptionBudget) => {
-    setSelectedItems((prev) =>
-      prev.includes(pdb) ? prev.filter((p) => p !== pdb) : [...prev, pdb]
-    );
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1PodDisruptionBudget[]) => {
+      if (!toDelete.length) return;
+      await onDeletePodDisruptionBudgets(toDelete);
     },
-    [items]
+    [onDeletePodDisruptionBudgets]
   );
 
-  const handleDeleteSelected = useCallback(async () => {
-    if (!selectedItems.length) return;
-    await onDeletePodDisruptionBudgets(selectedItems);
-    setSelectedItems([]);
-  }, [selectedItems, onDeletePodDisruptionBudgets]);
-
-  const columns: ColumnDef<keyof V1PodDisruptionBudget | ''>[] = [
+  const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'metadata' },
     { label: 'Namespace', key: 'metadata' },
     { label: 'Min Available', key: 'spec' },
@@ -62,19 +55,6 @@ export default function PanePodDisruptionBudgets({
     { label: 'Status', key: 'status' },
     { label: 'Age', key: 'metadata' },
   ];
-
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAll}
-      selectedItems={selectedItems}
-      totalItems={items}
-    />
-  );
 
   const renderRow = (pdb: V1PodDisruptionBudget) => {
     return (
@@ -105,17 +85,20 @@ export default function PanePodDisruptionBudgets({
       items={items}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
+      columns={columns}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
       onDelete={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
       renderRow={renderRow}
+      yamlTemplate={templatePodDisruptionBudget}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
     />
   );
 }

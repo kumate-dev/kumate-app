@@ -59,7 +59,11 @@ export function SidebarK8sDeployments({
             </Td>
           </Tr>
 
-          <TableYamlRow label="Selector" data={dep.spec?.selector?.matchLabels} maxWidthClass="lg" />
+          <TableYamlRow
+            label="Selector"
+            data={dep.spec?.selector?.matchLabels}
+            maxWidthClass="lg"
+          />
 
           <Tr>
             <Td>Strategy Type</Td>

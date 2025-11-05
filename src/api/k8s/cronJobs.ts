@@ -9,6 +9,30 @@ export interface CronJobEvent {
   object: V1CronJob;
 }
 
+export async function createCronJob({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1CronJob;
+}): Promise<V1CronJob> {
+  return await invoke<V1CronJob>('create_cron_job', { name, namespace, manifest });
+}
+
+export async function updateCronJob({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1CronJob;
+}): Promise<V1CronJob> {
+  return await invoke<V1CronJob>('update_cron_job', { name, namespace, manifest });
+}
+
 export async function listCronJobs({
   name,
   namespaces,

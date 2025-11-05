@@ -4,8 +4,6 @@ import { YamlEditor } from './YamlEditor';
 import { ButtonCancel } from './ButtonCancel';
 import { ButtonSave } from './ButtonSave';
 import { YamlEditorProps } from '@/types/yaml';
-import { Maximize2, Minimize2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { startResizing } from '@/utils/resizing';
 import { ButtonExpand } from './ButtonExpand';
 

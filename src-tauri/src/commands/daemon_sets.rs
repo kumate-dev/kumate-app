@@ -28,7 +28,7 @@ pub async fn update_daemon_set(
 #[tauri::command]
 pub async fn list_daemon_sets(
     name: String,
-    namespaces: Option<Vec<String>>, 
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<Value>, String> {
     K8sResources::<DaemonSet>::list(name, namespaces).await
 }

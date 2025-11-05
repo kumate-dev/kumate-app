@@ -3,8 +3,9 @@ import { V1ConfigMap, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
-import { ColumnDef, TableHeader } from '@/components/common/TableHeader';
+import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
+import { templateConfigMap } from '../../templates/configMap';
 
 export interface PaneConfigMapsProps {
   selectedNamespaces: string[];
@@ -14,6 +15,9 @@ export interface PaneConfigMapsProps {
   loading: boolean;
   error: string;
   onDeleteConfigMaps: (configMaps: V1ConfigMap[]) => Promise<void>;
+  onCreate?: (manifest: V1ConfigMap) => Promise<V1ConfigMap | undefined>;
+  onUpdate?: (manifest: V1ConfigMap) => Promise<V1ConfigMap | undefined>;
+  contextName?: string;
 }
 
 export default function PaneConfigMaps({
@@ -24,50 +28,26 @@ export default function PaneConfigMaps({
   loading,
   error,
   onDeleteConfigMaps,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneConfigMapsProps) {
-  const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1ConfigMap>('metadata');
+  const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1ConfigMap[]>([]);
-
-  const toggleItem = useCallback((item: V1ConfigMap) => {
-    setSelectedItems((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1ConfigMap[]) => {
+      if (!toDelete.length) return;
+      await onDeleteConfigMaps(toDelete);
     },
-    [items]
+    [onDeleteConfigMaps]
   );
 
-  const handleDeleteSelected = useCallback(async () => {
-    if (selectedItems.length === 0) return;
-    await onDeleteConfigMaps(selectedItems);
-    setSelectedItems([]);
-  }, [selectedItems, onDeleteConfigMaps]);
-
-  const columns: ColumnDef<keyof V1ConfigMap | ''>[] = [
+  const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'metadata' },
     { label: 'Namespace', key: 'metadata' },
     { label: 'Keys', key: 'data' },
     { label: 'Age', key: 'metadata' },
   ];
-
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAll}
-      selectedItems={selectedItems}
-      totalItems={items}
-    />
-  );
 
   const renderRow = (cm: V1ConfigMap) => (
     <>
@@ -95,17 +75,20 @@ export default function PaneConfigMaps({
       items={items}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
+      columns={columns}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
       onDelete={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
       renderRow={renderRow}
+      yamlTemplate={templateConfigMap}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
     />
   );
 }

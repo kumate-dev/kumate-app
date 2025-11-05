@@ -28,7 +28,7 @@ pub async fn update_job(
 #[tauri::command]
 pub async fn list_jobs(
     name: String,
-    namespaces: Option<Vec<String>>, 
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<Value>, String> {
     K8sResources::<Job>::list(name, namespaces).await
 }

@@ -43,29 +43,28 @@ export default function BottomExecTerminal({
   const [currentCommand, setCurrentCommand] = useState<string[]>(['bash', '-l']);
   const autoTriedRef = useRef<number>(0);
 
-  const { output, error, isConnected, startSession, stopSession, sendInput } =
-    useExecTerminal({
-      open,
-      contextName,
-      namespace,
-      podName,
-      containerName,
-      command: currentCommand,
-      tty: true,
-      autoConnect,
-      onStream: (evt: ExecEvent) => {
-        if (!termRef.current) return;
-        if ((evt.type === 'EXEC_STDOUT' || evt.type === 'EXEC_STDERR') && evt.data) {
-          termRef.current.write(evt.data);
-          try {
-            termRef.current.scrollToBottom();
-            termRef.current.focus();
-          } catch (_) {
-            // ignore focus/scroll errors
-          }
+  const { output, error, isConnected, startSession, stopSession, sendInput } = useExecTerminal({
+    open,
+    contextName,
+    namespace,
+    podName,
+    containerName,
+    command: currentCommand,
+    tty: true,
+    autoConnect,
+    onStream: (evt: ExecEvent) => {
+      if (!termRef.current) return;
+      if ((evt.type === 'EXEC_STDOUT' || evt.type === 'EXEC_STDERR') && evt.data) {
+        termRef.current.write(evt.data);
+        try {
+          termRef.current.scrollToBottom();
+          termRef.current.focus();
+        } catch {
+          // ignore focus/scroll errors
         }
-      },
-    });
+      }
+    },
+  });
 
   const onResize = useCallback(
     (e: React.MouseEvent) => {
@@ -144,7 +143,7 @@ export default function BottomExecTerminal({
       setTimeout(() => {
         try {
           fit.fit();
-        } catch (_) {}
+        } catch {}
       }, 0);
       fitAddonRef.current = fit;
       termRef.current = term;
@@ -175,14 +174,14 @@ export default function BottomExecTerminal({
         disposeDataHandlerRef.current = null;
       }
     };
-  }, [open, isConnected]);
+  }, [open, isConnected, currentCommand, sendInput]);
 
   useEffect(() => {
     if (!terminalContainerRef.current) return;
     const ro = new ResizeObserver(() => {
       try {
         fitAddonRef.current?.fit();
-      } catch (_) {}
+      } catch {}
     });
     ro.observe(terminalContainerRef.current);
     return () => ro.disconnect();
@@ -191,14 +190,14 @@ export default function BottomExecTerminal({
   useEffect(() => {
     try {
       fitAddonRef.current?.fit();
-    } catch (_) {}
+    } catch {}
   }, [panelHeight]);
 
   useEffect(() => {
     const onWinResize = () => {
       try {
         fitAddonRef.current?.fit();
-      } catch (_) {}
+      } catch {}
     };
     window.addEventListener('resize', onWinResize);
     return () => window.removeEventListener('resize', onWinResize);
@@ -208,7 +207,7 @@ export default function BottomExecTerminal({
     if (output.length === 0 && termRef.current) {
       try {
         termRef.current.clear();
-      } catch (_) {}
+      } catch {}
       lastWrittenLenRef.current = 0;
     }
   }, [output]);
@@ -270,7 +269,7 @@ export default function BottomExecTerminal({
       lastStatusRef.current = key;
       try {
         lines.forEach((l) => term.writeln(l));
-      } catch (_) {}
+      } catch {}
     };
 
     // Only check noSession; write with default shell color (no ANSI)
@@ -296,7 +295,7 @@ export default function BottomExecTerminal({
         onClick={() => {
           try {
             stopSession();
-          } catch (_) {}
+          } catch {}
           onClose();
         }}
       />
@@ -323,7 +322,7 @@ export default function BottomExecTerminal({
               onCancel={() => {
                 try {
                   stopSession();
-                } catch (_) {}
+                } catch {}
                 onClose();
               }}
             />
@@ -338,7 +337,7 @@ export default function BottomExecTerminal({
               onMouseDown={() => {
                 try {
                   termRef.current?.focus();
-                } catch (_) {}
+                } catch {}
               }}
               className="h-full w-full overflow-hidden font-mono text-sm text-white/80"
             />

@@ -13,10 +13,10 @@ export interface UseExecTerminalProps {
   namespace: string;
   podName: string;
   containerName?: string;
-  command?: string[]; // default: ["sh"]
-  tty?: boolean; // default: true
-  autoConnect?: boolean; // default: true
-  onStream?: (evt: ExecEvent) => void; // live event stream for terminals
+  command?: string[];
+  tty?: boolean;
+  autoConnect?: boolean;
+  onStream?: (evt: ExecEvent) => void;
 }
 
 export interface UseExecTerminalReturn {
@@ -52,10 +52,16 @@ export function useExecTerminal({
   const isMountedRef = useRef(true);
   const autoStartedRef = useRef(false);
 
+  const onStreamRef = useRef(onStream);
+  useEffect(() => {
+    onStreamRef.current = onStream;
+  }, [onStream]);
+
   const startSession = useCallback(async () => {
     if (!contextName || isConnected) return;
     setLoading(true);
     setError(null);
+
     try {
       const { eventName, sessionId, unlisten } = await startExecPodSession({
         context: contextName,
@@ -65,14 +71,13 @@ export function useExecTerminal({
         command,
         tty,
         onEvent: (evt: ExecEvent) => {
-          // Forward raw event to streaming consumer (e.g., xterm)
           try {
-            onStream?.(evt);
-          } catch (_) {
-            // ignore consumer errors
+            onStreamRef.current?.(evt);
+          } catch {
           }
+
           if (!isMountedRef.current) return;
-          // Only accumulate text output when NOT in TTY mode (line-based)
+
           if (!tty && evt.type === 'EXEC_STDOUT' && evt.data) {
             setOutput((prev) => prev + evt.data + '\n');
           } else if (!tty && evt.type === 'EXEC_STDERR' && evt.data) {
@@ -85,6 +90,7 @@ export function useExecTerminal({
           }
         },
       });
+
       unlistenRef.current = unlisten;
       sessionIdRef.current = sessionId;
       eventNameRef.current = eventName;
@@ -117,7 +123,11 @@ export function useExecTerminal({
   const sendInputHandler = useCallback(async (text: string, appendNewline: boolean = true) => {
     if (!sessionIdRef.current) return;
     try {
-      await sendExecInput({ sessionId: sessionIdRef.current, input: text, appendNewline });
+      await sendExecInput({
+        sessionId: sessionIdRef.current,
+        input: text,
+        appendNewline,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send input');
     }

@@ -23,7 +23,8 @@ export default function Pods({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-
+  const { handleCreateResource } = useCreateK8sResource<V1Pod>(createPod, context);
+  const { handleUpdateResource } = useUpdateK8sResource<V1Pod>(updatePod, context);
   const { handleDeleteResources } = useDeleteK8sResources<V1Pod>(deletePods, context);
 
   const handleDeletePods = useCallback(
@@ -36,9 +37,6 @@ export default function Pods({ context }: PaneResourceContextProps) {
     },
     [handleDeleteResources]
   );
-
-  const { handleCreateResource } = useCreateK8sResource<V1Pod>(createPod, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1Pod>(updatePod, context);
 
   return (
     <PanePods

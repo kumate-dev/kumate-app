@@ -29,7 +29,8 @@ export default function Deployments({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-
+  const { handleCreateResource } = useCreateK8sResource<V1Deployment>(createDeployment, context);
+  const { handleUpdateResource } = useUpdateK8sResource<V1Deployment>(updateDeployment, context);
   const { handleDeleteResources } = useDeleteK8sResources<V1Deployment>(deleteDeployments, context);
 
   const handleDeleteDeployments = useCallback(
@@ -42,9 +43,6 @@ export default function Deployments({ context }: PaneResourceContextProps) {
     },
     [handleDeleteResources]
   );
-
-  const { handleCreateResource } = useCreateK8sResource<V1Deployment>(createDeployment, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1Deployment>(updateDeployment, context);
 
   return (
     <PaneDeployments

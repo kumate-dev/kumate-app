@@ -28,7 +28,7 @@ pub async fn update_replication_controller(
 #[tauri::command]
 pub async fn list_replication_controllers(
     name: String,
-    namespaces: Option<Vec<String>>, 
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<Value>, String> {
     K8sResources::<ReplicationController>::list(name, namespaces).await
 }

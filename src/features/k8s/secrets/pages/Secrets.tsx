@@ -3,11 +3,19 @@ import { V1Secret } from '@kubernetes/client-node';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listSecrets, watchSecrets, deleteSecrets } from '@/api/k8s/secrets';
+import {
+  listSecrets,
+  watchSecrets,
+  deleteSecrets,
+  createSecret,
+  updateSecret,
+} from '@/api/k8s/secrets';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneSecrets from '../components/PaneSecrets';
 import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
+import { useCreateK8sResource } from '@/hooks/useCreateK8sResource';
+import { useUpdateK8sResource } from '@/hooks/useUpdateK8sResource';
 
 export default function Secrets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -22,6 +30,8 @@ export default function Secrets({ context }: PaneResourceContextProps) {
     selectedNamespaces
   );
 
+  const { handleCreateResource } = useCreateK8sResource<V1Secret>(createSecret, context);
+  const { handleUpdateResource } = useUpdateK8sResource<V1Secret>(updateSecret, context);
   const { handleDeleteResources } = useDeleteK8sResources<V1Secret>(deleteSecrets, context);
 
   const handleDeleteSecrets = useCallback(
@@ -44,6 +54,9 @@ export default function Secrets({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDeleteSecrets={handleDeleteSecrets}
+      onCreate={handleCreateResource}
+      onUpdate={handleUpdateResource}
+      contextName={context?.name}
     />
   );
 }

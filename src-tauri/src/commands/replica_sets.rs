@@ -28,7 +28,7 @@ pub async fn update_replica_set(
 #[tauri::command]
 pub async fn list_replica_sets(
     name: String,
-    namespaces: Option<Vec<String>>, 
+    namespaces: Option<Vec<String>>,
 ) -> Result<Vec<Value>, String> {
     K8sResources::<ReplicaSet>::list(name, namespaces).await
 }

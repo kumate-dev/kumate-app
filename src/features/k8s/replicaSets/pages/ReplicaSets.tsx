@@ -3,11 +3,19 @@ import { V1ReplicaSet } from '@kubernetes/client-node';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
-import { listReplicaSets, watchReplicaSets, deleteReplicaSets } from '@/api/k8s/replicaSets';
+import {
+  listReplicaSets,
+  watchReplicaSets,
+  deleteReplicaSets,
+  createReplicaSet,
+  updateReplicaSet,
+} from '@/api/k8s/replicaSets';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneReplicaSets from '../components/PaneReplicaSets';
 import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
+import { useCreateK8sResource } from '@/hooks/useCreateK8sResource';
+import { useUpdateK8sResource } from '@/hooks/useUpdateK8sResource';
 
 export default function ReplicaSets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -21,7 +29,8 @@ export default function ReplicaSets({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-
+  const { handleCreateResource } = useCreateK8sResource<V1ReplicaSet>(createReplicaSet, context);
+  const { handleUpdateResource } = useUpdateK8sResource<V1ReplicaSet>(updateReplicaSet, context);
   const { handleDeleteResources } = useDeleteK8sResources<V1ReplicaSet>(deleteReplicaSets, context);
 
   const handleDeleteReplicaSets = useCallback(
@@ -44,6 +53,9 @@ export default function ReplicaSets({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDeleteReplicaSets={handleDeleteReplicaSets}
+      onCreate={handleCreateResource}
+      onUpdate={handleUpdateResource}
+      contextName={context?.name}
     />
   );
 }

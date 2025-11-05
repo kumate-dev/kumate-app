@@ -9,6 +9,30 @@ export interface SecretEvent {
   object: V1Secret;
 }
 
+export async function createSecret({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Secret;
+}): Promise<V1Secret> {
+  return await invoke<V1Secret>('create_secret', { name, namespace, manifest });
+}
+
+export async function updateSecret({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1Secret;
+}): Promise<V1Secret> {
+  return await invoke<V1Secret>('update_secret', { name, namespace, manifest });
+}
+
 export async function listSecrets({
   name,
   namespaces,

@@ -9,6 +9,30 @@ export interface DaemonSetEvent {
   object: V1DaemonSet;
 }
 
+export async function createDaemonSet({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1DaemonSet;
+}): Promise<V1DaemonSet> {
+  return await invoke<V1DaemonSet>('create_daemon_set', { name, namespace, manifest });
+}
+
+export async function updateDaemonSet({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1DaemonSet;
+}): Promise<V1DaemonSet> {
+  return await invoke<V1DaemonSet>('update_daemon_set', { name, namespace, manifest });
+}
+
 export async function listDaemonSets({
   name,
   namespaces,

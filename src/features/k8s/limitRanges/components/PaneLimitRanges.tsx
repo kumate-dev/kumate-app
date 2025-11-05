@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
 import { V1LimitRange, V1Namespace } from '@kubernetes/client-node';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
-import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
+import { ColumnDef } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
+import { templateLimitRange } from '../../templates/limitRange';
 
 export interface PaneLimitRangesProps {
   selectedNamespaces: string[];
@@ -14,6 +15,9 @@ export interface PaneLimitRangesProps {
   loading: boolean;
   error: string;
   onDeleteLimitRanges: (limitRanges: V1LimitRange[]) => Promise<void>;
+  onCreate?: (manifest: V1LimitRange) => Promise<V1LimitRange | undefined>;
+  onUpdate?: (manifest: V1LimitRange) => Promise<V1LimitRange | undefined>;
+  contextName?: string;
 }
 
 export default function PaneLimitRanges({
@@ -24,26 +28,19 @@ export default function PaneLimitRanges({
   loading,
   error,
   onDeleteLimitRanges,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneLimitRangesProps) {
-  const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1LimitRange>('metadata');
+  const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1LimitRange[]>([]);
-
-  const toggleItem = useCallback((lr: V1LimitRange) => {
-    setSelectedItems((prev) => (prev.includes(lr) ? prev.filter((i) => i !== lr) : [...prev, lr]));
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => setSelectedItems(checked ? [...items] : []),
-    [items]
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1LimitRange[]) => {
+      if (!toDelete.length) return;
+      await onDeleteLimitRanges(toDelete);
+    },
+    [onDeleteLimitRanges]
   );
-
-  const handleDeleteSelected = useCallback(async () => {
-    if (!selectedItems.length) return;
-    await onDeleteLimitRanges(selectedItems);
-    setSelectedItems([]);
-  }, [selectedItems, onDeleteLimitRanges]);
 
   const renderLimitMap = (map?: Record<string, string>): { display: string; title: string } => {
     if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
@@ -53,7 +50,7 @@ export default function PaneLimitRanges({
     return { display: text, title: text };
   };
 
-  const columns: ColumnDef<keyof V1LimitRange | ''>[] = [
+  const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'metadata' },
     { label: 'Namespace', key: 'metadata' },
     { label: 'Type', key: 'spec' },
@@ -63,19 +60,6 @@ export default function PaneLimitRanges({
     { label: 'Default Request', key: 'spec' },
     { label: 'Age', key: 'metadata' },
   ];
-
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAll}
-      selectedItems={selectedItems}
-      totalItems={items}
-    />
-  );
 
   const renderRow = (lr: V1LimitRange) => (
     <>
@@ -99,17 +83,20 @@ export default function PaneLimitRanges({
       items={items}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
+      columns={columns}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
       onDelete={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
       renderRow={renderRow}
+      yamlTemplate={templateLimitRange}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
     />
   );
 }

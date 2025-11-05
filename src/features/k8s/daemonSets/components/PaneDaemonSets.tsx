@@ -9,6 +9,8 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getDaemonSetStatus } from '../utils/daemonSetStatus';
 import { sortItems } from '@/utils/sort';
 import { SidebarDaemonSets } from './SidebarDaemonSets';
+import { templateDaemonSet } from '../../templates/daemonSet';
+import { V1DaemonSet as DaemonSet } from '@kubernetes/client-node';
 
 export interface PaneDaemonSetsProps {
   selectedNamespaces: string[];
@@ -18,6 +20,9 @@ export interface PaneDaemonSetsProps {
   loading: boolean;
   error: string;
   onDeleteDaemonSets: (daemonSets: V1DaemonSet[]) => Promise<void>;
+  onCreate?: (manifest: DaemonSet) => Promise<DaemonSet | undefined>;
+  onUpdate?: (manifest: DaemonSet) => Promise<DaemonSet | undefined>;
+  contextName?: string;
 }
 
 export default function PaneDaemonSets({
@@ -28,21 +33,13 @@ export default function PaneDaemonSets({
   loading,
   error,
   onDeleteDaemonSets,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneDaemonSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1DaemonSet[]>([]);
-
-  const toggleItem = useCallback((ds: V1DaemonSet) => {
-    setSelectedItems((prev) => (prev.includes(ds) ? prev.filter((d) => d !== ds) : [...prev, ds]));
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
-    },
-    [items]
-  );
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedItems.length === 0) return;
@@ -97,8 +94,7 @@ export default function PaneDaemonSets({
         item={item}
         setItem={actions.setItem}
         onDelete={actions.onDelete}
-        // DaemonSets do not support edit via YAML yet
-        onEdit={undefined}
+        onEdit={actions.onEdit}
       />
     ),
     []
@@ -121,6 +117,10 @@ export default function PaneDaemonSets({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      yamlTemplate={templateDaemonSet}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
     />
   );
 }

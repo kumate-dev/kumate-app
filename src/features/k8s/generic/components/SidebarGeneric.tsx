@@ -1,5 +1,5 @@
 import { useState, useEffect, ReactNode, useRef, useCallback } from 'react';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { X} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
 import { ButtonEdit } from '@/components/common/ButtonEdit';
@@ -29,7 +29,6 @@ export function SidebarGeneric<T>({
 }: SidebarResourcesProps<T>) {
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
-  const [sectionsOpen, setSectionsOpen] = useState<Record<string, boolean>>({});
   const [visible, setVisible] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
@@ -60,10 +59,6 @@ export function SidebarGeneric<T>({
     },
     [sidebarWidth]
   );
-
-  const toggleSection = (key: string) => {
-    setSectionsOpen((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
 
   if (!item && !visible) return null;
 
@@ -98,21 +93,9 @@ export function SidebarGeneric<T>({
         <div className="flex-1 space-y-4 overflow-auto p-4">
           {sections.map((section) => (
             <div key={section.key}>
-              <h3
-                className="mb-2 flex cursor-pointer items-center justify-between text-white/80 select-none"
-                onClick={() => toggleSection(section.key)}
-              >
-                <span>{section.title}</span>
-                {sectionsOpen[section.key] ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </h3>
+              <h3 className="mb-2 text-white/80">{section.title}</h3>
 
-              {item && sectionsOpen[section.key] !== false && (
-                <div className="space-y-2">{section.content(item)}</div>
-              )}
+              {item && <div className="space-y-2">{section.content(item)}</div>}
             </div>
           ))}
         </div>

@@ -9,6 +9,38 @@ export interface PodDisruptionBudgetEvent {
   object: V1PodDisruptionBudget;
 }
 
+export async function createPodDisruptionBudget({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1PodDisruptionBudget;
+}): Promise<V1PodDisruptionBudget> {
+  return await invoke<V1PodDisruptionBudget>('create_pod_disruption_budget', {
+    name,
+    namespace,
+    manifest,
+  });
+}
+
+export async function updatePodDisruptionBudget({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1PodDisruptionBudget;
+}): Promise<V1PodDisruptionBudget> {
+  return await invoke<V1PodDisruptionBudget>('update_pod_disruption_budget', {
+    name,
+    namespace,
+    manifest,
+  });
+}
+
 export async function listPodDisruptionBudgets({
   name,
   namespaces,

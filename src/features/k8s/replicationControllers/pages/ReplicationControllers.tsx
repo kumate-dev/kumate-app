@@ -7,11 +7,15 @@ import {
   listReplicationControllers,
   watchReplicationControllers,
   deleteReplicationControllers,
+  createReplicationController,
+  updateReplicationController,
 } from '@/api/k8s/replicationControllers';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PaneReplicationControllers from '../components/PaneReplicationControllers';
 import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
+import { useCreateK8sResource } from '@/hooks/useCreateK8sResource';
+import { useUpdateK8sResource } from '@/hooks/useUpdateK8sResource';
 
 export default function ReplicationControllers({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -25,7 +29,14 @@ export default function ReplicationControllers({ context }: PaneResourceContextP
     context,
     selectedNamespaces
   );
-
+  const { handleCreateResource } = useCreateK8sResource<V1ReplicationController>(
+    createReplicationController,
+    context
+  );
+  const { handleUpdateResource } = useUpdateK8sResource<V1ReplicationController>(
+    updateReplicationController,
+    context
+  );
   const { handleDeleteResources } = useDeleteK8sResources<V1ReplicationController>(
     deleteReplicationControllers,
     context
@@ -51,6 +62,9 @@ export default function ReplicationControllers({ context }: PaneResourceContextP
       loading={loading}
       error={error ?? ''}
       onDeleteReplicationControllers={handleDeleteReplicationControllers}
+      onCreate={handleCreateResource}
+      onUpdate={handleUpdateResource}
+      contextName={context?.name}
     />
   );
 }

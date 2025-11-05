@@ -8,10 +8,16 @@ import {
   watchPodDisruptionBudgets,
   deletePodDisruptionBudgets,
 } from '@/api/k8s/podDisruptionBudgets';
+import {
+  createPodDisruptionBudget,
+  updatePodDisruptionBudget,
+} from '@/api/k8s/podDisruptionBudgets';
 import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import PanePodDisruptionBudgets from '../components/PanePodDisruptionBudgets';
 import { PaneResourceContextProps } from '../../generic/components/PaneGeneric';
+import { useCreateK8sResource } from '@/hooks/useCreateK8sResource';
+import { useUpdateK8sResource } from '@/hooks/useUpdateK8sResource';
 
 export default function PodDisruptionBudgets({ context }: PaneResourceContextProps) {
   const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
@@ -25,7 +31,14 @@ export default function PodDisruptionBudgets({ context }: PaneResourceContextPro
     context,
     selectedNamespaces
   );
-
+  const { handleCreateResource } = useCreateK8sResource<V1PodDisruptionBudget>(
+    createPodDisruptionBudget,
+    context
+  );
+  const { handleUpdateResource } = useUpdateK8sResource<V1PodDisruptionBudget>(
+    updatePodDisruptionBudget,
+    context
+  );
   const { handleDeleteResources } = useDeleteK8sResources<V1PodDisruptionBudget>(
     deletePodDisruptionBudgets,
     context
@@ -51,6 +64,9 @@ export default function PodDisruptionBudgets({ context }: PaneResourceContextPro
       loading={loading}
       error={error ?? ''}
       onDeletePodDisruptionBudgets={handleDeletePodDisruptionBudgets}
+      onCreate={handleCreateResource}
+      onUpdate={handleUpdateResource}
+      contextName={context?.name}
     />
   );
 }

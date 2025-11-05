@@ -9,6 +9,38 @@ export interface HorizontalPodAutoscalerEvent {
   object: V1HorizontalPodAutoscaler;
 }
 
+export async function createHorizontalPodAutoscaler({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1HorizontalPodAutoscaler;
+}): Promise<V1HorizontalPodAutoscaler> {
+  return await invoke<V1HorizontalPodAutoscaler>('create_horizontal_pod_autoscaler', {
+    name,
+    namespace,
+    manifest,
+  });
+}
+
+export async function updateHorizontalPodAutoscaler({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1HorizontalPodAutoscaler;
+}): Promise<V1HorizontalPodAutoscaler> {
+  return await invoke<V1HorizontalPodAutoscaler>('update_horizontal_pod_autoscaler', {
+    name,
+    namespace,
+    manifest,
+  });
+}
+
 export async function listHorizontalPodAutoscalers({
   name,
   namespaces,

@@ -9,6 +9,38 @@ export interface ReplicationControllerEvent {
   object: V1ReplicationController;
 }
 
+export async function createReplicationController({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1ReplicationController;
+}): Promise<V1ReplicationController> {
+  return await invoke<V1ReplicationController>('create_replication_controller', {
+    name,
+    namespace,
+    manifest,
+  });
+}
+
+export async function updateReplicationController({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1ReplicationController;
+}): Promise<V1ReplicationController> {
+  return await invoke<V1ReplicationController>('update_replication_controller', {
+    name,
+    namespace,
+    manifest,
+  });
+}
+
 export async function listReplicationControllers({
   name,
   namespaces,

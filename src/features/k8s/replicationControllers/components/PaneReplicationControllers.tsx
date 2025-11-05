@@ -9,6 +9,8 @@ import { getReplicationControllerStatus } from '../utils/replicationControllerSt
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { sortItems } from '@/utils/sort';
 import { SidebarReplicationControllers } from './SidebarReplicationControllers';
+import { templateReplicationController } from '../../templates/replicationController';
+import { V1ReplicationController as ReplicationController } from '@kubernetes/client-node';
 
 export interface PaneReplicationControllersProps {
   selectedNamespaces: string[];
@@ -20,6 +22,9 @@ export interface PaneReplicationControllersProps {
   onDeleteReplicationControllers: (
     replicationControllers: V1ReplicationController[]
   ) => Promise<void>;
+  onCreate?: (manifest: ReplicationController) => Promise<ReplicationController | undefined>;
+  onUpdate?: (manifest: ReplicationController) => Promise<ReplicationController | undefined>;
+  contextName?: string;
 }
 
 export default function PaneReplicationControllers({
@@ -30,21 +35,13 @@ export default function PaneReplicationControllers({
   loading,
   error,
   onDeleteReplicationControllers,
+  onCreate,
+  onUpdate,
+  contextName,
 }: PaneReplicationControllersProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1ReplicationController[]>([]);
-
-  const toggleItem = useCallback((rc: V1ReplicationController) => {
-    setSelectedItems((prev) => (prev.includes(rc) ? prev.filter((r) => r !== rc) : [...prev, rc]));
-  }, []);
-
-  const toggleAll = useCallback(
-    (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
-    },
-    [items]
-  );
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
@@ -64,7 +61,8 @@ export default function PaneReplicationControllers({
       name: (item: V1ReplicationController) => item.metadata?.name || '',
       namespace: (item: V1ReplicationController) => item.metadata?.namespace || '',
       status: (item: V1ReplicationController) => getReplicationControllerStatus(item),
-      age: (item: V1ReplicationController) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+      age: (item: V1ReplicationController) =>
+        new Date(item.metadata?.creationTimestamp || '').getTime(),
     };
     return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder]);
@@ -101,8 +99,7 @@ export default function PaneReplicationControllers({
         item={item}
         setItem={actions.setItem}
         onDelete={actions.onDelete}
-        // ReplicationControllers do not support edit via YAML yet
-        onEdit={undefined}
+        onEdit={actions.onEdit}
       />
     ),
     []
@@ -121,6 +118,10 @@ export default function PaneReplicationControllers({
       emptyText="No replication controllers found"
       onDelete={handleDeleteSelected}
       renderSidebar={renderSidebar}
+      yamlTemplate={templateReplicationController}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      contextName={contextName}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

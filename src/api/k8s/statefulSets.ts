@@ -9,6 +9,30 @@ export interface StatefulSetEvent {
   object: V1StatefulSet;
 }
 
+export async function createStatefulSet({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1StatefulSet;
+}): Promise<V1StatefulSet> {
+  return await invoke<V1StatefulSet>('create_stateful_set', { name, namespace, manifest });
+}
+
+export async function updateStatefulSet({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1StatefulSet;
+}): Promise<V1StatefulSet> {
+  return await invoke<V1StatefulSet>('update_stateful_set', { name, namespace, manifest });
+}
+
 export async function listStatefulSets({
   name,
   namespaces,
