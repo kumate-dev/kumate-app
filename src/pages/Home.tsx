@@ -32,6 +32,7 @@ import ValidatingWebhooks from '@/features/k8s/validatingWebhooks/pages/Validati
 import Endpoints from '@/features/k8s/endpoints/pages/Endpoints';
 import Ingresses from '@/features/k8s/ingresses/pages/Ingresses';
 import IngressClasses from '@/features/k8s/ingress-classes/pages/IngressClasses';
+import NetworkPolicies from '@/features/k8s/networkPolicies/pages/NetworkPolicies';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -113,6 +114,7 @@ export default function Home() {
     endpoints: Endpoints,
     ingresses: Ingresses,
     ingress_classes: IngressClasses,
+    network_policies: NetworkPolicies,
     persistent_volume_claims: PersistentVolumeClaims,
   };
 
