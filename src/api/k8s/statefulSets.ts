@@ -16,7 +16,7 @@ export async function listStatefulSets({
   name: string;
   namespaces?: string[];
 }): Promise<V1StatefulSet[]> {
-  return await invoke<V1StatefulSet[]>('list_replication_controllers', {
+  return await invoke<V1StatefulSet[]>('list_stateful_sets', {
     name,
     namespaces,
   });
@@ -31,7 +31,7 @@ export async function watchStatefulSets({
   namespaces?: string[];
   onEvent?: EventHandler<StatefulSetEvent>;
 }): Promise<{ eventName: string; unlisten: UnlistenFn }> {
-  const eventName = await invoke<string>('watch_replication_controllers', { name, namespaces });
+  const eventName = await invoke<string>('watch_stateful_sets', { name, namespaces });
 
   const unlisten = await listen<StatefulSetEvent>(eventName, (evt) => {
     try {
@@ -53,7 +53,7 @@ export async function deleteStatefulSets({
   namespace?: string;
   resourceNames: string[];
 }): Promise<K8sResponse[]> {
-  return await invoke<K8sResponse[]>('delete_replication_controllers', {
+  return await invoke<K8sResponse[]>('delete_stateful_sets', {
     name,
     namespace,
     resourceNames,

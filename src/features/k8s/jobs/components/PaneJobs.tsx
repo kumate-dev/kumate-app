@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { V1Job, V1Namespace } from '@kubernetes/client-node';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
-import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
+import { ColumnDef } from '../../../../components/common/TableHeader';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getJobStatus } from '../utils/jobStatus';
+import { sortItems } from '@/utils/sort';
+import { SidebarJobs } from './SidebarJobs';
 
 export interface PaneJobsProps {
   selectedNamespaces: string[];
@@ -16,6 +18,7 @@ export interface PaneJobsProps {
   loading: boolean;
   error: string;
   onDeleteJobs: (jobs: V1Job[]) => Promise<void>;
+  contextName?: string;
 }
 
 export default function PaneJobs({
@@ -27,8 +30,7 @@ export default function PaneJobs({
   error,
   onDeleteJobs,
 }: PaneJobsProps) {
-  const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1Job>('metadata');
+  const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1Job[]>([]);
 
@@ -49,25 +51,22 @@ export default function PaneJobs({
     setSelectedItems([]);
   }, [selectedItems, onDeleteJobs]);
 
-  const columns: ColumnDef<keyof V1Job | ''>[] = [
-    { label: 'Name', key: 'metadata' },
-    { label: 'Namespace', key: 'metadata' },
-    { label: 'Age', key: 'metadata' },
-    { label: 'Status', key: 'status' },
+  const columns: ColumnDef<string>[] = [
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Namespace', key: 'namespace', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
+    { label: 'Status', key: 'status', sortable: false },
   ];
 
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAll}
-      selectedItems={selectedItems}
-      totalItems={items}
-    />
-  );
+  const sortedItems = useMemo(() => {
+    const valueGetters = {
+      name: (item: V1Job) => item.metadata?.name || '',
+      namespace: (item: V1Job) => item.metadata?.namespace || '',
+      age: (item: V1Job) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+      status: (item: V1Job) => getJobStatus(item),
+    };
+    return sortItems(items, sortBy, sortOrder, valueGetters);
+  }, [items, sortBy, sortOrder]);
 
   const renderRow = (job: V1Job) => (
     <>
@@ -86,22 +85,43 @@ export default function PaneJobs({
     </>
   );
 
+  const renderSidebar = useCallback(
+    (
+      item: V1Job,
+      actions: {
+        setItem: (item: V1Job | null) => void;
+        onDelete?: (item: V1Job) => void;
+        onEdit?: (item: V1Job) => void;
+      }
+    ) => (
+      <SidebarJobs
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        // Jobs do not support edit via YAML yet
+        onEdit={undefined}
+      />
+    ),
+    []
+  );
+
   return (
     <PaneGeneric
-      items={items}
+      items={sortedItems}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
-      onDelete={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
+      columns={columns}
       renderRow={renderRow}
+      emptyText="No jobs found"
+      onDelete={handleDeleteSelected}
+      renderSidebar={renderSidebar}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
     />
   );
 }

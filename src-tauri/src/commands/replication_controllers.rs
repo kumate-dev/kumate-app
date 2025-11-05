@@ -8,9 +8,27 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_replication_controller(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<ReplicationController>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_replication_controller(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<ReplicationController>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_replication_controllers(
     name: String,
-    namespaces: Option<Vec<String>>,
+    namespaces: Option<Vec<String>>, 
 ) -> Result<Vec<Value>, String> {
     K8sResources::<ReplicationController>::list(name, namespaces).await
 }

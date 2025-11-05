@@ -8,9 +8,27 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_job(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<Job>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_job(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<Job>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_jobs(
     name: String,
-    namespaces: Option<Vec<String>>,
+    namespaces: Option<Vec<String>>, 
 ) -> Result<Vec<Value>, String> {
     K8sResources::<Job>::list(name, namespaces).await
 }

@@ -8,9 +8,27 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_replica_set(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<ReplicaSet>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_replica_set(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<ReplicaSet>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_replica_sets(
     name: String,
-    namespaces: Option<Vec<String>>,
+    namespaces: Option<Vec<String>>, 
 ) -> Result<Vec<Value>, String> {
     K8sResources::<ReplicaSet>::list(name, namespaces).await
 }

@@ -8,9 +8,27 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_stateful_set(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<StatefulSet>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_stateful_set(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<StatefulSet>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_stateful_sets(
     name: String,
-    namespaces: Option<Vec<String>>,
+    namespaces: Option<Vec<String>>, 
 ) -> Result<Vec<Value>, String> {
     K8sResources::<StatefulSet>::list(name, namespaces).await
 }

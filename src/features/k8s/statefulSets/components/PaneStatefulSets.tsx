@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { V1StatefulSet, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
-import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
+import { ColumnDef } from '../../../../components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getStatefulSetStatus } from '../utils/statefulSetStatus';
+import { sortItems } from '@/utils/sort';
+import { SidebarStatefulSets } from './SidebarStatefulSets';
 
 export interface PaneStatefulSetsProps {
   selectedNamespaces: string[];
@@ -27,8 +29,7 @@ export default function PaneStatefulSets({
   error,
   onDeleteStatefulSets,
 }: PaneStatefulSetsProps) {
-  const [q, setQ] = useState('');
-  const [sortBy, setSortBy] = useState<keyof V1StatefulSet>('metadata');
+  const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedItems, setSelectedItems] = useState<V1StatefulSet[]>([]);
 
@@ -49,26 +50,22 @@ export default function PaneStatefulSets({
     setSelectedItems([]);
   }, [selectedItems, onDeleteStatefulSets]);
 
-  const columns: ColumnDef<keyof V1StatefulSet | ''>[] = [
-    { label: 'Name', key: 'metadata' },
-    { label: '', key: '', sortable: false },
-    { label: 'Namespace', key: 'metadata' },
-    { label: 'Ready', key: 'status' },
-    { label: 'Age', key: 'metadata' },
+  const columns: ColumnDef<string>[] = [
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Namespace', key: 'namespace', sortable: true },
+    { label: 'Ready', key: 'status', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
   ];
 
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAll}
-      selectedItems={selectedItems}
-      totalItems={items}
-    />
-  );
+  const sortedItems = useMemo(() => {
+    const valueGetters = {
+      name: (item: V1StatefulSet) => item.metadata?.name || '',
+      namespace: (item: V1StatefulSet) => item.metadata?.namespace || '',
+      status: (item: V1StatefulSet) => getStatefulSetStatus(item),
+      age: (item: V1StatefulSet) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+    };
+    return sortItems(items, sortBy, sortOrder, valueGetters);
+  }, [items, sortBy, sortOrder]);
 
   const renderRow = (ss: V1StatefulSet) => {
     return (
@@ -78,7 +75,6 @@ export default function PaneStatefulSets({
             {ss.metadata?.name}
           </span>
         </Td>
-        <Td />
         <Td>
           <BadgeNamespaces name={ss.metadata?.namespace ?? ''} />
         </Td>
@@ -90,22 +86,43 @@ export default function PaneStatefulSets({
     );
   };
 
+  const renderSidebar = useCallback(
+    (
+      item: V1StatefulSet,
+      actions: {
+        setItem: (item: V1StatefulSet | null) => void;
+        onDelete?: (item: V1StatefulSet) => void;
+        onEdit?: (item: V1StatefulSet) => void;
+      }
+    ) => (
+      <SidebarStatefulSets
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        // StatefulSets do not support edit via YAML yet
+        onEdit={undefined}
+      />
+    ),
+    []
+  );
+
   return (
     <PaneGeneric
-      items={items}
+      items={sortedItems}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       namespaceList={namespaceList}
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={onSelectNamespace}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
-      onDelete={handleDeleteSelected}
-      colSpan={columns.length + 1}
-      tableHeader={tableHeader}
+      columns={columns}
       renderRow={renderRow}
+      emptyText="No stateful sets found"
+      onDelete={handleDeleteSelected}
+      renderSidebar={renderSidebar}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      setSortBy={setSortBy}
+      setSortOrder={setSortOrder}
     />
   );
 }

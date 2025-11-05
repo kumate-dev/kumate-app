@@ -8,9 +8,27 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_cron_job(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<CronJob>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_cron_job(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<CronJob>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_cron_jobs(
     name: String,
-    namespaces: Option<Vec<String>>,
+    namespaces: Option<Vec<String>>, 
 ) -> Result<Vec<Value>, String> {
     K8sResources::<CronJob>::list(name, namespaces).await
 }
