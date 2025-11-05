@@ -40,6 +40,8 @@ import Roles from '@/features/k8s/roles/pages/Roles';
 import RoleBindings from '@/features/k8s/roleBindings/pages/RoleBindings';
 import ClusterRoles from '@/features/k8s/clusterRoles/pages/ClusterRoles';
 import ClusterRoleBindings from '@/features/k8s/clusterRoleBindings/pages/ClusterRoleBindings';
+import HelmCharts from '@/features/k8s/helmCharts/pages/HelmCharts';
+import HelmReleases from '@/features/k8s/helmReleases/pages/HelmReleases';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -125,6 +127,9 @@ export default function Home() {
     persistent_volume_claims: PersistentVolumeClaims,
     persistent_volumes: PersistentVolumes,
     storage_classes: StorageClasses,
+    // Helm
+    helm_charts: HelmCharts,
+    helm_releases: HelmReleases,
     // Access Control
     service_accounts: ServiceAccounts,
     roles: Roles,

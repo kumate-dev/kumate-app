@@ -34,3 +34,4 @@ pub mod cluster_roles;
 pub mod role_bindings;
 pub mod cluster_role_bindings;
 pub mod validating_webhooks;
+pub mod helm;

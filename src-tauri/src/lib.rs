@@ -50,6 +50,7 @@ use crate::commands::secrets;
 use crate::commands::services;
 use crate::commands::stateful_sets;
 use crate::commands::validating_webhooks;
+use crate::commands::helm;
 use crate::utils::watcher::WatchManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -246,6 +247,11 @@ pub fn run() {
             network_policies::list_network_policies,
             network_policies::watch_network_policies,
             network_policies::delete_network_policies,
+            // Helm
+            helm::helm_list_charts,
+            helm::helm_list_releases,
+            helm::helm_uninstall_releases,
+            helm::watch_helm_releases,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
