@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { V1Namespace } from '@kubernetes/client-node';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
-import { ColumnDef, TableHeader } from '../../../../components/common/TableHeader';
+import { ColumnDef } from '../../../../components/common/TableHeader';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNamespaceStatus } from '../utils/namespaceStatus';
+import { SidebarNamespaces } from './SidebarNamespaces';
+import { sortItems } from '@/utils/sort';
 
 export interface PaneNamespacesProps {
   items: V1Namespace[];
@@ -20,43 +22,27 @@ export default function PaneNamespaces({
   error,
   onDeleteNamespaces,
 }: PaneNamespacesProps) {
-  const [q, setQ] = useState('');
   const [sortBy, setSortBy] = useState<keyof V1Namespace>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1Namespace[]>([]);
+  const handleDeleteSelected = useCallback(async (toDelete: V1Namespace[]) => {
+    if (!toDelete.length || !onDeleteNamespaces) return;
+    await onDeleteNamespaces(toDelete);
+  }, [onDeleteNamespaces]);
 
-  const toggleItem = (ns: V1Namespace) => {
-    setSelectedItems((prev) => (prev.includes(ns) ? prev.filter((n) => n !== ns) : [...prev, ns]));
-  };
-
-  const toggleAll = (checked: boolean) => {
-    setSelectedItems(checked ? [...items] : []);
-  };
-
-  const handleDeleteSelected = async () => {
-    if (!selectedItems.length || !onDeleteNamespaces) return;
-    await onDeleteNamespaces(selectedItems);
-    setSelectedItems([]);
-  };
-
-  const columns: ColumnDef<keyof V1Namespace | ''>[] = [
-    { label: 'Name', key: 'metadata' },
-    { label: 'Age', key: 'metadata' },
-    { label: 'Status', key: 'status' },
+  const columns: ColumnDef<string>[] = [
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
+    { label: 'Status', key: 'status', sortable: true },
   ];
 
-  const tableHeader = (
-    <TableHeader
-      columns={columns}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      setSortBy={setSortBy}
-      setSortOrder={setSortOrder}
-      onToggleAll={toggleAll}
-      selectedItems={selectedItems}
-      totalItems={items}
-    />
-  );
+  const sortedItems = useMemo(() => {
+    const valueGetters = {
+      name: (item: V1Namespace) => item.metadata?.name || '',
+      age: (item: V1Namespace) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+      status: (item: V1Namespace) => getNamespaceStatus(item),
+    };
+    return sortItems(items, sortBy as string, sortOrder, valueGetters);
+  }, [items, sortBy, sortOrder]);
 
   const renderRow = (ns: V1Namespace) => (
     <Tr key={ns.metadata?.name}>
@@ -70,20 +56,37 @@ export default function PaneNamespaces({
     </Tr>
   );
 
+  const renderSidebar = (
+    item: V1Namespace,
+    actions: {
+      setItem: (item: V1Namespace | null) => void;
+      onDelete?: (item: V1Namespace) => void;
+      onEdit?: (item: V1Namespace) => void;
+    }
+  ) => (
+    <SidebarNamespaces
+      item={item}
+      setItem={actions.setItem}
+      onDelete={actions.onDelete}
+      onEdit={actions.onEdit}
+    />
+  );
+
   return (
     <PaneGeneric
-      items={items}
+      items={sortedItems}
       loading={loading}
       error={error}
-      query={q}
-      onQueryChange={setQ}
       showNamespace={false}
-      selectedItems={selectedItems}
-      onToggleItem={toggleItem}
-      onDelete={onDeleteNamespaces ? handleDeleteSelected : undefined}
+      columns={columns}
+      sortBy={sortBy as string}
+      sortOrder={sortOrder}
+      setSortBy={(v) => setSortBy(v as keyof V1Namespace)}
+      setSortOrder={setSortOrder}
+      onDelete={handleDeleteSelected}
       colSpan={columns.length}
-      tableHeader={tableHeader}
       renderRow={renderRow}
+      renderSidebar={renderSidebar}
     />
   );
 }

@@ -1,4 +1,4 @@
-use crate::services::k8s::client::K8sClient;
+use crate::manager::k8s::client::K8sClient;
 use futures_util::{AsyncBufReadExt, StreamExt};
 use k8s_openapi::{api::core::v1::Pod, chrono};
 use kube::{

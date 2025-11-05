@@ -1,5 +1,5 @@
 use crate::{
-    services::k8s::contexts::K8sContexts, state::AppState, types::k8s_contexts::K8sContext,
+    manager::k8s::contexts::K8sContexts, state::AppState, types::k8s_contexts::K8sContext,
 };
 
 #[tauri::command]

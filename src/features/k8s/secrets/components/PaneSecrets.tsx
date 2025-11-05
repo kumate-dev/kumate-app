@@ -8,6 +8,7 @@ import AgeCell from '@/components/common/AgeCell';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getSecretTypeStatus } from '../utils/secretTypeStatus';
 import { templateSecret } from '../../templates/secret';
+import { SidebarSecrets } from './SidebarSecrets';
 
 export interface PaneSecretsProps {
   selectedNamespaces: string[];
@@ -82,6 +83,25 @@ export default function PaneSecrets({
     );
   };
 
+  const renderSidebar = useCallback(
+    (
+      item: V1Secret,
+      actions: {
+        setItem: (item: V1Secret | null) => void;
+        onDelete?: (item: V1Secret) => void;
+        onEdit?: (item: V1Secret) => void;
+      }
+    ) => (
+      <SidebarSecrets
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+      />
+    ),
+    []
+  );
+
   return (
     <PaneGeneric
       items={items}
@@ -100,6 +120,7 @@ export default function PaneSecrets({
       yamlTemplate={templateSecret}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       contextName={contextName}
     />
   );

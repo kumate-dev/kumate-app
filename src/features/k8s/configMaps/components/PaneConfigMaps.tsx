@@ -6,6 +6,7 @@ import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { templateConfigMap } from '../../templates/configMap';
+import { SidebarConfigMaps } from './SidebarConfigMaps';
 
 export interface PaneConfigMapsProps {
   selectedNamespaces: string[];
@@ -70,6 +71,25 @@ export default function PaneConfigMaps({
     </>
   );
 
+  const renderSidebar = useCallback(
+    (
+      item: V1ConfigMap,
+      actions: {
+        setItem: (item: V1ConfigMap | null) => void;
+        onDelete?: (item: V1ConfigMap) => void;
+        onEdit?: (item: V1ConfigMap) => void;
+      }
+    ) => (
+      <SidebarConfigMaps
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+      />
+    ),
+    []
+  );
+
   return (
     <PaneGeneric
       items={items}
@@ -88,6 +108,7 @@ export default function PaneConfigMaps({
       yamlTemplate={templateConfigMap}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       contextName={contextName}
     />
   );

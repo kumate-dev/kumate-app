@@ -8,7 +8,7 @@ use tauri::Manager;
 mod commands;
 mod constants;
 mod databases;
-mod services;
+mod manager;
 mod state;
 mod types;
 mod utils;
@@ -31,6 +31,8 @@ use crate::commands::replication_controllers;
 use crate::commands::resource_quotas;
 use crate::commands::secrets;
 use crate::commands::stateful_sets;
+use crate::commands::services;
+use crate::commands::persistent_volume_claims;
 use crate::utils::watcher::WatchManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -131,6 +133,16 @@ pub fn run() {
             pod_disruption_budgets::list_pod_disruption_budgets,
             pod_disruption_budgets::watch_pod_disruption_budgets,
             pod_disruption_budgets::delete_pod_disruption_budgets,
+            services::create_service,
+            services::update_service,
+            services::list_services,
+            services::watch_services,
+            services::delete_services,
+            persistent_volume_claims::create_persistent_volume_claim,
+            persistent_volume_claims::update_persistent_volume_claim,
+            persistent_volume_claims::list_persistent_volume_claims,
+            persistent_volume_claims::watch_persistent_volume_claims,
+            persistent_volume_claims::delete_persistent_volume_claims,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

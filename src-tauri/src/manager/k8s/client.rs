@@ -6,7 +6,7 @@ use kube::config::{Config, KubeConfigOptions, Kubeconfig};
 use kube::core::NamespaceResourceScope;
 use kube::{Api, Client, Resource};
 
-use crate::services::k8s::contexts::K8sContexts;
+use crate::manager::k8s::contexts::K8sContexts;
 
 pub struct K8sClient;
 

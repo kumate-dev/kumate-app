@@ -16,3 +16,5 @@ pub mod replication_controllers;
 pub mod resource_quotas;
 pub mod secrets;
 pub mod stateful_sets;
+pub mod services;
+pub mod persistent_volume_claims;

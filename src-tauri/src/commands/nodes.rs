@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch, services::k8s::cluster_resources::K8sClusterResources,
+    commands::common::watch, manager::k8s::cluster_resources::K8sClusterResources,
     utils::watcher::WatchManager,
 };
 use k8s_openapi::api::core::v1::Node;

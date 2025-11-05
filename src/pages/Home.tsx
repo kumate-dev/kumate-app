@@ -22,6 +22,8 @@ import ReplicationControllers from '@/features/k8s/replicationControllers/pages/
 import Secrets from '@/features/k8s/secrets/pages/Secrets';
 import StatefulSets from '@/features/k8s/statefulSets/pages/StatefulSets';
 import ResourceQuotas from '@/features/k8s/resourceQuotas/pages/ResourceQuotas';
+import Services from '@/features/k8s/services/pages/Services';
+import PersistentVolumeClaims from '@/features/k8s/persistentVolumeClaims/pages/PersistentVolumeClaims';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -94,6 +96,8 @@ export default function Home() {
     secrets: Secrets,
     resource_quotas: ResourceQuotas,
     limit_ranges: LimitRanges,
+    services: Services,
+    persistent_volume_claims: PersistentVolumeClaims,
   };
 
   const PageComponent = pageComponents[page] || ComingSoon;

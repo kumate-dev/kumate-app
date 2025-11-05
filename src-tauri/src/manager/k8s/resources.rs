@@ -13,7 +13,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter};
 
-use crate::{services::k8s::client::K8sClient, types::event::EventType};
+use crate::{manager::k8s::client::K8sClient, types::event::EventType};
 
 pub struct K8sResources<T> {
     _marker: std::marker::PhantomData<T>,

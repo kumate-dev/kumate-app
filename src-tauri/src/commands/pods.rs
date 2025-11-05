@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::common::watch,
-    services::k8s::{pod_resources::PodResources, resources::K8sResources},
+    manager::k8s::{pod_resources::PodResources, resources::K8sResources},
     utils::watcher::WatchManager,
 };
 use k8s_openapi::api::core::v1::Pod;
@@ -140,7 +140,7 @@ pub async fn start_exec_pod(
     tty: Option<bool>,
     state: tauri::State<'_, crate::utils::exec::ExecManager>,
 ) -> Result<ExecStartResult, String> {
-    use crate::services::k8s::client::K8sClient;
+    use crate::manager::k8s::client::K8sClient;
     use k8s_openapi::chrono::Utc;
     use kube::api::{Api, AttachParams};
     use kube::Client;

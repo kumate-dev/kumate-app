@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch, services::k8s::resources::K8sResources, utils::watcher::WatchManager,
+    commands::common::watch, manager::k8s::resources::K8sResources, utils::watcher::WatchManager,
 };
 use k8s_openapi::api::batch::v1::CronJob;
 use serde_json::Value;
