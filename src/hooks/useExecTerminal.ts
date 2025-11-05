@@ -73,8 +73,7 @@ export function useExecTerminal({
         onEvent: (evt: ExecEvent) => {
           try {
             onStreamRef.current?.(evt);
-          } catch {
-          }
+          } catch {}
 
           if (!isMountedRef.current) return;
 

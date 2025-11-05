@@ -24,10 +24,13 @@ export default function PaneNamespaces({
 }: PaneNamespacesProps) {
   const [sortBy, setSortBy] = useState<keyof V1Namespace>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const handleDeleteSelected = useCallback(async (toDelete: V1Namespace[]) => {
-    if (!toDelete.length || !onDeleteNamespaces) return;
-    await onDeleteNamespaces(toDelete);
-  }, [onDeleteNamespaces]);
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1Namespace[]) => {
+      if (!toDelete.length || !onDeleteNamespaces) return;
+      await onDeleteNamespaces(toDelete);
+    },
+    [onDeleteNamespaces]
+  );
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },

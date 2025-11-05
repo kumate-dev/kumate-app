@@ -59,6 +59,12 @@ export function SidebarConfigMaps({ item, setItem, onDelete, onEdit }: SidebarCo
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

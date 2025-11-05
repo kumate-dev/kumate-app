@@ -1,5 +1,5 @@
 import { useState, useEffect, ReactNode, useRef, useCallback } from 'react';
-import { X} from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
 import { ButtonEdit } from '@/components/common/ButtonEdit';

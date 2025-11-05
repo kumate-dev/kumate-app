@@ -60,7 +60,11 @@ export function SidebarNodes({ item, setItem, onDelete, onEdit }: SidebarNodesPr
             </Tr>
 
             <TableYamlRow label="Labels" data={node.metadata?.labels} maxWidthClass="lg" />
-            <TableYamlRow label="Annotations" data={node.metadata?.annotations} maxWidthClass="xl" />
+            <TableYamlRow
+              label="Annotations"
+              data={node.metadata?.annotations}
+              maxWidthClass="xl"
+            />
             <TableYamlRow label="Addresses" data={node.status?.addresses} maxWidthClass="xl" />
             <TableYamlRow label="Capacity" data={node.status?.capacity} maxWidthClass="xl" />
             <TableYamlRow label="Allocatable" data={node.status?.allocatable} maxWidthClass="xl" />
@@ -83,6 +87,12 @@ export function SidebarNodes({ item, setItem, onDelete, onEdit }: SidebarNodesPr
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

@@ -74,7 +74,12 @@ export default function PaneNodes({ items, loading, error }: PaneNodesProps) {
       onEdit?: (item: V1Node) => void;
     }
   ) => (
-    <SidebarNodes item={item} setItem={actions.setItem} onDelete={actions.onDelete} onEdit={actions.onEdit} />
+    <SidebarNodes
+      item={item}
+      setItem={actions.setItem}
+      onDelete={actions.onDelete}
+      onEdit={actions.onEdit}
+    />
   );
 
   const handleDeleteSelected = async (_items: V1Node[]) => {

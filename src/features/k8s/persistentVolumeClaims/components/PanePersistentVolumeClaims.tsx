@@ -62,10 +62,13 @@ export default function PanePersistentVolumeClaims({
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const handleDeleteSelected = useCallback(async (toDelete: V1PersistentVolumeClaim[]) => {
-    if (!toDelete.length) return;
-    await onDeletePersistentVolumeClaims(toDelete);
-  }, [onDeletePersistentVolumeClaims]);
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1PersistentVolumeClaim[]) => {
+      if (!toDelete.length) return;
+      await onDeletePersistentVolumeClaims(toDelete);
+    },
+    [onDeletePersistentVolumeClaims]
+  );
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -85,7 +88,8 @@ export default function PanePersistentVolumeClaims({
       storageClass: (item: V1PersistentVolumeClaim) => item.spec?.storageClassName || '',
       capacity: (item: V1PersistentVolumeClaim) => (item.status?.capacity as any)?.storage || '',
       accessModes: (item: V1PersistentVolumeClaim) => (item.spec?.accessModes || []).join(', '),
-      age: (item: V1PersistentVolumeClaim) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+      age: (item: V1PersistentVolumeClaim) =>
+        new Date(item.metadata?.creationTimestamp || '').getTime(),
     };
     return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder]);

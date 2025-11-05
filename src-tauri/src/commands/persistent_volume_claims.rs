@@ -57,7 +57,5 @@ pub async fn delete_persistent_volume_claims(
     namespace: Option<String>,
     resource_names: Vec<String>,
 ) -> Result<Vec<Result<String, String>>, String> {
-    Ok(
-        K8sResources::<PersistentVolumeClaim>::delete(name, namespace, resource_names).await?
-    )
+    Ok(K8sResources::<PersistentVolumeClaim>::delete(name, namespace, resource_names).await?)
 }

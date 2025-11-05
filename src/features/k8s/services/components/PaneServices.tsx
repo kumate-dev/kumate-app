@@ -37,10 +37,13 @@ export default function PaneServices({
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const handleDeleteSelected = useCallback(async (toDelete: V1Service[]) => {
-    if (!toDelete.length) return;
-    await onDeleteServices(toDelete);
-  }, [onDeleteServices]);
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1Service[]) => {
+      if (!toDelete.length) return;
+      await onDeleteServices(toDelete);
+    },
+    [onDeleteServices]
+  );
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -76,7 +79,10 @@ export default function PaneServices({
       <Td>{svc.spec?.type ?? '-'}</Td>
       <Td>{svc.spec?.clusterIP || svc.spec?.clusterIPs?.[0] || '-'}</Td>
       <Td className="max-w-truncate align-middle">
-        <span className="block truncate" title={(svc.spec?.ports || []).map((p) => String(p.port)).join(', ')}>
+        <span
+          className="block truncate"
+          title={(svc.spec?.ports || []).map((p) => String(p.port)).join(', ')}
+        >
           {(svc.spec?.ports || []).map((p) => String(p.port)).join(', ') || '-'}
         </span>
       </Td>

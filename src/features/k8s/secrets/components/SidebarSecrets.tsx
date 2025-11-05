@@ -44,7 +44,11 @@ export function SidebarSecrets({ item, setItem, onDelete, onEdit }: SidebarSecre
             </Tr>
 
             <TableYamlRow label="Labels" data={secret.metadata?.labels} maxWidthClass="lg" />
-            <TableYamlRow label="Annotations" data={secret.metadata?.annotations} maxWidthClass="xl" />
+            <TableYamlRow
+              label="Annotations"
+              data={secret.metadata?.annotations}
+              maxWidthClass="xl"
+            />
 
             <Tr>
               <Td>Type</Td>
@@ -81,6 +85,12 @@ export function SidebarSecrets({ item, setItem, onDelete, onEdit }: SidebarSecre
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

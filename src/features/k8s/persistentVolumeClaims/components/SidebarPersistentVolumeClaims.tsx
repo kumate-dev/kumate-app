@@ -36,7 +36,12 @@ const getPvcStatus = (pvc: V1PersistentVolumeClaim): K8sStatus => {
   return { status: phase, variant };
 };
 
-export function SidebarPersistentVolumeClaims({ item, setItem, onDelete, onEdit }: SidebarPVCProps) {
+export function SidebarPersistentVolumeClaims({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+}: SidebarPVCProps) {
   const renderOverview = (pvc: V1PersistentVolumeClaim) => {
     const capacity = (pvc.status?.capacity as any)?.storage || '';
     const accessModes = (pvc.spec?.accessModes || []).join(', ');
@@ -104,7 +109,11 @@ export function SidebarPersistentVolumeClaims({ item, setItem, onDelete, onEdit 
               <Td className="break-all">{volumeName || '-'}</Td>
             </Tr>
 
-            <TableYamlRow label="Selector" data={pvc.spec?.selector?.matchLabels} maxWidthClass="lg" />
+            <TableYamlRow
+              label="Selector"
+              data={pvc.spec?.selector?.matchLabels}
+              maxWidthClass="lg"
+            />
             <TableYamlRow label="Conditions" data={pvc.status?.conditions} maxWidthClass="xl" />
           </Tbody>
         </Table>
@@ -123,6 +132,12 @@ export function SidebarPersistentVolumeClaims({ item, setItem, onDelete, onEdit 
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

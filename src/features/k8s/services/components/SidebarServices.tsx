@@ -109,6 +109,12 @@ export function SidebarServices({ item, setItem, onDelete, onEdit }: SidebarServ
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <SidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+    />
   );
 }

@@ -24,15 +24,15 @@ use crate::commands::jobs;
 use crate::commands::limit_ranges;
 use crate::commands::namespaces;
 use crate::commands::nodes;
+use crate::commands::persistent_volume_claims;
 use crate::commands::pod_disruption_budgets;
 use crate::commands::pods;
 use crate::commands::replica_sets;
 use crate::commands::replication_controllers;
 use crate::commands::resource_quotas;
 use crate::commands::secrets;
-use crate::commands::stateful_sets;
 use crate::commands::services;
-use crate::commands::persistent_volume_claims;
+use crate::commands::stateful_sets;
 use crate::utils::watcher::WatchManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
