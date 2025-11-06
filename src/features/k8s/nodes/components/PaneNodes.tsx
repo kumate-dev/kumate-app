@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { V1Node } from '@kubernetes/client-node';
-import { Td, Tr } from '@/components/ui/table';
+import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef } from '../../../../components/common/TableHeader';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
@@ -60,7 +60,7 @@ export default function PaneNodes({
     const version = node.status?.nodeInfo?.kubeletVersion || '—';
 
     return (
-      <Tr key={node.metadata?.name}>
+      <>
         <Td className="max-w-truncate" title={node.metadata?.name}>
           {node.metadata?.name}
         </Td>
@@ -70,7 +70,7 @@ export default function PaneNodes({
         <Td>
           <BadgeStatus status={getNodeStatus(node)} />
         </Td>
-      </Tr>
+      </>
     );
   };
 

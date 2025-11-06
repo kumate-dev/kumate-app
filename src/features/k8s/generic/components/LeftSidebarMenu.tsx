@@ -11,6 +11,7 @@ export interface PageItem {
   icon?: React.ElementType;
   navigateKey?: PageKey;
   title?: string;
+  collapsible?: boolean;
 }
 
 export interface SidebarMenuProps {
@@ -21,17 +22,22 @@ export interface SidebarMenuProps {
   onSelectPage?: (page: PageKey) => void;
 }
 
-const COLLAPSIBLE_TITLES = new Set([
-  'Workloads',
-  'Config',
-  'Network',
-  'Storage',
-  'Helm',
-  'Access Control',
-  'Custom Resources',
-]);
-
 const CATEGORY_GROUPS: PageItem[] = [
+  {
+    title: 'Overview',
+    navigateKey: 'overview' as PageKey,
+    collapsible: false,
+  },
+  {
+    title: 'Nodes',
+    navigateKey: 'nodes' as PageKey,
+    collapsible: false,
+  },
+  {
+    title: 'Namespaces',
+    navigateKey: 'namespaces' as PageKey,
+    collapsible: false,
+  },
   {
     title: 'Workloads',
     items: [
@@ -45,6 +51,7 @@ const CATEGORY_GROUPS: PageItem[] = [
       { key: 'jobs', label: 'Jobs' },
       { key: 'cron_jobs', label: 'Cron Jobs' },
     ],
+    collapsible: true,
   },
   {
     title: 'Config',
@@ -61,6 +68,7 @@ const CATEGORY_GROUPS: PageItem[] = [
       { key: 'mutating_webhooks', label: 'Mutating Webhook' },
       { key: 'validating_webhooks', label: 'Validating Webhook' },
     ],
+    collapsible: true,
   },
   {
     title: 'Network',
@@ -72,6 +80,7 @@ const CATEGORY_GROUPS: PageItem[] = [
       { key: 'network_policies', label: 'Network Policies' },
       { key: 'port_forwarding', label: 'Port Forwarding' },
     ],
+    collapsible: true,
   },
   {
     title: 'Storage',
@@ -80,6 +89,7 @@ const CATEGORY_GROUPS: PageItem[] = [
       { key: 'persistent_volumes', label: 'Persistent Volumes' },
       { key: 'storage_classes', label: 'Storage Classes' },
     ],
+    collapsible: true,
   },
   {
     title: 'Access Control',
@@ -90,6 +100,7 @@ const CATEGORY_GROUPS: PageItem[] = [
       { key: 'cluster_role_bindings', label: 'Cluster Role Bindings' },
       { key: 'role_bindings', label: 'Role Bindings' },
     ],
+    collapsible: true,
   },
   {
     title: 'Helm',
@@ -97,10 +108,17 @@ const CATEGORY_GROUPS: PageItem[] = [
       { key: 'helm_charts', label: 'Charts' },
       { key: 'helm_releases', label: 'Releases' },
     ],
+    collapsible: true,
   },
   {
     title: 'Custom Resources',
     items: [{ key: 'custom_resource_definitions', label: 'Definitions' }],
+    collapsible: true,
+  },
+  {
+    title: 'Events',
+    navigateKey: 'events' as PageKey,
+    collapsible: false,
   },
 ];
 
@@ -114,13 +132,17 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
 
-    COLLAPSIBLE_TITLES.forEach((title) => {
-      initialState[title] = true;
+    CATEGORY_GROUPS.forEach((group) => {
+      if (group.collapsible && group.title) {
+        initialState[group.title] = true;
+      }
     });
 
     contexts.forEach((context) => {
-      COLLAPSIBLE_TITLES.forEach((title) => {
-        initialState[`${context.name}:${title}`] = true;
+      CATEGORY_GROUPS.forEach((group) => {
+        if (group.collapsible && group.title) {
+          initialState[`${context.name}:${group.title}`] = true;
+        }
       });
       initialState[`cluster:${context.name}`] = true;
     });
@@ -144,20 +166,14 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
   const groups = useMemo(() => {
     if (!selected) return [];
 
-    return [
-      { title: 'Overview', items: [], navigateKey: 'overview' as PageKey },
-      { title: 'Nodes', items: [], navigateKey: 'nodes' as PageKey },
-      { title: 'Namespaces', items: [], navigateKey: 'namespaces' as PageKey },
-      ...CATEGORY_GROUPS.map((category) => ({
-        title: category.title,
-        items:
-          category.items?.map((item) => ({
-            ...item,
-            clusterName: selected.name,
-          })) || [],
-      })),
-      { title: 'Events', items: [], navigateKey: 'events' as PageKey },
-    ];
+    return CATEGORY_GROUPS.map((category) => ({
+      ...category,
+      items:
+        category.items?.map((item) => ({
+          ...item,
+          clusterName: selected.name,
+        })) || [],
+    }));
   }, [selected]);
 
   const hotbarClusters = useMemo(
@@ -242,7 +258,7 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
   const renderGroup = useCallback(
     (group: PageItem, index: number) => {
       const GroupIcon = group.icon;
-      const isCollapsible = group.title && COLLAPSIBLE_TITLES.has(group.title);
+      const isCollapsible = group.collapsible ?? false;
       const isCollapsed = group.title ? collapsed[group.title] : false;
 
       const handleGroupClick = () => {

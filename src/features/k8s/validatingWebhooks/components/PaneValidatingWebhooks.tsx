@@ -98,7 +98,7 @@ export default function PaneValidatingWebhooks({
       emptyText="No validating webhooks found"
       onDelete={handleDeleteSelected}
       renderSidebar={renderSidebar}
-      yamlTemplate={(defaultNamespace?: string) => templateValidatingWebhook}
+      yamlTemplate={() => templateValidatingWebhook}
       onCreate={onCreate}
       onUpdate={onUpdate}
       contextName={contextName}

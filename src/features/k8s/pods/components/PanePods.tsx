@@ -106,7 +106,9 @@ export default function PanePods({
 
   const renderRow = useCallback((pod: V1Pod) => {
     const containerStatuses = getContainerStatuses(pod);
-    const hasWarning = containerStatuses.some((status) => !status.ready);
+    const hasWarning = containerStatuses.some(
+      (status) => !status.ready && status.state?.terminated?.reason !== 'Completed'
+    );
     const podName = pod.metadata?.name ?? '';
     const namespace = pod.metadata?.namespace ?? '';
     const cpuRequests =
@@ -178,7 +180,7 @@ export default function PanePods({
         deleting={deleting}
       />
     ),
-    [contextName]
+    [contextName, updating, deleting]
   );
 
   return (
@@ -203,7 +205,6 @@ export default function PanePods({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       creating={creating}
-      updating={updating}
       deleting={deleting}
     />
   );

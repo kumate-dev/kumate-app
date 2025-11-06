@@ -86,128 +86,125 @@ export function SidebarPods({
     };
   }, [item]);
 
-  const renderOverview = useCallback(
-    (pod: V1Pod) => {
-      if (!podProperties) return null;
+  const renderOverview = useCallback(() => {
+    if (!podProperties) return null;
 
-      return (
-        <div className="space-y-4">
-          <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-            <Table className="table-fixed">
-              <colgroup>
-                <col className="w-1/4" />
-                <col className="w-3/4" />
-              </colgroup>
-              <Tbody>
-                <Tr>
-                  <Td>Name</Td>
-                  <Td className="break-all text-white">{podProperties.name}</Td>
-                </Tr>
+    return (
+      <div className="space-y-4">
+        <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
+          <Table className="table-fixed">
+            <colgroup>
+              <col className="w-1/4" />
+              <col className="w-3/4" />
+            </colgroup>
+            <Tbody>
+              <Tr>
+                <Td>Name</Td>
+                <Td className="break-all text-white">{podProperties.name}</Td>
+              </Tr>
 
-                <Tr>
-                  <Td>Namespace</Td>
-                  <Td>
-                    <BadgeNamespaces name={podProperties.namespace} />
-                  </Td>
-                </Tr>
+              <Tr>
+                <Td>Namespace</Td>
+                <Td>
+                  <BadgeNamespaces name={podProperties.namespace} />
+                </Td>
+              </Tr>
 
-                <Tr>
-                  <Td>Age</Td>
-                  <AgeCell timestamp={podProperties.creationTimestamp} />
-                </Tr>
+              <Tr>
+                <Td>Age</Td>
+                <AgeCell timestamp={podProperties.creationTimestamp} />
+              </Tr>
 
-                <TableYamlRow label="Labels" data={podProperties.labels} maxWidthClass="lg" />
+              <TableYamlRow label="Labels" data={podProperties.labels} maxWidthClass="lg" />
 
-                <Tr>
-                  <Td>Node</Td>
-                  <Td>{podProperties.nodeName}</Td>
-                </Tr>
+              <Tr>
+                <Td>Node</Td>
+                <Td>{podProperties.nodeName}</Td>
+              </Tr>
 
-                <Tr>
-                  <Td>QoS</Td>
-                  <Td>{podProperties.qosClass}</Td>
-                </Tr>
+              <Tr>
+                <Td>QoS</Td>
+                <Td>{podProperties.qosClass}</Td>
+              </Tr>
 
-                <Tr>
-                  <Td>Controlled By</Td>
-                  <Td>{podProperties.ownerReferences}</Td>
-                </Tr>
+              <Tr>
+                <Td>Controlled By</Td>
+                <Td>{podProperties.ownerReferences}</Td>
+              </Tr>
 
-                <Tr>
-                  <Td>Restarts</Td>
-                  <Td>{podProperties.restartCount}</Td>
-                </Tr>
+              <Tr>
+                <Td>Restarts</Td>
+                <Td>{podProperties.restartCount}</Td>
+              </Tr>
 
-                <Tr>
-                  <Td>Pod IP</Td>
-                  <Td>{podProperties.podIP}</Td>
-                </Tr>
+              <Tr>
+                <Td>Pod IP</Td>
+                <Td>{podProperties.podIP}</Td>
+              </Tr>
 
-                <Tr>
-                  <Td>Host IP</Td>
-                  <Td>{podProperties.hostIP}</Td>
-                </Tr>
+              <Tr>
+                <Td>Host IP</Td>
+                <Td>{podProperties.hostIP}</Td>
+              </Tr>
 
-                <Tr>
-                  <Td>Service Account</Td>
-                  <Td>{podProperties.serviceAccount}</Td>
-                </Tr>
+              <Tr>
+                <Td>Service Account</Td>
+                <Td>{podProperties.serviceAccount}</Td>
+              </Tr>
 
-                <Tr>
-                  <Td>Status</Td>
-                  <Td>
-                    <BadgeStatus status={podProperties.status} />
-                  </Td>
-                </Tr>
-              </Tbody>
-            </Table>
-          </div>
+              <Tr>
+                <Td>Status</Td>
+                <Td>
+                  <BadgeStatus status={podProperties.status} />
+                </Td>
+              </Tr>
+            </Tbody>
+          </Table>
+        </div>
 
-          <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-            <div className="p-4">
-              <div className="space-y-3">
-                {podProperties.containers.map((container: any) => {
-                  const status = containerStatuses.find((s) => s.name === container.name);
-                  const isReady = status?.ready ?? false;
+        <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
+          <div className="p-4">
+            <div className="space-y-3">
+              {podProperties.containers.map((container: any) => {
+                const status = containerStatuses.find((s) => s.name === container.name);
+                const isReady = status?.ready ?? false;
 
-                  return (
-                    <div
-                      key={container.name}
-                      className="flex items-start justify-between rounded-lg border border-white/10 p-3"
-                    >
-                      <div className="flex flex-1 items-start gap-3">
-                        <div
-                          className={`mt-1.5 h-3 w-3 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}
-                          title={isReady ? 'Ready' : 'Not Ready'}
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-white">{container.name}</div>
-                          <div className="text-sm text-white/60">{container.image}</div>
-                          {status?.message && (
-                            <div className="mt-1 text-sm text-red-400">{status.message}</div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-shrink-0 gap-2">
-                        <ButtonLog onClick={() => handleViewLogs(container.name)} />
-                        <ButtonShell onClick={() => handleOpenExec(container.name)} />
+                return (
+                  <div
+                    key={container.name}
+                    className="flex items-start justify-between rounded-lg border border-white/10 p-3"
+                  >
+                    <div className="flex flex-1 items-start gap-3">
+                      <div
+                        className={`mt-1.5 h-3 w-3 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}
+                        title={isReady ? 'Ready' : 'Not Ready'}
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{container.name}</div>
+                        <div className="text-sm text-white/60">{container.image}</div>
+                        {status?.message && (
+                          <div className="mt-1 text-sm text-red-400">{status.message}</div>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
 
-                {podProperties.containers.length === 0 && (
-                  <div className="py-4 text-center text-white/60">No containers</div>
-                )}
-              </div>
+                    <div className="flex flex-shrink-0 gap-2">
+                      <ButtonLog onClick={() => handleViewLogs(container.name)} />
+                      <ButtonShell onClick={() => handleOpenExec(container.name)} />
+                    </div>
+                  </div>
+                );
+              })}
+
+              {podProperties.containers.length === 0 && (
+                <div className="py-4 text-center text-white/60">No containers</div>
+              )}
             </div>
           </div>
         </div>
-      );
-    },
-    [podProperties, containerStatuses, handleViewLogs, handleOpenExec]
-  );
+      </div>
+    );
+  }, [podProperties, containerStatuses, handleViewLogs, handleOpenExec]);
 
   const sections = useMemo(
     () =>

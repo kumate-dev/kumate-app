@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { V1Namespace } from '@kubernetes/client-node';
-import { Td, Tr } from '@/components/ui/table';
+import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { ColumnDef } from '../../../../components/common/TableHeader';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
@@ -61,7 +61,7 @@ export default function PaneNamespaces({
   }, [items, sortBy, sortOrder]);
 
   const renderRow = (ns: V1Namespace) => (
-    <Tr key={ns.metadata?.name}>
+    <>
       <Td className="max-w-truncate" title={ns.metadata?.name}>
         {ns.metadata?.name}
       </Td>
@@ -69,7 +69,7 @@ export default function PaneNamespaces({
       <Td>
         <BadgeStatus status={getNamespaceStatus(ns)} />
       </Td>
-    </Tr>
+    </>
   );
 
   const renderSidebar = (
