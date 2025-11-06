@@ -3,7 +3,7 @@ import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 export interface SidebarLeasesProps {
   item: V1Lease;
@@ -82,7 +82,7 @@ export function SidebarLeases({ item, setItem, onDelete, onEdit }: SidebarLeases
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       onDelete={onDelete}

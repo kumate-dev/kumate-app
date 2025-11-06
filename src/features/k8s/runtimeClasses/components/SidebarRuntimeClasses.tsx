@@ -2,7 +2,7 @@ import type { V1RuntimeClass } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 export interface SidebarRuntimeClassesProps {
   item: V1RuntimeClass | null;
@@ -58,7 +58,7 @@ export function SidebarRuntimeClasses({
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}

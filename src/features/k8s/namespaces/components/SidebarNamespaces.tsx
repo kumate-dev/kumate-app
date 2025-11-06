@@ -2,7 +2,7 @@ import type { V1Namespace } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNamespaceStatus } from '../utils/namespaceStatus';
 
@@ -59,7 +59,7 @@ export function SidebarNamespaces({ item, setItem, onDelete, onEdit }: SidebarNa
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}

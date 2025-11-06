@@ -2,7 +2,7 @@ import type { V1IngressClass } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 export interface SidebarIngressClassProps {
   item: V1IngressClass;
@@ -57,7 +57,7 @@ export function SidebarIngressClass({ item, setItem, onDelete, onEdit }: Sidebar
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem as any}
       onDelete={onDelete as any}

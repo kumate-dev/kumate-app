@@ -3,7 +3,7 @@ import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 interface SidebarServiceAccountsProps {
   item: V1ServiceAccount | null;
@@ -63,6 +63,6 @@ export function SidebarServiceAccounts({ item, setItem, onDelete, onEdit }: Side
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <RightSidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
   );
 }

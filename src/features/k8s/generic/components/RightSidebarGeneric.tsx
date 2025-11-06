@@ -19,7 +19,7 @@ export interface SidebarResourcesProps<T> {
   onEdit?: (item: T) => void;
 }
 
-export function SidebarGeneric<T>({
+export function RightSidebarGeneric<T>({
   item,
   setItem,
   width = 550,

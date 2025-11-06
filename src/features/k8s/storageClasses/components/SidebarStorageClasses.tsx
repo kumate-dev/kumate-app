@@ -2,7 +2,7 @@ import type { V1StorageClass } from '@kubernetes/client-node';
 import AgeCell from '@/components/common/AgeCell';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 interface SidebarStorageClassesProps {
   item: V1StorageClass | null;
@@ -75,7 +75,7 @@ export function SidebarStorageClasses({
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}

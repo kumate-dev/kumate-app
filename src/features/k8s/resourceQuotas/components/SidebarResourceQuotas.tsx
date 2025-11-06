@@ -3,7 +3,7 @@ import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 interface SidebarResourceQuotasProps {
   item: V1ResourceQuota | null;
@@ -83,7 +83,7 @@ export function SidebarResourceQuotas({
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}

@@ -3,7 +3,7 @@ import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 export interface SidebarEndpointsProps {
   item: V1Endpoints;
@@ -51,7 +51,7 @@ export function SidebarEndpoints({ item, setItem, onDelete, onEdit }: SidebarEnd
   };
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem as any}
       onDelete={onDelete as any}

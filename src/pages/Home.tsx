@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { SidebarMenu } from '@/features/k8s/generic/components/SidebarMenu';
+import { LeftSidebarMenu } from '@/features/k8s/generic/components/LeftSidebarMenu';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';
@@ -146,7 +146,7 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-neutral-950 text-white">
       <aside className="w-64 flex-shrink-0 overflow-y-auto border-r border-white/10">
-        <SidebarMenu
+        <LeftSidebarMenu
           contexts={contexts}
           selected={selected ?? undefined}
           onSelectContext={(c) => {

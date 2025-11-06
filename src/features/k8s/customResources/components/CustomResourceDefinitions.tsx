@@ -1,7 +1,7 @@
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 import type { CrdDefinition } from '@/api/k8s/crdDefinitions';
 
 interface SidebarDefinitionsProps {
@@ -78,7 +78,7 @@ export default function CustomResourceDefinitions({
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}

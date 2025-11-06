@@ -2,7 +2,7 @@ import type { V1PersistentVolume } from '@kubernetes/client-node';
 import AgeCell from '@/components/common/AgeCell';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 interface SidebarPersistentVolumesProps {
   item: V1PersistentVolume | null;
@@ -104,7 +104,7 @@ export function SidebarPersistentVolumes({
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}

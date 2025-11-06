@@ -2,7 +2,7 @@ import type { V1ClusterRoleBinding } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 interface SidebarClusterRoleBindingsProps {
   item: V1ClusterRoleBinding | null;
@@ -60,6 +60,6 @@ export function SidebarClusterRoleBindings({ item, setItem, onDelete, onEdit }: 
     : [];
 
   return (
-    <SidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <RightSidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
   );
 }

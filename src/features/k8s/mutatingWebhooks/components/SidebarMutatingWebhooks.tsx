@@ -2,7 +2,7 @@ import type { V1MutatingWebhookConfiguration } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 
 interface Props {
   item: V1MutatingWebhookConfiguration;
@@ -51,7 +51,7 @@ export default function SidebarMutatingWebhooks({ item, setItem, onDelete, onEdi
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       onDelete={onDelete}

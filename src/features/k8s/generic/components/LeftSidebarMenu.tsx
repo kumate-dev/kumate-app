@@ -21,7 +21,7 @@ export interface SidebarMenuProps {
   onSelectPage?: (page: PageKey) => void;
 }
 
-export const SidebarMenu: React.FC<SidebarMenuProps> = ({
+export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
   contexts = [],
   selected,
   onSelectContext,

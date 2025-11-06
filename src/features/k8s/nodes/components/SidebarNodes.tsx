@@ -2,7 +2,7 @@ import type { V1Node } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
-import { SidebarGeneric } from '../../generic/components/SidebarGeneric';
+import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNodeStatus } from '../utils/nodeStatus';
 
@@ -87,7 +87,7 @@ export function SidebarNodes({ item, setItem, onDelete, onEdit }: SidebarNodesPr
     : [];
 
   return (
-    <SidebarGeneric
+    <RightSidebarGeneric
       item={item}
       setItem={setItem}
       sections={sections}
