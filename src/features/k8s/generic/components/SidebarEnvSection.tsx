@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import type { V1Container, V1ConfigMap, V1Secret } from '@kubernetes/client-node';
 import { Table, Tbody, Tr, Td } from '@/components/ui/table';
 import { listConfigMaps } from '@/api/k8s/configMaps';
 import { listSecrets } from '@/api/k8s/secrets';
 import { decodeBase64 } from '@/utils/base64';
 import { IconEye } from '@/components/common/IconEye';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 export interface SidebarEnvSectionProps {
   contextName?: string;
@@ -276,40 +277,67 @@ const ContainerSection = ({
 }: ContainerSectionProps) => {
   const containerName = container.name || 'unnamed';
   const idKey = `${namespace}/${containerName}`;
+  const [isOpen, setIsOpen] = useState(false);
+  const hasEntries = entries.length > 0;
+
+  useEffect(() => {
+    // Always collapse when opening sidebar or data changes
+    setIsOpen(false);
+  }, [containerName, namespace, entries]);
+
+  const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
 
   return (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-      <Table>
-        <colgroup>
-          <col className="w-auto" />
-          <col className="w-auto" />
-          <col className="w-32" />
-        </colgroup>
-        <Tbody>
-          <Tr>
-            <Td colSpan={3} className="font-medium text-white">
-              Container: {containerName}
-            </Td>
-          </Tr>
-          {entries.length === 0 ? (
+      <div className="px-4 pt-3">
+        {hasEntries && (
+          <button
+            type="button"
+            onClick={toggle}
+            className="mb-2 flex items-center space-x-1 text-gray-400 hover:text-gray-200"
+            title={isOpen ? 'Collapse' : 'Expand'}
+          >
+            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            <span>
+              {entries.length} environment variable{entries.length !== 1 ? 's' : ''}
+            </span>
+          </button>
+        )}
+      </div>
+
+      {isOpen || !hasEntries ? (
+        <Table>
+          <colgroup>
+            <col className="w-auto" />
+            <col className="w-auto" />
+            <col className="w-32" />
+          </colgroup>
+          <Tbody>
             <Tr>
-              <Td colSpan={3} className="text-white/60">
-                No environment variables
+              <Td colSpan={3} className="font-medium text-white">
+                Container: {containerName}
               </Td>
             </Tr>
-          ) : (
-            entries.map((entry, idx) => (
-              <EnvRow
-                key={`${entry.name}-${idx}`}
-                entry={entry}
-                idKey={`${idKey}/${entry.name}-${idx}`}
-                isSecretVisible={isSecretVisible}
-                onToggleSecret={onToggleSecret}
-              />
-            ))
-          )}
-        </Tbody>
-      </Table>
+            {entries.length === 0 ? (
+              <Tr>
+                <Td colSpan={3} className="text-white/60">
+                  No environment variables
+                </Td>
+              </Tr>
+            ) : (
+              entries.map((entry, idx) => (
+                <EnvRow
+                  key={`${entry.name}-${idx}`}
+                  entry={entry}
+                  idKey={`${idKey}/${entry.name}-${idx}`}
+                  isSecretVisible={isSecretVisible}
+                  onToggleSecret={onToggleSecret}
+                />
+              ))
+            )}
+          </Tbody>
+        </Table>
+      ) : null}
     </div>
   );
 };
@@ -332,28 +360,58 @@ const InlineEnvSection = ({
   const containerName = container?.name || '';
   const idKey = `${namespace}/${containerName}`;
 
+  const [isOpen, setIsOpen] = useState(false);
+  const hasEntries = entries.length > 0;
+
+  useEffect(() => {
+    // Always collapse when opening sidebar or data changes
+    setIsOpen(false);
+  }, [containerName, namespace, entries]);
+
+  const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
+
   return (
-    <Table>
-      <Tbody>
-        {entries.length === 0 ? (
-          <Tr>
-            <Td colSpan={3} className="text-white/60">
-              No environment variables
-            </Td>
-          </Tr>
-        ) : (
-          entries.map((entry, idx) => (
-            <EnvRow
-              key={`${entry.name}-${idx}`}
-              entry={entry}
-              idKey={`${idKey}/${entry.name}-${idx}`}
-              isSecretVisible={isSecretVisible}
-              onToggleSecret={onToggleSecret}
-            />
-          ))
-        )}
-      </Tbody>
-    </Table>
+    <div className="flex w-full min-w-0 flex-col">
+      {hasEntries && (
+        <button
+          type="button"
+          onClick={toggle}
+          className="mb-1 flex items-center space-x-1 text-gray-400 hover:text-gray-200"
+          title={isOpen ? 'Collapse' : 'Expand'}
+        >
+          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <span>
+            {entries.length} environment variable{entries.length !== 1 ? 's' : ''}
+          </span>
+        </button>
+      )}
+
+      <div>
+        {isOpen || !hasEntries ? (
+          <Table>
+            <Tbody>
+              {entries.length === 0 ? (
+                <Tr>
+                  <Td colSpan={3} className="text-white/60">
+                    No environment variables
+                  </Td>
+                </Tr>
+              ) : (
+                entries.map((entry, idx) => (
+                  <EnvRow
+                    key={`${entry.name}-${idx}`}
+                    entry={entry}
+                    idKey={`${idKey}/${entry.name}-${idx}`}
+                    isSecretVisible={isSecretVisible}
+                    onToggleSecret={onToggleSecret}
+                  />
+                ))
+              )}
+            </Tbody>
+          </Table>
+        ) : null}
+      </div>
+    </div>
   );
 };
 
