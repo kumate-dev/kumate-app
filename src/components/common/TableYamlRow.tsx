@@ -37,7 +37,7 @@ export function TableYamlRow<T extends Record<string, any>>({
 
   return (
     <Tr>
-      <Td className="w-1/4 align-middle text-white/70">{label}</Td>
+      <Td className="w-1/4 align-top text-white/70">{label}</Td>
       <Td className={`w-3/4 overflow-hidden align-middle ${appliedMaxWClass}`} style={tdStyle}>
         <YamlCollapsible label={label} data={data} />
       </Td>

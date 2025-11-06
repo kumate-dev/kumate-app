@@ -239,7 +239,7 @@ const EnvRow = ({ entry, idKey, isSecretVisible, onToggleSecret }: EnvRowProps) 
 
   return (
     <Tr>
-      <Td className="w-auto">{entry.name}</Td>
+      <Td className="w-auto align-top">{entry.name}</Td>
       <Td className="w-auto text-white">
         <div className="inline-flex items-center gap-2 break-all">
           <span className={masked ? 'secret-masked select-none' : ''}>

@@ -272,7 +272,7 @@ export function SidebarPods({
                       </colgroup>
                       <Tbody>
                         <Tr>
-                          <Td>Environments</Td>
+                          <Td className="align-top">Environments</Td>
                           <Td>
                             <SidebarEnvSection
                               variant="inline"
