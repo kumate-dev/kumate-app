@@ -297,6 +297,7 @@ export function SidebarPods({
       </div>
     );
   }, [
+    contextName,
     item,
     podProperties,
     containerStatuses,
