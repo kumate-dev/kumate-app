@@ -12,6 +12,8 @@ import BottomExecTerminal from '@/components/common/BottomExecTerminal';
 import { useState, useCallback, useMemo } from 'react';
 import BottomLogViewer from '@/components/common/BottomLogViewer';
 import { ButtonShell } from '@/components/common/ButtonShell';
+import { Button } from '@/components/ui/button';
+import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 
 interface SidebarPodsProps {
   item: V1Pod | null;
@@ -37,6 +39,8 @@ export function SidebarPods({
   const [logViewerOpen, setLogViewerOpen] = useState(false);
   const [selectedContainer, setSelectedContainer] = useState('');
   const [execOpen, setExecOpen] = useState(false);
+  const [pfDialogOpen, setPfDialogOpen] = useState(false);
+  const [selectedRemotePort, setSelectedRemotePort] = useState<number | undefined>(undefined);
 
   const handleViewLogs = useCallback((containerName?: string) => {
     setSelectedContainer(containerName || '');
@@ -56,6 +60,11 @@ export function SidebarPods({
   const handleCloseExec = useCallback(() => {
     setExecOpen(false);
     setSelectedContainer('');
+  }, []);
+
+  const handleOpenPortForward = useCallback((remote?: number) => {
+    setSelectedRemotePort(remote);
+    setPfDialogOpen(true);
   }, []);
 
   const podProperties = useMemo(() => {
@@ -172,26 +181,88 @@ export function SidebarPods({
                 return (
                   <div
                     key={container.name}
-                    className="flex items-start justify-between rounded-lg border border-white/10 p-3"
+                    className="overflow-hidden rounded-lg border border-white/10 bg-white/5"
                   >
-                    <div className="flex flex-1 items-start gap-3">
-                      <div
-                        className={`mt-1.5 h-3 w-3 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}
-                        title={isReady ? 'Ready' : 'Not Ready'}
-                      />
-                      <div className="flex-1">
-                        <div className="font-medium text-white">{container.name}</div>
-                        <div className="text-sm text-white/60">{container.image}</div>
+                    <Table className="table-fixed">
+                      <colgroup>
+                        <col className="w-1/4" />
+                        <col className="w-3/4" />
+                      </colgroup>
+                      <Tbody>
+                        <Tr>
+                          <Td>Container</Td>
+                          <Td>
+                            <div className="flex items-center gap-2 text-white">
+                              <span
+                                className={`inline-block h-2.5 w-2.5 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}
+                                aria-label={isReady ? 'Ready' : 'Not Ready'}
+                              />
+                              <span className="font-medium">{container.name}</span>
+                            </div>
+                          </Td>
+                        </Tr>
+                        <Tr>
+                          <Td>Image</Td>
+                          <Td className="text-white/80">{container.image}</Td>
+                        </Tr>
                         {status?.message && (
-                          <div className="mt-1 text-sm text-red-400">{status.message}</div>
+                          <Tr>
+                            <Td>Message</Td>
+                            <Td className="text-red-400">{status.message}</Td>
+                          </Tr>
                         )}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-shrink-0 gap-2">
-                      <ButtonLog onClick={() => handleViewLogs(container.name)} />
-                      <ButtonShell onClick={() => handleOpenExec(container.name)} />
-                    </div>
+                        <Tr>
+                          <Td>Actions</Td>
+                          <Td>
+                            <div className="flex gap-2">
+                              <ButtonLog onClick={() => handleViewLogs(container.name)} />
+                              <ButtonShell onClick={() => handleOpenExec(container.name)} />
+                            </div>
+                          </Td>
+                        </Tr>
+                        {(container.ports || []).length > 0 && (
+                          <Tr>
+                            <Td>Ports</Td>
+                            <Td>
+                              <div className="rounded-md border border-white/10 bg-white/5">
+                                <Table className="w-full table-fixed">
+                                  <colgroup>
+                                    <col className="w-auto" />
+                                    <col className="w-[120px]" />
+                                  </colgroup>
+                                  <Tbody>
+                                    {(container.ports || []).map((p: any, idx: number) => (
+                                      <Tr key={`${container.name}-${p.containerPort}-${idx}`}>
+                                        <Td>
+                                          <span className="text-white">{p.containerPort}</span>
+                                          <span className="text-white/60">
+                                            /{p.protocol || 'TCP'}
+                                          </span>
+                                          {p.name && (
+                                            <span className="ml-2 text-white/60">{p.name}</span>
+                                          )}
+                                        </Td>
+                                        <Td className="text-right">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="min-w-[96px] px-3"
+                                            onClick={() => handleOpenPortForward(p.containerPort)}
+                                            disabled={!item}
+                                          >
+                                            Forward...
+                                          </Button>
+                                        </Td>
+                                      </Tr>
+                                    ))}
+                                  </Tbody>
+                                </Table>
+                              </div>
+                            </Td>
+                          </Tr>
+                        )}
+                      </Tbody>
+                    </Table>
                   </div>
                 );
               })}
@@ -213,7 +284,8 @@ export function SidebarPods({
             {
               key: 'properties',
               title: 'Properties',
-              content: renderProperties,
+              headerRight: (_i: V1Pod) => null,
+              content: (_i: V1Pod) => renderProperties(),
             },
           ]
         : [],
@@ -238,6 +310,7 @@ export function SidebarPods({
 
   const shouldShowLogViewer = item && logViewerOpen;
   const shouldShowExecTerminal = item && execOpen;
+  const shouldShowPortForwarderDialog = item && pfDialogOpen;
 
   return (
     <>
@@ -272,6 +345,18 @@ export function SidebarPods({
           contextName={contextName}
           containerName={selectedContainer || undefined}
           onClose={handleCloseExec}
+        />
+      )}
+
+      {shouldShowPortForwarderDialog && (
+        <ModalPortForwarder
+          open={pfDialogOpen}
+          onOpenChange={setPfDialogOpen}
+          contextName={contextName}
+          namespace={item.metadata?.namespace || ''}
+          resourceKind="pod"
+          resourceName={item.metadata?.name || ''}
+          defaultRemotePort={selectedRemotePort}
         />
       )}
     </>

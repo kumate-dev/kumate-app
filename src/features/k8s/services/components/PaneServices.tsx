@@ -112,9 +112,10 @@ export default function PaneServices({
         onEdit={actions.onEdit}
         updating={updating}
         deleting={deleting}
+        contextName={contextName}
       />
     ),
-    [updating, deleting]
+    [updating, deleting, contextName]
   );
 
   return (

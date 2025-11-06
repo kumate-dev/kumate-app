@@ -104,11 +104,12 @@ export default function PaneReplicaSets({
         onDelete={actions.onDelete}
         // ReplicaSets do not support edit via YAML yet
         onEdit={undefined}
+        contextName={contextName}
         updating={updating}
         deleting={deleting}
       />
     ),
-    [updating, deleting]
+    [updating, deleting, contextName]
   );
 
   return (

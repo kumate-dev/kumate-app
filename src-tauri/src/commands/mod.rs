@@ -24,6 +24,7 @@ pub mod persistent_volume_claims;
 pub mod persistent_volumes;
 pub mod pod_disruption_budgets;
 pub mod pods;
+pub mod port_forward;
 pub mod priority_classes;
 pub mod replica_sets;
 pub mod replication_controllers;

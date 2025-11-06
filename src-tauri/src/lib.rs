@@ -40,6 +40,7 @@ use crate::commands::persistent_volume_claims;
 use crate::commands::persistent_volumes;
 use crate::commands::pod_disruption_budgets;
 use crate::commands::pods;
+use crate::commands::port_forward;
 use crate::commands::priority_classes;
 use crate::commands::replica_sets;
 use crate::commands::replication_controllers;
@@ -76,6 +77,7 @@ pub fn run() {
         })
         .manage(WatchManager::default())
         .manage(crate::utils::exec::ExecManager::default())
+        .manage(crate::utils::port_forward::PortForwardManager::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
@@ -264,6 +266,9 @@ pub fn run() {
             custom_resources::delete_custom_resources,
             // Custom Resource Definitions
             crd_definitions::list_custom_resource_definitions,
+            // Port Forwarder
+            port_forward::start_port_forward,
+            port_forward::stop_port_forward,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

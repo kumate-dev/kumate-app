@@ -4,6 +4,9 @@ import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 
 interface SidebarServicesProps {
   item: V1Service | null;
@@ -12,6 +15,7 @@ interface SidebarServicesProps {
   onEdit?: (item: V1Service) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export function SidebarServices({
@@ -21,19 +25,15 @@ export function SidebarServices({
   onEdit,
   updating = false,
   deleting = false,
+  contextName,
 }: SidebarServicesProps) {
+  const [pfDialogOpen, setPfDialogOpen] = useState(false);
+  const [selectedRemotePort, setSelectedRemotePort] = useState<number | undefined>(undefined);
   const renderProperties = (svc: V1Service) => {
     const clusterIPs = svc.spec?.clusterIPs || (svc.spec?.clusterIP ? [svc.spec.clusterIP] : []);
     const externalIPs = svc.spec?.externalIPs || [];
     const lbIngress = svc.status?.loadBalancer?.ingress || [];
-    const portsStr = (svc.spec?.ports || [])
-      .map((p) => {
-        const name = p.name ? `${p.name}:` : '';
-        const proto = p.protocol ? `/${p.protocol}` : '';
-        const target = p.targetPort ? ` → ${String(p.targetPort)}` : '';
-        return `${name}${p.port}${proto}${target}`;
-      })
-      .join(', ');
+    const ports = svc.spec?.ports || [];
 
     return (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -97,12 +97,54 @@ export function SidebarServices({
 
             <Tr>
               <Td>Ports</Td>
-              <Td className="break-all">{portsStr || '-'}</Td>
+              <Td className="break-all">
+                {ports.length === 0 ? (
+                  '-'
+                ) : (
+                  <div className="rounded-md border border-white/10 bg-white/5">
+                    <Table className="w-full table-fixed">
+                      <colgroup>
+                        <col className="w-auto" />
+                        <col className="w-[120px]" />
+                      </colgroup>
+                      <Tbody>
+                        {ports.map((p, idx) => (
+                          <Tr key={idx}>
+                            <Td>
+                              <span className="text-white">{p.port}</span>
+                              <span className="text-white/60">/{p.protocol || 'TCP'}</span>
+                              {p.name && <span className="ml-2 text-white/60">{p.name}</span>}
+                              {p.targetPort && (
+                                <span className="ml-2 text-white/50">→ {String(p.targetPort)}</span>
+                              )}
+                            </Td>
+                            <Td className="text-right">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="min-w-[96px] px-3"
+                                onClick={() => {
+                                  setSelectedRemotePort(p.port || 0);
+                                  setPfDialogOpen(true);
+                                }}
+                                disabled={!contextName || deleting || updating}
+                              >
+                                Forward...
+                              </Button>
+                            </Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </div>
+                )}
+              </Td>
             </Tr>
 
             <TableYamlRow label="Selector" data={svc.spec?.selector} maxWidthClass="lg" />
           </Tbody>
         </Table>
+        {/** per-port forward list removed; ports are now inline in Properties **/}
       </div>
     );
   };
@@ -112,7 +154,20 @@ export function SidebarServices({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1Service) => renderProperties(i),
+          content: (i: V1Service) => (
+            <>
+              {renderProperties(i)}
+              <ModalPortForwarder
+                open={pfDialogOpen}
+                onOpenChange={setPfDialogOpen}
+                contextName={contextName}
+                namespace={i.metadata?.namespace || ''}
+                resourceKind="service"
+                resourceName={i.metadata?.name || ''}
+                defaultRemotePort={selectedRemotePort}
+              />
+            </>
+          ),
         },
       ]
     : [];

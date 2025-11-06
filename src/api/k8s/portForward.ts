@@ -14,7 +14,7 @@ export interface PortForwardStartResult {
 export async function startPortForward(options: {
   context: string;
   namespace: string;
-  resourceKind: 'pod' | 'service';
+  resourceKind: 'pod' | 'service' | 'deployment' | 'replicaset' | 'statefulset' | 'daemonset';
   resourceName: string;
   localPort: number;
   remotePort: number;

@@ -39,9 +39,9 @@ export const ModalDeploymentScale: React.FC<ModalDeploymentScaleProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    
+
     setIsInvalid(false);
-    
+
     if (value === '') {
       setInputValue('');
       return;
@@ -104,18 +104,13 @@ export const ModalDeploymentScale: React.FC<ModalDeploymentScaleProps> = ({
               disabled={patching}
               required
             />
-            {isInvalid && (
-              <span className="text-red-500 text-xs">This field is required</span>
-            )}
+            {isInvalid && <span className="text-xs text-red-500">This field is required</span>}
           </div>
           {patching && <p className="text-yellow-400">Applying changes, please wait...</p>}
         </div>
         <DialogFooter>
           <ButtonCancel onClick={() => onOpenChange(false)} disabled={patching} />
-          <ButtonScale 
-            onClick={handleConfirm} 
-            disabled={isApplyDisabled}
-          />
+          <ButtonScale onClick={handleConfirm} disabled={isApplyDisabled} />
         </DialogFooter>
       </DialogContent>
     </Dialog>

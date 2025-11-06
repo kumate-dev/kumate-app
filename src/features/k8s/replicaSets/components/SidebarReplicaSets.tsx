@@ -1,12 +1,14 @@
 import type { V1ReplicaSet } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getReplicaSetStatus } from '../utils/replicaSetStatus';
+import { Button } from '@/components/ui/button';
+import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 
 interface SidebarReplicaSetsProps {
   item: V1ReplicaSet | null;
@@ -15,6 +17,7 @@ interface SidebarReplicaSetsProps {
   onEdit?: (item: V1ReplicaSet) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export function SidebarReplicaSets({
@@ -22,9 +25,12 @@ export function SidebarReplicaSets({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarReplicaSetsProps) {
+  const [pfDialogOpen, setPfDialogOpen] = useState(false);
+  const [selectedRemotePort, setSelectedRemotePort] = useState<number | undefined>(undefined);
   const renderProperties = useCallback(
     (rs: V1ReplicaSet) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -65,11 +71,63 @@ export function SidebarReplicaSets({
                 <BadgeStatus status={getReplicaSetStatus(rs)} />
               </Td>
             </Tr>
+
+            {(() => {
+              const containers = rs.spec?.template?.spec?.containers || [];
+              const ports = containers.flatMap((c) =>
+                (c.ports || []).map((p) => ({ ...p, __containerName: c.name }))
+              );
+              return (
+                <Tr>
+                  <Td>Ports</Td>
+                  <Td className="break-all">
+                    {ports.length === 0 ? (
+                      '-'
+                    ) : (
+                      <div className="rounded-md border border-white/10 bg-white/5">
+                        <Table className="w-full table-fixed">
+                          <colgroup>
+                            <col className="w-auto" />
+                            <col className="w-[120px]" />
+                          </colgroup>
+                          <Tbody>
+                            {ports.map((p, idx) => (
+                              <Tr key={idx}>
+                                <Td>
+                                  <span className="mr-2 text-white/70">{p.__containerName}</span>
+                                  <span className="text-white">{p.containerPort}</span>
+                                  <span className="text-white/60">/{p.protocol || 'TCP'}</span>
+                                  {p.name && <span className="ml-2 text-white/60">{p.name}</span>}
+                                </Td>
+                                <Td className="text-right">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="min-w-[96px] px-3"
+                                    onClick={() => {
+                                      setSelectedRemotePort(p.containerPort || 0);
+                                      setPfDialogOpen(true);
+                                    }}
+                                    disabled={!contextName || deleting || updating}
+                                  >
+                                    Forward...
+                                  </Button>
+                                </Td>
+                              </Tr>
+                            ))}
+                          </Tbody>
+                        </Table>
+                      </div>
+                    )}
+                  </Td>
+                </Tr>
+              );
+            })()}
           </Tbody>
         </Table>
       </div>
     ),
-    []
+    [deleting, updating]
   );
 
   const sections = useMemo(
@@ -79,11 +137,24 @@ export function SidebarReplicaSets({
             {
               key: 'properties',
               title: 'Properties',
-              content: (i: V1ReplicaSet) => renderProperties(i),
+              content: (i: V1ReplicaSet) => (
+                <>
+                  {renderProperties(i)}
+                  <ModalPortForwarder
+                    open={pfDialogOpen}
+                    onOpenChange={setPfDialogOpen}
+                    contextName={contextName}
+                    namespace={i.metadata?.namespace || ''}
+                    resourceKind="replicaset"
+                    resourceName={i.metadata?.name || ''}
+                    defaultRemotePort={selectedRemotePort}
+                  />
+                </>
+              ),
             },
           ]
         : [],
-    [item, renderProperties]
+    [item, renderProperties, pfDialogOpen, selectedRemotePort, contextName]
   );
 
   return (

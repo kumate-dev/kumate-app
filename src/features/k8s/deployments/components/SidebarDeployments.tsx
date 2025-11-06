@@ -13,6 +13,8 @@ import { ButtonRestart } from '@/components/common/ButtonRestart';
 import { ButtonScale } from '@/components/common/ButtonScale';
 import { ModalDeploymentRestart } from './ModalDeploymentRestart';
 import { ModalDeploymentScale } from './ModalDeploymentScale';
+import { Button } from '@/components/ui/button';
+import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 
 interface SidebarDeploymentsProps {
   item: V1Deployment | null;
@@ -37,6 +39,8 @@ export function SidebarDeployments({
   const [patching, setPatching] = useState(false);
   const [confirmRestartOpen, setConfirmRestartOpen] = useState(false);
   const [scaleDialogOpen, setScaleDialogOpen] = useState(false);
+  const [pfDialogOpen, setPfDialogOpen] = useState(false);
+  const [selectedRemotePort, setSelectedRemotePort] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     setScale(item?.spec?.replicas ?? 0);
@@ -144,6 +148,58 @@ export function SidebarDeployments({
                 <BadgeStatus status={getDeploymentStatus(dep)} />
               </Td>
             </Tr>
+
+            {(() => {
+              const containers = dep.spec?.template?.spec?.containers || [];
+              const ports = containers.flatMap((c) =>
+                (c.ports || []).map((p) => ({ ...p, __containerName: c.name }))
+              );
+              return (
+                <Tr>
+                  <Td>Ports</Td>
+                  <Td className="break-all">
+                    {ports.length === 0 ? (
+                      '-'
+                    ) : (
+                      <div className="rounded-md border border-white/10 bg-white/5">
+                        <Table className="w-full table-fixed">
+                          <colgroup>
+                            <col className="w-auto" />
+                            <col className="w-[120px]" />
+                          </colgroup>
+                          <Tbody>
+                            {ports.map((p, idx) => (
+                              <Tr key={idx}>
+                                <Td>
+                                  <span className="mr-2 text-white/70">{p.__containerName}</span>
+                                  <span className="text-white">{p.containerPort}</span>
+                                  <span className="text-white/60">/{p.protocol || 'TCP'}</span>
+                                  {p.name && <span className="ml-2 text-white/60">{p.name}</span>}
+                                </Td>
+                                <Td className="text-right">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="min-w-[96px] px-3"
+                                    onClick={() => {
+                                      setSelectedRemotePort(p.containerPort || 0);
+                                      setPfDialogOpen(true);
+                                    }}
+                                    disabled={!contextName || deleting || updating || patching}
+                                  >
+                                    Forward...
+                                  </Button>
+                                </Td>
+                              </Tr>
+                            ))}
+                          </Tbody>
+                        </Table>
+                      </div>
+                    )}
+                  </Td>
+                </Tr>
+              );
+            })()}
           </Tbody>
         </Table>
       </div>
@@ -176,6 +232,15 @@ export function SidebarDeployments({
               content: (i: V1Deployment) => (
                 <>
                   {renderProperties(i)}
+                  <ModalPortForwarder
+                    open={pfDialogOpen}
+                    onOpenChange={setPfDialogOpen}
+                    contextName={contextName}
+                    namespace={i.metadata?.namespace || ''}
+                    resourceKind="deployment"
+                    resourceName={i.metadata?.name || ''}
+                    defaultRemotePort={selectedRemotePort}
+                  />
 
                   <ModalDeploymentRestart
                     open={confirmRestartOpen}
@@ -209,6 +274,8 @@ export function SidebarDeployments({
       contextName,
       updating,
       patching,
+      pfDialogOpen,
+      selectedRemotePort,
       handleRestart,
       handleScaleApply,
     ]
