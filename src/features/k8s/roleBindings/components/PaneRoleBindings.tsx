@@ -7,6 +7,7 @@ import { SidebarRoleBindings } from './SidebarRoleBindings';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { sortItems } from '@/utils/sort';
+import { templateRoleBinding } from '../../templates/roleBinding';
 
 export interface PaneRoleBindingsProps {
   items: V1RoleBinding[];
@@ -116,6 +117,7 @@ export default function PaneRoleBindings({
       renderRow={renderRow}
       emptyText="No role bindings found"
       onDelete={handleDeleteSelected}
+      yamlTemplate={templateRoleBinding}
       onCreate={onCreate}
       onUpdate={onUpdate}
       renderSidebar={renderSidebar}

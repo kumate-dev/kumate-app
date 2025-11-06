@@ -7,6 +7,7 @@ import { SidebarServiceAccounts } from './SidebarServiceAccounts';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { sortItems } from '@/utils/sort';
+import { templateServiceAccount } from '../../templates/serviceAccount';
 
 export interface PaneServiceAccountsProps {
   items: V1ServiceAccount[];
@@ -113,6 +114,7 @@ export default function PaneServiceAccounts({
       renderRow={renderRow}
       emptyText="No service accounts found"
       onDelete={handleDeleteSelected}
+      yamlTemplate={templateServiceAccount}
       onCreate={onCreate}
       onUpdate={onUpdate}
       renderSidebar={renderSidebar}

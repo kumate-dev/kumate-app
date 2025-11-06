@@ -7,6 +7,7 @@ import { SidebarRoles } from './SidebarRoles';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { sortItems } from '@/utils/sort';
+import { templateRole } from '../../templates/role';
 
 export interface PaneRolesProps {
   items: V1Role[];
@@ -113,6 +114,7 @@ export default function PaneRoles({
       renderRow={renderRow}
       emptyText="No roles found"
       onDelete={handleDeleteSelected}
+      yamlTemplate={templateRole}
       onCreate={onCreate}
       onUpdate={onUpdate}
       renderSidebar={renderSidebar}

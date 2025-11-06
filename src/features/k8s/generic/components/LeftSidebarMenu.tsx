@@ -28,6 +28,7 @@ const COLLAPSIBLE_TITLES = new Set([
   'Storage',
   'Helm',
   'Access Control',
+  'Custom Resources',
 ]);
 
 const CATEGORY_GROUPS: PageItem[] = [
@@ -81,6 +82,16 @@ const CATEGORY_GROUPS: PageItem[] = [
     ],
   },
   {
+    title: 'Access Control',
+    items: [
+      { key: 'service_accounts', label: 'Service Accounts' },
+      { key: 'cluster_roles', label: 'Cluster Roles' },
+      { key: 'roles', label: 'Roles' },
+      { key: 'cluster_role_bindings', label: 'Cluster Role Bindings' },
+      { key: 'role_bindings', label: 'Role Bindings' },
+    ],
+  },
+  {
     title: 'Helm',
     items: [
       { key: 'helm_charts', label: 'Charts' },
@@ -90,16 +101,6 @@ const CATEGORY_GROUPS: PageItem[] = [
   {
     title: 'Custom Resources',
     items: [{ key: 'custom_resource_definitions', label: 'Definitions' }],
-  },
-  {
-    title: 'Access Control',
-    items: [
-      { key: 'service_accounts', label: 'Service Accounts' },
-      { key: 'cluster_roles', label: 'Cluster Roles' },
-      { key: 'roles', label: 'Roles' },
-      { key: 'cluster_role_bindings', label: 'Cluster Role Bindings' },
-      { key: 'role_bindings', label: 'Role Bindings' },
-    ],
   },
 ];
 
