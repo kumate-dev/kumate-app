@@ -3,6 +3,7 @@ import type { V1ClusterRole } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarClusterRoles } from './SidebarClusterRoles';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { sortItems } from '@/utils/sort';
 
@@ -65,6 +66,22 @@ export default function PaneClusterRoles({
     </>
   );
 
+  const renderSidebar = (
+    item: V1ClusterRole,
+    actions: {
+      setItem: (item: V1ClusterRole | null) => void;
+      onDelete?: (item: V1ClusterRole) => void;
+      onEdit?: (item: V1ClusterRole) => void;
+    }
+  ) => (
+    <SidebarClusterRoles
+      item={item}
+      setItem={actions.setItem}
+      onDelete={actions.onDelete}
+      onEdit={actions.onEdit}
+    />
+  );
+
   return (
     <PaneGeneric
       items={sortedItems}
@@ -77,6 +94,7 @@ export default function PaneClusterRoles({
       onDelete={handleDeleteSelected}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

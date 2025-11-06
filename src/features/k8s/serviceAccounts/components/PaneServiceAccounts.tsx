@@ -3,6 +3,7 @@ import type { V1ServiceAccount, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarServiceAccounts } from './SidebarServiceAccounts';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { sortItems } from '@/utils/sort';
@@ -76,6 +77,22 @@ export default function PaneServiceAccounts({
     </>
   );
 
+  const renderSidebar = (
+    item: V1ServiceAccount,
+    actions: {
+      setItem: (item: V1ServiceAccount | null) => void;
+      onDelete?: (item: V1ServiceAccount) => void;
+      onEdit?: (item: V1ServiceAccount) => void;
+    }
+  ) => (
+    <SidebarServiceAccounts
+      item={item}
+      setItem={actions.setItem}
+      onDelete={actions.onDelete}
+      onEdit={actions.onEdit}
+    />
+  );
+
   return (
     <PaneGeneric
       items={sortedItems}
@@ -90,6 +107,7 @@ export default function PaneServiceAccounts({
       onDelete={handleDeleteSelected}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

@@ -3,6 +3,7 @@ import type { V1RoleBinding, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarRoleBindings } from './SidebarRoleBindings';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { sortItems } from '@/utils/sort';
@@ -79,6 +80,22 @@ export default function PaneRoleBindings({
     </>
   );
 
+  const renderSidebar = (
+    item: V1RoleBinding,
+    actions: {
+      setItem: (item: V1RoleBinding | null) => void;
+      onDelete?: (item: V1RoleBinding) => void;
+      onEdit?: (item: V1RoleBinding) => void;
+    }
+  ) => (
+    <SidebarRoleBindings
+      item={item}
+      setItem={actions.setItem}
+      onDelete={actions.onDelete}
+      onEdit={actions.onEdit}
+    />
+  );
+
   return (
     <PaneGeneric
       items={sortedItems}
@@ -93,6 +110,7 @@ export default function PaneRoleBindings({
       onDelete={handleDeleteSelected}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

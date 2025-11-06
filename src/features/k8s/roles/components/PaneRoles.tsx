@@ -3,6 +3,7 @@ import type { V1Role, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarRoles } from './SidebarRoles';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { sortItems } from '@/utils/sort';
@@ -76,6 +77,17 @@ export default function PaneRoles({
     </>
   );
 
+  const renderSidebar = (
+    item: V1Role,
+    actions: {
+      setItem: (item: V1Role | null) => void;
+      onDelete?: (item: V1Role) => void;
+      onEdit?: (item: V1Role) => void;
+    }
+  ) => (
+    <SidebarRoles item={item} setItem={actions.setItem} onDelete={actions.onDelete} onEdit={actions.onEdit} />
+  );
+
   return (
     <PaneGeneric
       items={sortedItems}
@@ -90,6 +102,7 @@ export default function PaneRoles({
       onDelete={handleDeleteSelected}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

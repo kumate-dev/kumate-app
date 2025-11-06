@@ -3,6 +3,7 @@ import type { V1ClusterRoleBinding } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
+import { SidebarClusterRoleBindings } from './SidebarClusterRoleBindings';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { sortItems } from '@/utils/sort';
 
@@ -68,6 +69,22 @@ export default function PaneClusterRoleBindings({
     </>
   );
 
+  const renderSidebar = (
+    item: V1ClusterRoleBinding,
+    actions: {
+      setItem: (item: V1ClusterRoleBinding | null) => void;
+      onDelete?: (item: V1ClusterRoleBinding) => void;
+      onEdit?: (item: V1ClusterRoleBinding) => void;
+    }
+  ) => (
+    <SidebarClusterRoleBindings
+      item={item}
+      setItem={actions.setItem}
+      onDelete={actions.onDelete}
+      onEdit={actions.onEdit}
+    />
+  );
+
   return (
     <PaneGeneric
       items={sortedItems}
@@ -80,6 +97,7 @@ export default function PaneClusterRoleBindings({
       onDelete={handleDeleteSelected}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}
