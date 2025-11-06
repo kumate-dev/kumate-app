@@ -70,6 +70,19 @@
   }
 }
 
+/* Secret masking for ENV values */
+@layer components {
+  .secret-masked {
+    -webkit-text-security: disc;
+    text-security: disc;
+  }
+  @supports not (-webkit-text-security: disc) {
+    .secret-masked {
+      filter: blur(3px);
+    }
+  }
+}
+
 @layer utilities {
   .max-w-truncate {
     max-width: 320px;

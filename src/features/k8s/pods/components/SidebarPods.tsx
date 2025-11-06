@@ -14,6 +14,7 @@ import BottomLogViewer from '@/components/common/BottomLogViewer';
 import { ButtonShell } from '@/components/common/ButtonShell';
 import { Button } from '@/components/ui/button';
 import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
+import { SidebarEnvSection } from '@/features/k8s/generic/components/SidebarEnvSection';
 
 interface SidebarPodsProps {
   item: V1Pod | null;
@@ -261,6 +262,26 @@ export function SidebarPods({
                             </Td>
                           </Tr>
                         )}
+                      </Tbody>
+                    </Table>
+
+                    <Table className="mt-2 table-fixed">
+                      <colgroup>
+                        <col className="w-1/4" />
+                        <col className="w-3/4" />
+                      </colgroup>
+                      <Tbody>
+                        <Tr>
+                          <Td>Environments</Td>
+                          <Td>
+                            <SidebarEnvSection
+                              variant="inline"
+                              contextName={contextName}
+                              namespace={item?.metadata?.namespace}
+                              containers={[container]}
+                            />
+                          </Td>
+                        </Tr>
                       </Tbody>
                     </Table>
                   </div>
