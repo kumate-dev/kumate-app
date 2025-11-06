@@ -139,7 +139,7 @@ export function RightSidebarGeneric<T>({
 
       <div
         ref={sidebarRef}
-        className={`fixed top-0 right-0 z-50 flex h-full transform cursor-auto flex-col border-l border-white/10 bg-neutral-900/95 shadow-xl transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 z-50 flex h-full transform cursor-auto flex-col overscroll-none border-l border-white/10 bg-neutral-900/95 shadow-xl transition-transform duration-300 ease-in-out ${
           visible ? 'translate-x-0' : 'translate-x-full'
         } ${isResizing ? 'select-none' : ''}`}
         style={{ width: `${sidebarWidth}px` }}
@@ -161,7 +161,7 @@ export function RightSidebarGeneric<T>({
           </Button>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-auto px-4 pt-0 pb-4">
+        <div className="flex-1 space-y-4 overflow-auto overscroll-none px-4 pt-0 pb-4">
           {sections.map((section) => (
             <div key={section.key}>
               <div className="sticky top-0 z-10 mb-2 flex items-center justify-between border-b border-white/10 bg-neutral-900/95 px-4 py-2 backdrop-blur">

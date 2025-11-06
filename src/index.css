@@ -12,6 +12,7 @@
   body,
   #root {
     height: 100%;
+    overscroll-behavior-y: none;
   }
 
   /* Font smoothing and default font stack */
@@ -32,6 +33,7 @@
       Arial,
       'Apple Color Emoji',
       'Segoe UI Emoji';
+    overflow: hidden;
   }
 
   /* Scrollbar styling (WebKit-based browsers) */

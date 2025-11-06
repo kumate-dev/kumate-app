@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { LeftSidebarMenu } from '@/features/k8s/generic/components/LeftSidebarMenu';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { PageKey } from '@/types/pageKey';
@@ -54,6 +54,27 @@ export default function Home() {
 
   const resetNsToAll = () => useNamespaceStore.setState({ selectedNamespaces: [ALL_NAMESPACES] });
   const selectedRef = useRef(selected);
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleMainWheelCapture = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const canScroll = el.scrollHeight > el.clientHeight;
+
+    if (!canScroll) {
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+
+    const delta = e.deltaY;
+    const atTop = el.scrollTop <= 0;
+    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+
+    if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchContexts() {
@@ -114,41 +135,47 @@ export default function Home() {
     secrets: Secrets,
     resource_quotas: ResourceQuotas,
     limit_ranges: LimitRanges,
+    horizontal_pod_autoscalers: HorizontalPodAutoscalers,
+    pod_disruption_budgets: PodDisruptionBudgets,
     priority_classes: PriorityClasses,
     runtime_classes: RuntimeClasses,
     leases: Leases,
     mutating_webhooks: MutatingWebhooks,
     validating_webhooks: ValidatingWebhooks,
+
+    // Network
     services: Services,
     endpoints: Endpoints,
     ingresses: Ingresses,
     ingress_classes: IngressClasses,
     network_policies: NetworkPolicies,
     port_forwarding: PortForwarding,
+
+    // Storage
     persistent_volume_claims: PersistentVolumeClaims,
     persistent_volumes: PersistentVolumes,
     storage_classes: StorageClasses,
-    horizontal_pod_autoscalers: HorizontalPodAutoscalers,
-    pod_disruption_budgets: PodDisruptionBudgets,
 
-    // Helm
-    helm_charts: HelmCharts,
-    helm_releases: HelmReleases,
-    // Custom Resources
-    custom_resource_definitions: Definitions,
     // Access Control
     service_accounts: ServiceAccounts,
     roles: Roles,
     role_bindings: RoleBindings,
     cluster_roles: ClusterRoles,
     cluster_role_bindings: ClusterRoleBindings,
+
+    // Helm
+    helm_charts: HelmCharts,
+    helm_releases: HelmReleases,
+
+    // Custom Resources
+    custom_resource_definitions: Definitions,
   };
 
   const PageComponent = pageComponents[page] || ComingSoon;
 
   return (
-    <div className="flex h-screen bg-neutral-950 text-white">
-      <aside className="w-64 flex-shrink-0 overflow-y-auto border-r border-white/10">
+    <div className="flex h-screen overflow-hidden bg-neutral-950 text-white">
+      <aside className="w-64 flex-shrink-0 overflow-y-auto overscroll-none border-r border-white/10">
         <LeftSidebarMenu
           contexts={contexts}
           selected={selected ?? undefined}
@@ -168,7 +195,11 @@ export default function Home() {
           </div>
         )}
 
-        <div className="h-full overflow-y-auto p-4">
+        <div
+          ref={mainScrollRef}
+          className="h-full overflow-y-auto overscroll-none p-4"
+          onWheelCapture={handleMainWheelCapture}
+        >
           <PageComponent context={selected ?? undefined} />
         </div>
       </main>

@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
+import { ReactNode, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { V1Namespace } from '@kubernetes/client-node';
 import { PaneTaskbar } from '@/features/k8s/generic/components/PaneTaskbar';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
@@ -84,6 +84,27 @@ export function PaneGeneric<T>({
   const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  const handleWheelCapture = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const canScroll = el.scrollHeight > el.clientHeight;
+
+    if (!canScroll) {
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+
+    const delta = e.deltaY;
+    const atTop = el.scrollTop <= 0;
+    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+
+    if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, []);
 
   const totalColSpan = useMemo(() => (colSpan || columns.length) + 1, [colSpan, columns.length]);
 
@@ -301,7 +322,11 @@ export function PaneGeneric<T>({
 
       <div className="flex-1 overflow-hidden rounded-xl border border-white/10 bg-neutral-900/60">
         <div className="flex h-full">
-          <div className="flex-1 overflow-auto">
+          <div
+            ref={scrollAreaRef}
+            className="flex-1 overflow-auto overscroll-none"
+            onWheelCapture={handleWheelCapture}
+          >
             <div className="min-w-max">
               <Table>
                 {tableHeader}
