@@ -161,10 +161,10 @@ export function RightSidebarGeneric<T>({
           </Button>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-auto p-4">
+        <div className="flex-1 space-y-4 overflow-auto px-4 pt-0 pb-4">
           {sections.map((section) => (
             <div key={section.key}>
-              <div className="mb-2 flex items-center justify-between">
+              <div className="sticky top-0 z-10 mb-2 flex items-center justify-between border-b border-white/10 bg-neutral-900/95 px-4 py-2 backdrop-blur">
                 <h3 className="font-medium text-white/80">{section.title}</h3>
                 {item && (
                   <div className="flex items-center gap-2">

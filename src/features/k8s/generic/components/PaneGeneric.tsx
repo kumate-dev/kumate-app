@@ -309,16 +309,6 @@ export function PaneGeneric<T>({
               </Table>
             </div>
           </div>
-
-          {selectedItem && renderSidebar && (
-            <div className="w-[550px] border-l border-white/10">
-              {renderSidebar(selectedItem, {
-                setItem: setSelectedItem,
-                onDelete: onDelete ? handleDeleteOne : undefined,
-                onEdit: openEditEditor,
-              })}
-            </div>
-          )}
         </div>
       </div>
 
@@ -330,6 +320,14 @@ export function PaneGeneric<T>({
       />
 
       <BottomYamlEditor {...yamlEditorProps} />
+
+      {selectedItem &&
+        renderSidebar &&
+        renderSidebar(selectedItem, {
+          setItem: setSelectedItem,
+          onDelete: onDelete ? handleDeleteOne : undefined,
+          onEdit: openEditEditor,
+        })}
     </div>
   );
 }
