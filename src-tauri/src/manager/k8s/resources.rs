@@ -5,7 +5,7 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::ObjectMeta, Metadata, Resource as K8sResource,
 };
 use kube::{
-    api::{Api, DeleteParams, ObjectList, PostParams, WatchEvent, WatchParams},
+    api::{Api, DeleteParams, ObjectList, Patch, PatchParams, PostParams, WatchEvent, WatchParams},
     core::NamespaceResourceScope,
     Resource,
 };
@@ -37,6 +37,36 @@ where
             Some(v) if !v.is_empty() => v.into_iter().map(Some).collect(),
             _ => vec![None],
         }
+    }
+
+    pub async fn patch(
+        context_name: String,
+        namespace: Option<String>,
+        resource_name: String,
+        patch: Value,
+        patch_type: String,
+    ) -> Result<Value, String> {
+        let client: kube::Client = K8sClient::for_context(&context_name).await?;
+        let api: Api<T> = K8sClient::api::<T>(client, namespace.clone()).await;
+
+        let params: PatchParams = PatchParams::default();
+
+        let result: T = match patch_type.as_str() {
+            "strategic" => api
+                .patch(&resource_name, &params, &Patch::Strategic(patch))
+                .await
+                .map_err(|e| Self::extract_error(&e, &resource_name))?,
+            "merge" => api
+                .patch(&resource_name, &params, &Patch::Merge(patch))
+                .await
+                .map_err(|e| Self::extract_error(&e, &resource_name))?,
+            _ => api
+                .patch(&resource_name, &params, &Patch::Merge(patch))
+                .await
+                .map_err(|e| Self::extract_error(&e, &resource_name))?,
+        };
+
+        serde_json::to_value(&result).map_err(|e| e.to_string())
     }
 
     async fn upsert(

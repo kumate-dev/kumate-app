@@ -13,7 +13,7 @@ export interface SidebarLeasesProps {
 }
 
 export function SidebarLeases({ item, setItem, onDelete, onEdit }: SidebarLeasesProps) {
-  const renderOverview = (lease: V1Lease) => (
+  const renderProperties = (lease: V1Lease) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -78,7 +78,7 @@ export function SidebarLeases({ item, setItem, onDelete, onEdit }: SidebarLeases
   );
 
   const sections = item
-    ? [{ key: 'properties', title: 'Properties', content: (i: V1Lease) => renderOverview(i) }]
+    ? [{ key: 'properties', title: 'Properties', content: (i: V1Lease) => renderProperties(i) }]
     : [];
 
   return (

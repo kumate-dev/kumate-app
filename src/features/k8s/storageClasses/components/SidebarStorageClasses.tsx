@@ -21,7 +21,7 @@ export function SidebarStorageClasses({
   updating = false,
   deleting = false,
 }: SidebarStorageClassesProps) {
-  const renderOverview = (sc: V1StorageClass) => {
+  const renderProperties = (sc: V1StorageClass) => {
     return (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -73,7 +73,7 @@ export function SidebarStorageClasses({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1StorageClass) => renderOverview(i),
+          content: (i: V1StorageClass) => renderProperties(i),
         },
       ]
     : [];
@@ -87,6 +87,7 @@ export function SidebarStorageClasses({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

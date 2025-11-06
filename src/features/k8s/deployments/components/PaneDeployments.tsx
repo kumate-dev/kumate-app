@@ -1,6 +1,5 @@
 import { V1Deployment, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
-import { SidebarK8sDeployments } from './SidebarDeployments';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
@@ -10,6 +9,7 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { templateDeployment } from '../../templates/deployment';
 import { useCallback, useMemo, useState } from 'react';
 import { sortItems } from '@/utils/sort';
+import { SidebarDeployments } from './SidebarDeployments';
 
 export interface PaneDeploymentsProps {
   selectedNamespaces: string[];
@@ -89,16 +89,17 @@ export default function PaneDeployments({
         onEdit?: (item: V1Deployment) => void;
       }
     ) => (
-      <SidebarK8sDeployments
+      <SidebarDeployments
         item={item}
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        contextName={contextName}
         updating={updating}
         deleting={deleting}
       />
     ),
-    [updating, deleting]
+    [updating, deleting, contextName]
   );
 
   return (

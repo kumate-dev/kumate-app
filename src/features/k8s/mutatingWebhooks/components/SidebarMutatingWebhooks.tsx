@@ -21,7 +21,7 @@ export default function SidebarMutatingWebhooks({
   updating = false,
   deleting = false,
 }: Props) {
-  const renderOverview = (mw: V1MutatingWebhookConfiguration) => (
+  const renderProperties = (mw: V1MutatingWebhookConfiguration) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -54,7 +54,7 @@ export default function SidebarMutatingWebhooks({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1MutatingWebhookConfiguration) => renderOverview(i),
+          content: (i: V1MutatingWebhookConfiguration) => renderProperties(i),
         },
       ]
     : [];

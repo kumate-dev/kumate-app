@@ -13,7 +13,7 @@ export interface SidebarPriorityClassesProps {
   deleting?: boolean;
 }
 
-function renderOverview(pc: V1PriorityClass) {
+function renderProperties(pc: V1PriorityClass) {
   return (
     <div className="space-y-2">
       <Table>
@@ -60,7 +60,7 @@ export function SidebarPriorityClasses({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1PriorityClass) => renderOverview(i),
+          content: (i: V1PriorityClass) => renderProperties(i),
         },
       ]
     : [];

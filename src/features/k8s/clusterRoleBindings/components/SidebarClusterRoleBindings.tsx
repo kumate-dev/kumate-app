@@ -21,7 +21,7 @@ export function SidebarClusterRoleBindings({
   updating,
   deleting,
 }: SidebarClusterRoleBindingsProps) {
-  const renderOverview = (rb: V1ClusterRoleBinding) => (
+  const renderProperties = (rb: V1ClusterRoleBinding) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -63,7 +63,7 @@ export function SidebarClusterRoleBindings({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1ClusterRoleBinding) => renderOverview(i),
+          content: renderProperties,
         },
       ]
     : [];
@@ -77,6 +77,7 @@ export function SidebarClusterRoleBindings({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

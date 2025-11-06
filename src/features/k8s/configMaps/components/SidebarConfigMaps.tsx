@@ -22,7 +22,7 @@ export function SidebarConfigMaps({
   updating = false,
   deleting = false,
 }: SidebarConfigMapsProps) {
-  const renderOverview = (cm: V1ConfigMap) => (
+  const renderProperties = (cm: V1ConfigMap) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -62,7 +62,7 @@ export function SidebarConfigMaps({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1ConfigMap) => renderOverview(i),
+          content: (i: V1ConfigMap) => renderProperties(i),
         },
       ]
     : [];

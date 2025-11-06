@@ -25,7 +25,7 @@ export function SidebarReplicaSets({
   updating = false,
   deleting = false,
 }: SidebarReplicaSetsProps) {
-  const renderOverview = useCallback(
+  const renderProperties = useCallback(
     (rs: V1ReplicaSet) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -79,11 +79,11 @@ export function SidebarReplicaSets({
             {
               key: 'properties',
               title: 'Properties',
-              content: (i: V1ReplicaSet) => renderOverview(i),
+              content: (i: V1ReplicaSet) => renderProperties(i),
             },
           ]
         : [],
-    [item, renderOverview]
+    [item, renderProperties, onEdit, onDelete, updating, deleting]
   );
 
   return (
@@ -95,6 +95,7 @@ export function SidebarReplicaSets({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

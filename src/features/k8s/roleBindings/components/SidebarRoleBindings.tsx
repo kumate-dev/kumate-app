@@ -22,7 +22,7 @@ export function SidebarRoleBindings({
   updating = false,
   deleting = false,
 }: SidebarRoleBindingsProps) {
-  const renderOverview = (rb: V1RoleBinding) => (
+  const renderProperties = (rb: V1RoleBinding) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -71,7 +71,7 @@ export function SidebarRoleBindings({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1RoleBinding) => renderOverview(i),
+          content: (i: V1RoleBinding) => renderProperties(i),
         },
       ]
     : [];
@@ -85,6 +85,7 @@ export function SidebarRoleBindings({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

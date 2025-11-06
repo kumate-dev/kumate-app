@@ -76,3 +76,34 @@ export async function deleteDeployments({
 }): Promise<K8sResponse[]> {
   return await invoke<K8sResponse[]>('delete_deployments', { name, namespace, resourceNames });
 }
+
+export async function restartDeployment({
+  name,
+  namespace,
+  resourceName,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+}): Promise<V1Deployment> {
+  return await invoke<V1Deployment>('restart_deployment', { name, namespace, resourceName });
+}
+
+export async function scaleDeployment({
+  name,
+  namespace,
+  resourceName,
+  replicas,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+  replicas: number;
+}): Promise<V1Deployment> {
+  return await invoke<V1Deployment>('scale_deployment', {
+    name,
+    namespace,
+    resourceName,
+    replicas,
+  });
+}

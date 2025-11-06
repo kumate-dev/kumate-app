@@ -14,7 +14,7 @@ interface SidebarHorizontalPodAutoscalersProps {
   onEdit?: (item: V1HorizontalPodAutoscaler) => void;
 }
 
-function renderOverview(hpa: V1HorizontalPodAutoscaler) {
+function renderProperties(hpa: V1HorizontalPodAutoscaler) {
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -107,7 +107,7 @@ export function SidebarHorizontalPodAutoscalers({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1HorizontalPodAutoscaler) => renderOverview(i),
+          content: (i: V1HorizontalPodAutoscaler) => renderProperties(i),
         },
       ]
     : [];

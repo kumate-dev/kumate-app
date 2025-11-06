@@ -25,7 +25,7 @@ export function SidebarStatefulSets({
   updating = false,
   deleting = false,
 }: SidebarStatefulSetsProps) {
-  const renderOverview = useCallback(
+  const renderProperties = useCallback(
     (ss: V1StatefulSet) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -84,11 +84,11 @@ export function SidebarStatefulSets({
             {
               key: 'properties',
               title: 'Properties',
-              content: (i: V1StatefulSet) => renderOverview(i),
+              content: (i: V1StatefulSet) => renderProperties(i),
             },
           ]
         : [],
-    [item, renderOverview]
+    [item, renderProperties, onEdit, onDelete, updating, deleting]
   );
 
   return (
@@ -100,6 +100,7 @@ export function SidebarStatefulSets({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

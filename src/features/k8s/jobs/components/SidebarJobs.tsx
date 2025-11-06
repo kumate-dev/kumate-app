@@ -25,7 +25,7 @@ export function SidebarJobs({
   updating = false,
   deleting = false,
 }: SidebarJobsProps) {
-  const renderOverview = useCallback(
+  const renderProperties = useCallback(
     (job: V1Job) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -84,11 +84,11 @@ export function SidebarJobs({
             {
               key: 'properties',
               title: 'Properties',
-              content: (i: V1Job) => renderOverview(i),
+              content: (i: V1Job) => renderProperties(i),
             },
           ]
         : [],
-    [item, renderOverview]
+    [item, renderProperties, onEdit, onDelete, updating, deleting]
   );
 
   return (
@@ -100,6 +100,7 @@ export function SidebarJobs({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

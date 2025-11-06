@@ -22,7 +22,7 @@ export function SidebarServiceAccounts({
   updating = false,
   deleting = false,
 }: SidebarServiceAccountsProps) {
-  const renderOverview = (sa: V1ServiceAccount) => (
+  const renderProperties = (sa: V1ServiceAccount) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -66,7 +66,7 @@ export function SidebarServiceAccounts({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1ServiceAccount) => renderOverview(i),
+          content: (i: V1ServiceAccount) => renderProperties(i),
         },
       ]
     : [];
@@ -80,6 +80,7 @@ export function SidebarServiceAccounts({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

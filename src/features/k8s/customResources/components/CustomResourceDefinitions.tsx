@@ -21,7 +21,7 @@ export default function CustomResourceDefinitions({
   updating,
   deleting,
 }: SidebarDefinitionsProps) {
-  const renderOverview = (def: CrdDefinition) => (
+  const renderProperties = (def: CrdDefinition) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -78,7 +78,7 @@ export default function CustomResourceDefinitions({
   );
 
   const sections = item
-    ? [{ key: 'properties', title: 'Properties', content: (i: CrdDefinition) => renderOverview(i) }]
+    ? [{ key: 'properties', title: 'Properties', content: (i: CrdDefinition) => renderProperties(i) }]
     : [];
 
   return (

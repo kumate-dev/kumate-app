@@ -21,7 +21,7 @@ export function SidebarIngressClass({
   updating = false,
   deleting = false,
 }: SidebarIngressClassProps) {
-  const renderOverview = (ingc: V1IngressClass) => {
+  const renderProperties = (ingc: V1IngressClass) => {
     return (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -60,7 +60,7 @@ export function SidebarIngressClass({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1IngressClass) => renderOverview(i),
+          content: (i: V1IngressClass) => renderProperties(i),
         },
       ]
     : [];

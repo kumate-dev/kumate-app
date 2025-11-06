@@ -84,7 +84,7 @@ export default function HelmReleases({ context }: PaneResourceContextProps) {
       onSelectNamespace={setSelectedNamespaces}
       columns={columns}
       renderRow={renderRow}
-      onClick={onDelete}
+      onDelete={onDelete}
       showNamespace={true}
       contextName={context?.name}
     />

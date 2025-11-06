@@ -22,7 +22,7 @@ export function SidebarRoles({
   updating = false,
   deleting = false,
 }: SidebarRolesProps) {
-  const renderOverview = (role: V1Role) => (
+  const renderProperties = (role: V1Role) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -65,7 +65,7 @@ export function SidebarRoles({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1Role) => renderOverview(i),
+          content: (i: V1Role) => renderProperties(i),
         },
       ]
     : [];

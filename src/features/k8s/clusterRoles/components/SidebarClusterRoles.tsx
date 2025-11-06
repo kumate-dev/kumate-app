@@ -21,7 +21,7 @@ export function SidebarClusterRoles({
   updating,
   deleting,
 }: SidebarClusterRolesProps) {
-  const renderOverview = (cr: V1ClusterRole) => (
+  const renderProperties = (cr: V1ClusterRole) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -57,7 +57,7 @@ export function SidebarClusterRoles({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1ClusterRole) => renderOverview(i),
+          content: (i: V1ClusterRole) => renderProperties(i),
         },
       ]
     : [];

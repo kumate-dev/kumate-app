@@ -14,7 +14,6 @@ export function templateLimitRange(defaultNamespace?: string): V1LimitRange {
           type: 'Container',
           max: { cpu: '1', memory: '1Gi' },
           min: { cpu: '100m', memory: '128Mi' },
-          default: { cpu: '500m', memory: '256Mi' },
           defaultRequest: { cpu: '200m', memory: '128Mi' },
         },
       ],

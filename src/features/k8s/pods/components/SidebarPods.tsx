@@ -86,7 +86,7 @@ export function SidebarPods({
     };
   }, [item]);
 
-  const renderOverview = useCallback(() => {
+  const renderProperties = useCallback(() => {
     if (!podProperties) return null;
 
     return (
@@ -213,11 +213,11 @@ export function SidebarPods({
             {
               key: 'properties',
               title: 'Properties',
-              content: renderOverview,
+              content: renderProperties,
             },
           ]
         : [],
-    [item, renderOverview]
+    [item, renderProperties]
   );
 
   const logViewerTitle = useMemo(

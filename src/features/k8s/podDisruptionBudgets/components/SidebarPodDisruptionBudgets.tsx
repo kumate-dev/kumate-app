@@ -16,7 +16,7 @@ interface SidebarPodDisruptionBudgetsProps {
   deleting?: boolean;
 }
 
-function renderOverview(pdb: V1PodDisruptionBudget) {
+function renderProperties(pdb: V1PodDisruptionBudget) {
   const selector = pdb.spec?.selector?.matchLabels as
     | Record<string, string | number | undefined>
     | undefined;
@@ -110,7 +110,7 @@ export function SidebarPodDisruptionBudgets({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1PodDisruptionBudget) => renderOverview(i),
+          content: (i: V1PodDisruptionBudget) => renderProperties(i),
         },
       ]
     : [];

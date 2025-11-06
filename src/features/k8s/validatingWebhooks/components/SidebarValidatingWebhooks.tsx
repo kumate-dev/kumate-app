@@ -21,7 +21,7 @@ export default function SidebarValidatingWebhooks({
   updating = false,
   deleting = false,
 }: Props) {
-  const renderOverview = (vw: V1ValidatingWebhookConfiguration) => (
+  const renderProperties = (vw: V1ValidatingWebhookConfiguration) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -54,7 +54,7 @@ export default function SidebarValidatingWebhooks({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1ValidatingWebhookConfiguration) => renderOverview(i),
+          content: (i: V1ValidatingWebhookConfiguration) => renderProperties(i),
         },
       ]
     : [];

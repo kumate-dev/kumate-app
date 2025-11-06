@@ -21,7 +21,7 @@ export function SidebarPersistentVolumes({
   updating = false,
   deleting = false,
 }: SidebarPersistentVolumesProps) {
-  const renderOverview = (pv: V1PersistentVolume) => {
+  const renderProperties = (pv: V1PersistentVolume) => {
     const capacity = (pv.spec?.capacity as any)?.storage || '';
     const accessModes = (pv.spec?.accessModes || []).join(', ');
     const volumeMode = pv.spec?.volumeMode || '';
@@ -102,7 +102,7 @@ export function SidebarPersistentVolumes({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1PersistentVolume) => renderOverview(i),
+          content: (i: V1PersistentVolume) => renderProperties(i),
         },
       ]
     : [];
@@ -116,6 +116,7 @@ export function SidebarPersistentVolumes({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

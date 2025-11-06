@@ -14,11 +14,21 @@ export interface SidebarResourcesProps<T> {
     key: string;
     title: string;
     content: (item: T) => ReactNode;
+    headerRight?: (
+      item: T,
+      actions: {
+        showDeleteModal: () => void;
+        handleEdit: () => void;
+        isEditDisabled: boolean;
+        isDeleteDisabled: boolean;
+      }
+    ) => ReactNode;
   }[];
   onDelete?: (item: T) => void;
   onEdit?: (item: T) => void;
   updating?: boolean;
   deleting?: boolean;
+  hideFooterActions?: boolean;
 }
 
 export function RightSidebarGeneric<T>({
@@ -30,6 +40,7 @@ export function RightSidebarGeneric<T>({
   onEdit,
   updating = false,
   deleting = false,
+  hideFooterActions = false,
 }: SidebarResourcesProps<T>) {
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
@@ -97,12 +108,36 @@ export function RightSidebarGeneric<T>({
     setOpenDeleteModal(true);
   }, []);
 
-  const hasActions = onEdit || onDelete;
-  const shouldShowSidebar = item || visible;
+  console.log('RightSidebarGeneric - onEdit:', !!onEdit, 'onDelete:', !!onDelete);
+
+  const showEditButton = !!onEdit;
+  const showDeleteButton = !!onDelete;
   const isEditDisabled = !item || updating;
   const isDeleteDisabled = !item || deleting;
 
+  const hasActions = onEdit || onDelete;
+  const shouldShowSidebar = item || visible;
+
   if (!shouldShowSidebar) return null;
+
+  const defaultActions = (
+    <>
+      {showEditButton && (
+        <ButtonEdit
+          onClick={handleEdit}
+          disabled={isEditDisabled}
+          loading={updating}
+        />
+      )}
+      {showDeleteButton && (
+        <ButtonTrash
+          onClick={showDeleteModal}
+          disabled={isDeleteDisabled}
+          loading={deleting}
+        />
+      )}
+    </>
+  );
 
   return (
     <>
@@ -140,28 +175,32 @@ export function RightSidebarGeneric<T>({
         <div className="flex-1 space-y-4 overflow-auto p-4">
           {sections.map((section) => (
             <div key={section.key}>
-              <h3 className="mb-2 font-medium text-white/80">{section.title}</h3>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="font-medium text-white/80">{section.title}</h3>
+                {item && (
+                  <div className="flex items-center gap-2">
+                    {section.headerRight && section.headerRight(item, {
+                      showDeleteModal,
+                      handleEdit,
+                      isEditDisabled,
+                      isDeleteDisabled,
+                    })}
+                    {defaultActions}
+                  </div>
+                )}
+              </div>
               {item && <div className="space-y-2">{section.content(item)}</div>}
             </div>
           ))}
         </div>
 
-        {hasActions && (
+        {hasActions && !hideFooterActions && (
           <div className="flex flex-shrink-0 justify-between gap-2 border-t border-white/10 p-4">
-            {onEdit && (
-              <ButtonEdit onClick={handleEdit} disabled={isEditDisabled} loading={updating} />
-            )}
-            {onDelete && (
-              <ButtonTrash
-                onClick={showDeleteModal}
-                disabled={isDeleteDisabled}
-                loading={deleting}
-              />
-            )}
+            {defaultActions}
           </div>
         )}
 
-        {onDelete && item && (
+        {showDeleteButton && item && (
           <ModalConfirmDelete
             open={openDeleteModal}
             setOpen={setOpenDeleteModal}

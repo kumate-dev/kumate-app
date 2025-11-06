@@ -25,7 +25,7 @@ export function SidebarReplicationControllers({
   updating = false,
   deleting = false,
 }: SidebarReplicationControllersProps) {
-  const renderOverview = useCallback(
+  const renderProperties = useCallback(
     (rc: V1ReplicationController) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -79,11 +79,11 @@ export function SidebarReplicationControllers({
             {
               key: 'properties',
               title: 'Properties',
-              content: (i: V1ReplicationController) => renderOverview(i),
+              content: (i: V1ReplicationController) => renderProperties(i),
             },
           ]
         : [],
-    [item, renderOverview]
+    [item, renderProperties, onEdit, onDelete, updating, deleting]
   );
 
   return (
@@ -95,6 +95,7 @@ export function SidebarReplicationControllers({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

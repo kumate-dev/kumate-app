@@ -46,7 +46,7 @@ export function SidebarPersistentVolumeClaims({
   updating = false,
   deleting = false,
 }: SidebarPVCProps) {
-  const renderOverview = (pvc: V1PersistentVolumeClaim) => {
+  const renderProperties = (pvc: V1PersistentVolumeClaim) => {
     const capacity = (pvc.status?.capacity as any)?.storage || '';
     const accessModes = (pvc.spec?.accessModes || []).join(', ');
     const volumeMode = pvc.spec?.volumeMode || '';
@@ -130,7 +130,7 @@ export function SidebarPersistentVolumeClaims({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1PersistentVolumeClaim) => renderOverview(i),
+          content: (i: V1PersistentVolumeClaim) => renderProperties(i),
         },
       ]
     : [];
@@ -144,6 +144,7 @@ export function SidebarPersistentVolumeClaims({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

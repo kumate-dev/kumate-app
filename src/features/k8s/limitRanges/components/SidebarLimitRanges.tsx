@@ -29,7 +29,7 @@ function renderLimitItem(item?: V1LimitRangeItem) {
   );
 }
 
-function renderOverview(lr: V1LimitRange) {
+function renderProperties(lr: V1LimitRange) {
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -76,7 +76,7 @@ function renderOverview(lr: V1LimitRange) {
 
 export function SidebarLimitRanges({ item, setItem, onDelete, onEdit }: SidebarLimitRangesProps) {
   const sections = item
-    ? [{ key: 'properties', title: 'Properties', content: (i: V1LimitRange) => renderOverview(i) }]
+    ? [{ key: 'properties', title: 'Properties', content: (i: V1LimitRange) => renderProperties(i) }]
     : [];
 
   return (

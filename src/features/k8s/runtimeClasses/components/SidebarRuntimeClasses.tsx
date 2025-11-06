@@ -13,7 +13,7 @@ export interface SidebarRuntimeClassesProps {
   deleting?: boolean;
 }
 
-function renderOverview(rc: V1RuntimeClass) {
+function renderProperties(rc: V1RuntimeClass) {
   const scheduling = rc.scheduling?.nodeSelector || {};
   const overhead = (rc.overhead as any)?.podFixed || {};
   return (
@@ -56,7 +56,7 @@ export function SidebarRuntimeClasses({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1RuntimeClass) => renderOverview(i),
+          content: (i: V1RuntimeClass) => renderProperties(i),
         },
       ]
     : [];

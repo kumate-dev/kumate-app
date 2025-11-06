@@ -22,7 +22,7 @@ export function SidebarEndpoints({
   updating = false,
   deleting = false,
 }: SidebarEndpointsProps) {
-  const renderOverview = (ep: V1Endpoints) => {
+  const renderProperties = (ep: V1Endpoints) => {
     const subsetsCount = (ep.subsets || []).length;
     return (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -65,7 +65,7 @@ export function SidebarEndpoints({
       setItem={setItem}
       onDelete={onDelete}
       onEdit={onEdit}
-      sections={[{ key: 'properties', title: 'Properties', content: renderOverview }]}
+      sections={[{ key: 'properties', title: 'Properties', content: renderProperties }]}
       updating={updating}
       deleting={deleting}
     />

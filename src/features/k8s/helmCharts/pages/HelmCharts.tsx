@@ -58,7 +58,7 @@ export default function HelmCharts({ context }: PaneResourceContextProps) {
       error={error}
       columns={columns}
       renderRow={renderRow}
-      onClick={onDelete}
+      onDelete={onDelete}
       showNamespace={false}
       contextName={context?.name}
     />

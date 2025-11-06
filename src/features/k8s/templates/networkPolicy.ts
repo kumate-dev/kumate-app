@@ -10,7 +10,7 @@ export function templateNetworkPolicy(namespace?: string): V1NetworkPolicy {
       policyTypes: ['Ingress', 'Egress'],
       ingress: [
         {
-          from: [{ podSelector: { matchLabels: { app: 'frontend' } } }],
+          _from: [{ podSelector: { matchLabels: { app: 'frontend' } } }],
         },
       ],
       egress: [

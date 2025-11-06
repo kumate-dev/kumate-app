@@ -14,7 +14,7 @@ interface SidebarResourceQuotasProps {
   deleting?: boolean;
 }
 
-function renderOverview(rq: V1ResourceQuota) {
+function renderProperties(rq: V1ResourceQuota) {
   const hard = rq.status?.hard as Record<string, string | number | undefined> | undefined;
   const used = rq.status?.used as Record<string, string | number | undefined> | undefined;
 
@@ -81,7 +81,7 @@ export function SidebarResourceQuotas({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1ResourceQuota) => renderOverview(i),
+          content: (i: V1ResourceQuota) => renderProperties(i),
         },
       ]
     : [];
@@ -95,6 +95,7 @@ export function SidebarResourceQuotas({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

@@ -24,7 +24,7 @@ export function SidebarSecrets({
   updating = false,
   deleting = false,
 }: SidebarSecretsProps) {
-  const renderOverview = (secret: V1Secret) => {
+  const renderProperties = (secret: V1Secret) => {
     const dataKeys = secret.data ? Object.keys(secret.data) : [];
 
     return (
@@ -88,7 +88,7 @@ export function SidebarSecrets({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1Secret) => renderOverview(i),
+          content: (i: V1Secret) => renderProperties(i),
         },
       ]
     : [];

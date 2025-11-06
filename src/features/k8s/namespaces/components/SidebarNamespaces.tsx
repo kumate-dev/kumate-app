@@ -23,7 +23,7 @@ export function SidebarNamespaces({
   updating = false,
   deleting = false,
 }: SidebarNamespacesProps) {
-  const renderOverview = (ns: V1Namespace) => (
+  const renderProperties = (ns: V1Namespace) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
         <colgroup>
@@ -62,7 +62,7 @@ export function SidebarNamespaces({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1Namespace) => renderOverview(i),
+          content: (i: V1Namespace) => renderProperties(i),
         },
       ]
     : [];

@@ -147,6 +147,8 @@ pub fn run() {
             cluster_role_bindings::delete_cluster_role_bindings,
             deployments::create_deployment,
             deployments::update_deployment,
+            deployments::restart_deployment,
+            deployments::scale_deployment,
             deployments::list_deployments,
             deployments::watch_deployments,
             deployments::delete_deployments,

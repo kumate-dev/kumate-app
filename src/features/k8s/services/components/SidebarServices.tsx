@@ -22,7 +22,7 @@ export function SidebarServices({
   updating = false,
   deleting = false,
 }: SidebarServicesProps) {
-  const renderOverview = (svc: V1Service) => {
+  const renderProperties = (svc: V1Service) => {
     const clusterIPs = svc.spec?.clusterIPs || (svc.spec?.clusterIP ? [svc.spec.clusterIP] : []);
     const externalIPs = svc.spec?.externalIPs || [];
     const lbIngress = svc.status?.loadBalancer?.ingress || [];
@@ -112,7 +112,7 @@ export function SidebarServices({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1Service) => renderOverview(i),
+          content: (i: V1Service) => renderProperties(i),
         },
       ]
     : [];
@@ -126,6 +126,7 @@ export function SidebarServices({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

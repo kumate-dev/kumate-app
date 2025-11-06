@@ -10,6 +10,8 @@ export interface SidebarNetworkPoliciesProps {
   setItem: (item: V1NetworkPolicy | null) => void;
   onDelete?: (item: V1NetworkPolicy) => void;
   onEdit?: (item: V1NetworkPolicy) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export function SidebarNetworkPolicies({
@@ -17,8 +19,10 @@ export function SidebarNetworkPolicies({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarNetworkPoliciesProps) {
-  const renderOverview = (np: V1NetworkPolicy) => {
+  const renderProperties = (np: V1NetworkPolicy) => {
     const policyTypes = np.spec?.policyTypes || [];
     const podSelector = np.spec?.podSelector?.matchLabels || {};
     const ingress = np.spec?.ingress || [];
@@ -81,7 +85,7 @@ export function SidebarNetworkPolicies({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1NetworkPolicy) => renderOverview(i),
+          content: (i: V1NetworkPolicy) => renderProperties(i),
         },
       ]
     : [];
@@ -93,6 +97,9 @@ export function SidebarNetworkPolicies({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
+      hideFooterActions
     />
   );
 }

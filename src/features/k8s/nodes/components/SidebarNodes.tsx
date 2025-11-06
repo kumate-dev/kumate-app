@@ -29,7 +29,7 @@ export function SidebarNodes({
   deleting = false,
   updating = false,
 }: SidebarNodesProps) {
-  const renderOverview = (node: V1Node) => {
+  const renderProperties = (node: V1Node) => {
     const roles = getNodeRoles(node) || '—';
     const version = node.status?.nodeInfo?.kubeletVersion || '—';
 
@@ -90,7 +90,7 @@ export function SidebarNodes({
         {
           key: 'properties',
           title: 'Properties',
-          content: (i: V1Node) => renderOverview(i),
+          content: (i: V1Node) => renderProperties(i),
         },
       ]
     : [];
@@ -104,6 +104,7 @@ export function SidebarNodes({
       onEdit={onEdit}
       deleting={deleting}
       updating={updating}
+      hideFooterActions
     />
   );
 }

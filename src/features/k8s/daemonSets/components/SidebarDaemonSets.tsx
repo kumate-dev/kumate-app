@@ -25,7 +25,7 @@ export function SidebarDaemonSets({
   updating = false,
   deleting = false,
 }: SidebarDaemonSetsProps) {
-  const renderOverview = useCallback(
+  const renderProperties = useCallback(
     (ds: V1DaemonSet) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -84,11 +84,11 @@ export function SidebarDaemonSets({
             {
               key: 'properties',
               title: 'Properties',
-              content: (i: V1DaemonSet) => renderOverview(i),
+              content: (i: V1DaemonSet) => renderProperties(i),
             },
           ]
         : [],
-    [item, renderOverview]
+    [item, renderProperties, onEdit, onDelete, updating, deleting]
   );
 
   return (
@@ -100,6 +100,7 @@ export function SidebarDaemonSets({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }

@@ -25,7 +25,7 @@ export function SidebarCronJobs({
   updating = false,
   deleting = false,
 }: SidebarCronJobsProps) {
-  const renderOverview = useCallback(
+  const renderProperties = useCallback(
     (cj: V1CronJob) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -89,11 +89,11 @@ export function SidebarCronJobs({
             {
               key: 'properties',
               title: 'Properties',
-              content: (i: V1CronJob) => renderOverview(i),
+              content: (i: V1CronJob) => renderProperties(i),
             },
           ]
         : [],
-    [item, renderOverview]
+    [item, renderProperties, onEdit, onDelete, updating, deleting]
   );
 
   return (
@@ -105,6 +105,7 @@ export function SidebarCronJobs({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
+      hideFooterActions
     />
   );
 }
