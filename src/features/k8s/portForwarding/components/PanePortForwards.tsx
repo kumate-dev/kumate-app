@@ -9,6 +9,7 @@ import { BadgeStatus } from '@/features/k8s/generic/components/BadgeStatus';
 import type { PortForwardItemDto } from '@/api/k8s/portForward';
 import { SidebarPortForwards } from './SidebarPortForwards';
 import { capitalizeFirstLetter } from '@/utils/string';
+import { getPortForwardingStatus } from '../utils/portForwardingStatus';
 
 export interface PanePortForwardsProps {
   selectedNamespaces?: string[];
@@ -20,6 +21,7 @@ export interface PanePortForwardsProps {
   onDelete: (items: PortForwardItemDto[]) => Promise<void>;
   contextName?: string;
   onStopItem?: (item: PortForwardItemDto) => Promise<void> | void;
+  onStartItem?: (item: PortForwardItemDto) => Promise<void> | void;
 }
 
 export function PanePortForwards({
@@ -32,7 +34,11 @@ export function PanePortForwards({
   onDelete,
   contextName,
   onStopItem,
+  onStartItem,
 }: PanePortForwardsProps) {
+  const [pendingAction, setPendingAction] = useState<{ id: string; type: 'stop' | 'start' } | null>(
+    null
+  );
   const [sortBy, setSortBy] = useState<string>('Name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -77,23 +83,22 @@ export function PanePortForwards({
   }, [items, selectedNamespaces, sortBy, sortOrder]);
 
   const renderRow = useCallback((it: PortForwardItemDto) => {
-    const statusVariant = it.status === 'Running' ? 'success' : 'default';
     return (
       <>
-        <Td className="py-2">
+        <Td>
           <span className="block truncate" title={it.resourceName}>
             {it.resourceName}
           </span>
         </Td>
-        <Td className="py-2">
+        <Td>
           <BadgeNamespaces name={it.namespace} />
         </Td>
-        <Td className="py-2">{capitalizeFirstLetter(it.resourceKind)}</Td>
-        <Td className="py-2">{it.remotePort}</Td>
-        <Td className="py-2">{it.localPort}</Td>
-        <Td className="py-2">{it.protocol}</Td>
-        <Td className="py-2">
-          <BadgeStatus status={{ status: it.status, variant: statusVariant }} />
+        <Td>{capitalizeFirstLetter(it.resourceKind)}</Td>
+        <Td>{it.remotePort}</Td>
+        <Td>{it.localPort}</Td>
+        <Td>{it.protocol}</Td>
+        <Td>
+          <BadgeStatus status={getPortForwardingStatus(it.status)} />
         </Td>
       </>
     );
@@ -121,13 +126,24 @@ export function PanePortForwards({
         <SidebarPortForwards
           item={item}
           setItem={actions.setItem}
-          onStop={() => {
-            onStopItem?.(item);
+          onStop={async () => {
+            try {
+              setPendingAction({ id: item.sessionId, type: 'stop' });
+              await onStopItem?.(item);
+            } finally {
+              setPendingAction(null);
+            }
+          }}
+          onStart={async () => {
+            try {
+              setPendingAction({ id: item.sessionId, type: 'start' });
+              await onStartItem?.(item);
+            } finally {
+              setPendingAction(null);
+            }
           }}
           onDelete={actions.onDelete}
-          onEdit={() => {
-            /* edit opens modal inside sidebar */
-          }}
+          updating={pendingAction?.id === item.sessionId && pendingAction.type === 'stop'}
         />
       )}
       sortBy={sortBy}

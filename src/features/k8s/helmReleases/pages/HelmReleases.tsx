@@ -45,13 +45,13 @@ export default function HelmReleases({ context }: PaneResourceContextProps) {
   const renderRow = useCallback(
     (item: Release) => (
       <>
-        <Td className="py-2">{item.metadata?.name ?? item.name ?? ''}</Td>
-        <Td className="py-2">{item.metadata?.namespace ?? item.namespace ?? ''}</Td>
-        <Td className="py-2">{item.revision ?? ''}</Td>
-        <Td className="py-2">{item.updated ?? ''}</Td>
-        <Td className="py-2">{item.status ?? ''}</Td>
-        <Td className="py-2">{item.chart ?? ''}</Td>
-        <Td className="py-2">{item.app_version ?? ''}</Td>
+        <Td>{item.metadata?.name ?? item.name ?? ''}</Td>
+        <Td>{item.metadata?.namespace ?? item.namespace ?? ''}</Td>
+        <Td>{item.revision ?? ''}</Td>
+        <Td>{item.updated ?? ''}</Td>
+        <Td>{item.status ?? ''}</Td>
+        <Td>{item.chart ?? ''}</Td>
+        <Td>{item.app_version ?? ''}</Td>
       </>
     ),
     []

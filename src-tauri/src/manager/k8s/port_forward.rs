@@ -12,6 +12,7 @@ use tokio::io;
 use tokio::net::TcpListener;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
+use tokio_util::sync::CancellationToken;
 
 #[derive(Serialize, Clone)]
 struct PortForwardEventPayload {
@@ -193,6 +194,8 @@ impl<'a> PortForwarder<'a> {
         let (kill_tx, mut kill_rx) = mpsc::channel::<()>(1);
         let app = self.app.clone();
         let ev_name = event_name.clone();
+        let cancel_token = CancellationToken::new();
+        let cancel_main = cancel_token.clone();
 
         let handle: JoinHandle<()> = tokio::spawn(async move {
             match pods_api.portforward(&pod_name, &[remote_port]).await {
@@ -212,6 +215,11 @@ impl<'a> PortForwarder<'a> {
                             loop {
                                 tokio::select! {
                                   _ = kill_rx.recv() => {
+                                    cancel_main.cancel();
+                                    let _ = app.emit(&ev_name, PortForwardEventPayload { r#type: "PF_DONE".into(), line: "stopped".into() });
+                                    break;
+                                  }
+                                  _ = cancel_main.cancelled() => {
                                     let _ = app.emit(&ev_name, PortForwardEventPayload { r#type: "PF_DONE".into(), line: "stopped".into() });
                                     break;
                                   }
@@ -223,8 +231,16 @@ impl<'a> PortForwarder<'a> {
                                         while attempts > 0 {
                                           if let Some(mut remote) = pf.take_stream(remote_port) {
                                             got_stream = true;
+                                            let cancel_copy = cancel_main.clone();
                                             tokio::spawn(async move {
-                                              let _ = io::copy_bidirectional(&mut socket, &mut remote).await;
+                                              tokio::select! {
+                                                _ = cancel_copy.cancelled() => {
+                                                  // cancellation: drop sockets
+                                                }
+                                                _ = io::copy_bidirectional(&mut socket, &mut remote) => {
+                                                  // done
+                                                }
+                                              }
                                             });
                                             break;
                                           } else {
@@ -272,14 +288,16 @@ impl<'a> PortForwarder<'a> {
         });
 
         PortForwardSession {
-            kill_tx,
-            handle,
+            kill_tx: Some(kill_tx),
+            handle: Some(handle),
+            cancel_token: Some(cancel_token),
             context,
             namespace,
             resource_kind,
             resource_name,
             local_port,
             remote_port,
+            status: "Running".to_string(),
         }
     }
 
@@ -336,5 +354,50 @@ impl<'a> PortForwarder<'a> {
         session_id: String,
     ) -> Result<(), String> {
         state.stop(&session_id).await
+    }
+
+    pub async fn delete(
+        state: tauri::State<'_, PortForwardManager>,
+        session_id: String,
+    ) -> Result<(), String> {
+        state.delete(&session_id).await
+    }
+
+    pub async fn resume(&self, session_id: String) -> Result<(), String> {
+        // Retrieve stored configuration
+        let (context, namespace, resource_kind, resource_name, local_port, remote_port) = self
+            .state
+            .get_config(&session_id)
+            .await
+            .ok_or_else(|| "session not found".to_string())?;
+
+        let client: Client = K8sClient::for_context(&context).await?;
+        let pod_name: String = self
+            .resolve_target_pod(
+                client.clone(),
+                namespace.clone(),
+                resource_kind.clone(),
+                resource_name.clone(),
+            )
+            .await?;
+        let pods_api: Api<Pod> =
+            K8sClient::api::<Pod>(client.clone(), Some(namespace.clone())).await;
+
+        let event_name: String = Self::make_event_name(&session_id);
+        let session = self
+            .spawn_forward_task(
+                pods_api,
+                pod_name,
+                local_port,
+                remote_port,
+                event_name,
+                context,
+                namespace,
+                resource_kind,
+                resource_name,
+            )
+            .await;
+        self.state.insert(session_id, session).await;
+        Ok(())
     }
 }

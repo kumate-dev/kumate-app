@@ -275,7 +275,14 @@ export function SidebarPods({
         </div>
       </div>
     );
-  }, [podProperties, containerStatuses, handleViewLogs, handleOpenExec]);
+  }, [
+    item,
+    podProperties,
+    containerStatuses,
+    handleViewLogs,
+    handleOpenExec,
+    handleOpenPortForward,
+  ]);
 
   const sections = useMemo(
     () =>

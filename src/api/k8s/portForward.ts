@@ -38,6 +38,14 @@ export async function stopPortForward(sessionId: string): Promise<void> {
   await invoke('stop_port_forward', { sessionId });
 }
 
+export async function resumePortForward(sessionId: string): Promise<void> {
+  await invoke('resume_port_forward', { sessionId });
+}
+
+export async function deletePortForward(sessionId: string): Promise<void> {
+  await invoke('delete_port_forward', { sessionId });
+}
+
 export interface PortForwardItemDto {
   sessionId: string;
   context: string;

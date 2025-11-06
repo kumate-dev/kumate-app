@@ -31,3 +31,21 @@ pub async fn list_port_forwards(
 ) -> Result<Vec<PortForwardItem>, String> {
     Ok(state.list().await)
 }
+
+#[tauri::command]
+pub async fn resume_port_forward(
+    app_handle: AppHandle,
+    state: tauri::State<'_, PortForwardManager>,
+    session_id: String,
+) -> Result<(), String> {
+    let pf = PortForwarder::new(app_handle, &state);
+    pf.resume(session_id).await
+}
+
+#[tauri::command]
+pub async fn delete_port_forward(
+    state: tauri::State<'_, PortForwardManager>,
+    session_id: String,
+) -> Result<(), String> {
+    PortForwarder::delete(state, session_id).await
+}

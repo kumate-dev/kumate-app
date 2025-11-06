@@ -45,10 +45,10 @@ export default function Definitions({ context }: PaneResourceContextProps) {
     const scope = item?.spec?.scope || '';
     return (
       <>
-        <Td className="py-2">{kind}</Td>
-        <Td className="py-2">{group}</Td>
-        <Td className="py-2">{version}</Td>
-        <Td className="py-2">{scope}</Td>
+        <Td>{kind}</Td>
+        <Td>{group}</Td>
+        <Td>{version}</Td>
+        <Td>{scope}</Td>
         <AgeCell timestamp={item?.metadata?.creationTimestamp ?? ''} />
       </>
     );

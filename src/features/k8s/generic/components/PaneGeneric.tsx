@@ -228,7 +228,7 @@ export function PaneGeneric<T>({
             <Skeleton className="h-5 w-5 rounded" />
           </Td>
           {Array.from({ length: colSpan || columns.length }).map((_, colIndex) => (
-            <Td key={colIndex} className="py-2">
+            <Td key={colIndex}>
               <Skeleton className="h-4 w-[80%] rounded" />
             </Td>
           ))}

@@ -127,7 +127,7 @@ export function SidebarReplicaSets({
         </Table>
       </div>
     ),
-    [deleting, updating]
+    [contextName, deleting, updating]
   );
 
   const sections = useMemo(

@@ -1,11 +1,24 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { K8sContext } from '@/api/k8s/contexts';
-import { listPortForwards, type PortForwardItemDto, stopPortForward } from '@/api/k8s/portForward';
+import {
+  listPortForwards,
+  type PortForwardItemDto,
+  stopPortForward,
+  resumePortForward,
+  deletePortForward,
+} from '@/api/k8s/portForward';
+import { toast } from 'sonner';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { PanePortForwards } from '@/features/k8s/portForwarding/components/PanePortForwards';
 
-export default function PortForwarding({ context }: { context?: K8sContext | null }) {
+const REFRESH_INTERVAL = 3000;
+
+interface PortForwardingProps {
+  context?: K8sContext | null;
+}
+
+export default function PortForwarding({ context }: PortForwardingProps) {
   const [items, setItems] = useState<PortForwardItemDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,57 +30,86 @@ export default function PortForwarding({ context }: { context?: K8sContext | nul
   const refresh = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await listPortForwards();
-      setItems(res);
       setError('');
-    } catch (e: any) {
-      setError(e?.message || 'Failed to list port forwards');
+      const portForwards = await listPortForwards();
+      setItems(portForwards);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to list port forwards';
+      setError(errorMessage);
+      console.error('Failed to refresh port forwards:', err);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  const handlePortForwardAction = useCallback(
+    async (action: 'start' | 'stop', sessionId: string) => {
+      try {
+        const actionFn = action === 'start' ? resumePortForward : stopPortForward;
+        await actionFn(sessionId);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        const actionText = action === 'start' ? 'Start' : 'Stop';
+        toast.error(`${actionText} failed: ${errorMessage}`);
+        console.error(`${actionText} port forward failed:`, err);
+      }
+    },
+    []
+  );
 
-  // Poll for updates so new sessions started elsewhere show up automatically
-  useEffect(() => {
-    const id = setInterval(() => {
-      refresh();
-    }, 3000);
-    return () => clearInterval(id);
-  }, [refresh]);
+  const handleStopItem = useCallback(
+    async (item: PortForwardItemDto) => {
+      await handlePortForwardAction('stop', item.sessionId);
+      await refresh();
+    },
+    [handlePortForwardAction, refresh]
+  );
+
+  const handleStartItem = useCallback(
+    async (item: PortForwardItemDto) => {
+      await handlePortForwardAction('start', item.sessionId);
+      await refresh();
+    },
+    [handlePortForwardAction, refresh]
+  );
 
   const handleDeleteSelected = useCallback(
     async (toDelete: PortForwardItemDto[]) => {
-      for (const it of toDelete) {
+      const deletePromises = toDelete.map(async (item) => {
         try {
-          await stopPortForward(it.sessionId);
-        } catch (e) {
-          // ignore per-item errors for batch delete
-          console.error('Failed to stop port-forward', it.sessionId, e);
+          await deletePortForward(item.sessionId);
+        } catch (err) {
+          console.error(`Failed to delete port-forward ${item.sessionId}:`, err);
         }
-      }
+      });
+
+      await Promise.allSettled(deletePromises);
       await refresh();
     },
     [refresh]
   );
 
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    const intervalId = setInterval(refresh, REFRESH_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, [refresh]);
+
   return (
     <PanePortForwards
       selectedNamespaces={selectedNamespaces}
       onSelectNamespace={setSelectedNamespaces}
-      namespaceList={namespaceList as any}
+      namespaceList={namespaceList}
       items={items}
       loading={loading}
       error={error}
       onDelete={handleDeleteSelected}
       contextName={context?.name}
-      onStopItem={async (item) => {
-        await stopPortForward(item.sessionId);
-        await refresh();
-      }}
+      onStopItem={handleStopItem}
+      onStartItem={handleStartItem}
     />
   );
 }

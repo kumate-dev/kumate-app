@@ -141,7 +141,7 @@ export function SidebarStatefulSets({
         </Table>
       </div>
     ),
-    []
+    [contextName, deleting, updating]
   );
 
   const sections = useMemo(

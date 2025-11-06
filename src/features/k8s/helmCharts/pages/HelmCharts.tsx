@@ -38,10 +38,10 @@ export default function HelmCharts({ context }: PaneResourceContextProps) {
   const renderRow = useCallback(
     (item: Chart) => (
       <>
-        <Td className="py-2">{item.name ?? ''}</Td>
-        <Td className="py-2">{item.chart_version ?? ''}</Td>
-        <Td className="py-2">{item.app_version ?? ''}</Td>
-        <Td className="py-2">{item.description ?? ''}</Td>
+        <Td>{item.name ?? ''}</Td>
+        <Td>{item.chart_version ?? ''}</Td>
+        <Td>{item.app_version ?? ''}</Td>
+        <Td>{item.description ?? ''}</Td>
       </>
     ),
     []

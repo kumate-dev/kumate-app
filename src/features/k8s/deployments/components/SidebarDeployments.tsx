@@ -204,7 +204,7 @@ export function SidebarDeployments({
         </Table>
       </div>
     ),
-    []
+    [contextName, deleting, updating, patching]
   );
 
   const sections = useMemo(
