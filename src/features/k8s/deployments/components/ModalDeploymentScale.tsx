@@ -9,9 +9,9 @@ import {
 } from '@/components/ui/dialog';
 import { V1Deployment } from '@kubernetes/client-node';
 import { ButtonCancel } from '@/components/common/ButtonCancel';
-import { ButtonApply } from '@/components/common/ButtonApply';
+import { ButtonScale } from '@/components/common/ButtonScale';
 
-interface ModalDeploymentScaleDialogProps {
+interface ModalDeploymentScaleProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   deployment: V1Deployment;
@@ -21,7 +21,7 @@ interface ModalDeploymentScaleDialogProps {
   onConfirm: (deployment: V1Deployment) => void;
 }
 
-export const ModalDeploymentScaleDialog: React.FC<ModalDeploymentScaleDialogProps> = ({
+export const ModalDeploymentScale: React.FC<ModalDeploymentScaleProps> = ({
   open,
   onOpenChange,
   deployment,
@@ -30,10 +30,57 @@ export const ModalDeploymentScaleDialog: React.FC<ModalDeploymentScaleDialogProp
   onScaleChange,
   onConfirm,
 }) => {
+  const [inputValue, setInputValue] = React.useState(scale.toString());
+  const [isInvalid, setIsInvalid] = React.useState(false);
+
+  React.useEffect(() => {
+    setInputValue(scale.toString());
+  }, [scale]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.max(0, Number(e.target.value) || 0);
-    onScaleChange(value);
+    const value = e.target.value;
+    
+    setIsInvalid(false);
+    
+    if (value === '') {
+      setInputValue('');
+      return;
+    }
+
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 0) {
+      setInputValue(value);
+      onScaleChange(numValue);
+    }
   };
+
+  const handleBlur = () => {
+    if (inputValue === '') {
+      setIsInvalid(true);
+      const normalizedValue = 0;
+      setInputValue(normalizedValue.toString());
+      onScaleChange(normalizedValue);
+    } else {
+      const normalizedValue = parseInt(inputValue, 10);
+      if (!isNaN(normalizedValue) && normalizedValue >= 0) {
+        setIsInvalid(false);
+        setInputValue(normalizedValue.toString());
+        onScaleChange(normalizedValue);
+      } else {
+        setIsInvalid(true);
+      }
+    }
+  };
+
+  const handleConfirm = () => {
+    if (inputValue === '' || isInvalid) {
+      setIsInvalid(true);
+      return;
+    }
+    onConfirm(deployment);
+  };
+
+  const isApplyDisabled = patching || isInvalid || inputValue === '';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,19 +94,28 @@ export const ModalDeploymentScaleDialog: React.FC<ModalDeploymentScaleDialogProp
           </p>
           <div className="flex items-center gap-2">
             <Input
-              type="number"
-              min={0}
-              value={scale}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={inputValue}
               onChange={handleInputChange}
-              className="w-32"
+              onBlur={handleBlur}
+              className={`w-32 ${isInvalid ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               disabled={patching}
+              required
             />
+            {isInvalid && (
+              <span className="text-red-500 text-xs">This field is required</span>
+            )}
           </div>
           {patching && <p className="text-yellow-400">Applying changes, please wait...</p>}
         </div>
         <DialogFooter>
           <ButtonCancel onClick={() => onOpenChange(false)} disabled={patching} />
-          <ButtonApply onClick={() => onConfirm(deployment)} disabled={patching} />
+          <ButtonScale 
+            onClick={handleConfirm} 
+            disabled={isApplyDisabled}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

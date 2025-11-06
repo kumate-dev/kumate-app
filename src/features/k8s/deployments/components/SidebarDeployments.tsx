@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { ButtonRestart } from '@/components/common/ButtonRestart';
 import { ButtonScale } from '@/components/common/ButtonScale';
 import { ModalDeploymentRestart } from './ModalDeploymentRestart';
-import { ModalDeploymentScaleDialog } from './ModalDeploymentScale';
+import { ModalDeploymentScale } from './ModalDeploymentScale';
 
 interface SidebarDeploymentsProps {
   item: V1Deployment | null;
@@ -160,15 +160,15 @@ export function SidebarDeployments({
               title: 'Properties',
               headerRight: (i: V1Deployment) => (
                 <>
-                  <ButtonRestart
-                    onClick={() => setConfirmRestartOpen(true)}
-                    disabled={deleting || !contextName || updating || patching}
-                  />
                   <ButtonScale
                     onClick={() => {
                       setScale(i.spec?.replicas ?? 0);
                       setScaleDialogOpen(true);
                     }}
+                    disabled={deleting || !contextName || updating || patching}
+                  />
+                  <ButtonRestart
+                    onClick={() => setConfirmRestartOpen(true)}
                     disabled={deleting || !contextName || updating || patching}
                   />
                 </>
@@ -185,7 +185,7 @@ export function SidebarDeployments({
                     onConfirm={handleRestart}
                   />
 
-                  <ModalDeploymentScaleDialog
+                  <ModalDeploymentScale
                     open={scaleDialogOpen}
                     onOpenChange={setScaleDialogOpen}
                     deployment={i}
