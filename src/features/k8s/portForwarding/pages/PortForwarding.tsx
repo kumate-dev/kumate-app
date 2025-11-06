@@ -5,7 +5,6 @@ import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { PanePortForwards } from '@/features/k8s/portForwarding/components/PanePortForwards';
 
-
 export default function PortForwarding({ context }: { context?: K8sContext | null }) {
   const [items, setItems] = useState<PortForwardItemDto[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,17 +39,20 @@ export default function PortForwarding({ context }: { context?: K8sContext | nul
     return () => clearInterval(id);
   }, [refresh]);
 
-  const handleDeleteSelected = useCallback(async (toDelete: PortForwardItemDto[]) => {
-    for (const it of toDelete) {
-      try {
-        await stopPortForward(it.sessionId);
-      } catch (e) {
-        // ignore per-item errors for batch delete
-        console.error('Failed to stop port-forward', it.sessionId, e);
+  const handleDeleteSelected = useCallback(
+    async (toDelete: PortForwardItemDto[]) => {
+      for (const it of toDelete) {
+        try {
+          await stopPortForward(it.sessionId);
+        } catch (e) {
+          // ignore per-item errors for batch delete
+          console.error('Failed to stop port-forward', it.sessionId, e);
+        }
       }
-    }
-    await refresh();
-  }, [refresh]);
+      await refresh();
+    },
+    [refresh]
+  );
 
   return (
     <PanePortForwards

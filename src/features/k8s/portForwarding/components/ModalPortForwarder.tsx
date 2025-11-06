@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ButtonCancel } from '@/components/common/ButtonCancel';
 import { ButtonStart } from '@/components/common/ButtonStart';
 import { usePortForward } from '@/hooks/usePortForward';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 export interface ModalPortForwarderProps {
   open: boolean;
@@ -68,10 +69,14 @@ export const ModalPortForwarder: React.FC<ModalPortForwarderProps> = ({
     if (openBrowser) {
       const useHttps = typeof defaultRemotePort === 'number' ? defaultRemotePort === 443 : https;
       const url = `${useHttps ? 'https' : 'http'}://localhost:${local}/`;
-      setTimeout(() => {
+      setTimeout(async () => {
         try {
-          window.open(url, '_blank');
-        } catch {}
+          await openUrl(url);
+        } catch {
+          try {
+            window.open(url, '_blank');
+          } catch {}
+        }
       }, 800);
     }
     onOpenChange(false);
@@ -118,7 +123,7 @@ export const ModalPortForwarder: React.FC<ModalPortForwarderProps> = ({
 
         <DialogFooter>
           <ButtonCancel onClick={() => onOpenChange(false)} />
-          <ButtonStart onClick={handleStart} disabled={!canStart} />
+          <ButtonStart onClick={handleStart} disabled={!canStart} useIcon={false} />
         </DialogFooter>
       </DialogContent>
     </Dialog>

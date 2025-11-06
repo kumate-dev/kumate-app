@@ -104,7 +104,9 @@ export default function BottomPortForwarder({
       <div className="flex items-center gap-2">
         <div className="mr-4 flex items-center gap-2">
           <span className="text-white/70">URL</span>
-          <span className="break-all rounded bg-white/10 px-2 py-1 text-xs text-white">{previewUrl}</span>
+          <span className="rounded bg-white/10 px-2 py-1 text-xs break-all text-white">
+            {previewUrl}
+          </span>
           <button
             className="rounded bg-white/10 px-2 py-1 text-white/80 hover:bg-white/20"
             onClick={() => {
@@ -165,7 +167,18 @@ export default function BottomPortForwarder({
         <ButtonCancel onClick={handleClose} />
       </div>
     ),
-    [previewUrl, running, localPort, remotePort, https, openBrowser, handleStart, handleStop, clear, handleClose]
+    [
+      previewUrl,
+      running,
+      localPort,
+      remotePort,
+      https,
+      openBrowser,
+      handleStart,
+      handleStop,
+      clear,
+      handleClose,
+    ]
   );
 
   if (!open) return null;
@@ -187,7 +200,9 @@ export default function BottomPortForwarder({
           <div className="mb-2 flex items-center justify-between text-white/60">
             <div>
               <span className="mr-2">Resource:</span>
-              <span className="text-white">{resourceKind}/{resourceName}</span>
+              <span className="text-white">
+                {resourceKind}/{resourceName}
+              </span>
               <span className="ml-2">Namespace:</span>
               <span className="text-white">{namespace}</span>
             </div>

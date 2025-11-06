@@ -7,6 +7,8 @@ interface ButtonStartProps {
   className?: string;
   disabled?: boolean;
   loading?: boolean;
+  useIcon?: boolean;
+  text?: string;
 }
 
 export const ButtonStart: React.FC<ButtonStartProps> = ({
@@ -14,6 +16,8 @@ export const ButtonStart: React.FC<ButtonStartProps> = ({
   className = '',
   disabled = false,
   loading = false,
+  useIcon = true,
+  text = '',
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -21,6 +25,22 @@ export const ButtonStart: React.FC<ButtonStartProps> = ({
       onClick();
     }
   };
+
+  if (!useIcon) {
+    return (
+      <Button
+        variant="secondary"
+        size="sm"
+        className={`flex gap-1 px-3 ${className}`}
+        onClick={handleClick}
+        title={loading ? 'Starting...' : 'Start'}
+        disabled={disabled || loading}
+      >
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {text !== '' ? text : loading ? 'Starting...' : 'Start'}
+      </Button>
+    );
+  }
 
   return (
     <Button
@@ -34,7 +54,10 @@ export const ButtonStart: React.FC<ButtonStartProps> = ({
       {loading ? (
         <Loader2 className="mr-1 h-4 w-4 animate-spin" />
       ) : (
-        <Play className="mr-1 h-4 w-4" />
+        <>
+          <Play className="mr-1 h-4 w-4" />
+          Start
+        </>
       )}
     </Button>
   );

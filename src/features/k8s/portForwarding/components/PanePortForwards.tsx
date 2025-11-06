@@ -8,6 +8,7 @@ import { BadgeNamespaces } from '@/features/k8s/generic/components/BadgeNamespac
 import { BadgeStatus } from '@/features/k8s/generic/components/BadgeStatus';
 import type { PortForwardItemDto } from '@/api/k8s/portForward';
 import { SidebarPortForwards } from './SidebarPortForwards';
+import { capitalizeFirstLetter } from '@/utils/string';
 
 export interface PanePortForwardsProps {
   selectedNamespaces?: string[];
@@ -80,12 +81,14 @@ export function PanePortForwards({
     return (
       <>
         <Td className="py-2">
-          <span className="block truncate" title={it.resourceName}>{it.resourceName}</span>
+          <span className="block truncate" title={it.resourceName}>
+            {it.resourceName}
+          </span>
         </Td>
         <Td className="py-2">
           <BadgeNamespaces name={it.namespace} />
         </Td>
-        <Td className="py-2">{it.resourceKind}</Td>
+        <Td className="py-2">{capitalizeFirstLetter(it.resourceKind)}</Td>
         <Td className="py-2">{it.remotePort}</Td>
         <Td className="py-2">{it.localPort}</Td>
         <Td className="py-2">{it.protocol}</Td>

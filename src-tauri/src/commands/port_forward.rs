@@ -1,5 +1,5 @@
 use crate::manager::k8s::port_forward::PortForwarder;
-use crate::utils::port_forward::{PortForwardManager, PortForwardItem};
+use crate::utils::port_forward::{PortForwardItem, PortForwardManager};
 use tauri::AppHandle;
 
 #[tauri::command]
@@ -14,16 +14,7 @@ pub async fn start_port_forward(
     remote_port: u16,
 ) -> Result<serde_json::Value, String> {
     let pf = PortForwarder::new(app_handle, &state);
-    pf
-        .start(
-            context,
-            namespace,
-            resource_kind,
-            resource_name,
-            local_port,
-            remote_port,
-        )
-        .await
+    pf.start(context, namespace, resource_kind, resource_name, local_port, remote_port).await
 }
 
 #[tauri::command]

@@ -56,12 +56,7 @@ export default function PanePods({
       { label: '', key: 'warning', sortable: false },
       { label: 'Namespace', key: 'namespace', sortable: true },
       { label: 'Containers', key: 'containers', sortable: true },
-      { label: 'CPU', key: 'cpu', sortable: true },
-      { label: 'Memory', key: 'memory', sortable: true },
       { label: 'Restart', key: 'restart', sortable: true },
-      { label: 'Controlled By', key: 'controlledBy', sortable: true },
-      { label: 'Node', key: 'node', sortable: true },
-      { label: 'QoS', key: 'qos', sortable: true },
       { label: 'Age', key: 'age', sortable: true },
       { label: 'Status', key: 'status', sortable: false },
     ],
@@ -73,21 +68,7 @@ export default function PanePods({
       name: (pod: V1Pod) => pod.metadata?.name || '',
       namespace: (pod: V1Pod) => pod.metadata?.namespace || '',
       containers: (pod: V1Pod) => pod.spec?.containers?.length || 0,
-      cpu: (pod: V1Pod) => {
-        const cpuRequests = pod.spec?.containers
-          ?.map((container) => container.resources?.requests?.cpu)
-          .filter(Boolean);
-        return cpuRequests?.length || 0;
-      },
-      memory: (pod: V1Pod) => {
-        const memoryRequests = pod.spec?.containers
-          ?.map((container) => container.resources?.requests?.memory)
-          .filter(Boolean);
-        return memoryRequests?.length || 0;
-      },
       restart: (pod: V1Pod) => podRestartCount(pod),
-      controlledBy: (pod: V1Pod) => pod.metadata?.ownerReferences?.[0]?.name || '',
-      node: (pod: V1Pod) => pod.spec?.nodeName || '',
       qos: (pod: V1Pod) => pod.status?.qosClass || '',
       age: (pod: V1Pod) => new Date(pod.metadata?.creationTimestamp || '').getTime(),
       status: (pod: V1Pod) => getPodStatus(pod),
@@ -111,19 +92,6 @@ export default function PanePods({
     );
     const podName = pod.metadata?.name ?? '';
     const namespace = pod.metadata?.namespace ?? '';
-    const cpuRequests =
-      pod.spec?.containers
-        ?.map((c) => c.resources?.requests?.cpu)
-        .filter(Boolean)
-        .join(', ') || '-';
-    const memoryRequests =
-      pod.spec?.containers
-        ?.map((c) => c.resources?.requests?.memory)
-        .filter(Boolean)
-        .join(', ') || '-';
-    const ownerReferences = pod.metadata?.ownerReferences?.map((o) => o.name).join(', ') || '-';
-    const nodeName = pod.spec?.nodeName || '-';
-    const qosClass = pod.status?.qosClass || '-';
 
     return (
       <>
@@ -147,12 +115,7 @@ export default function PanePods({
         <Td className="align-middle">
           <DotContainers containerStatuses={containerStatuses} />
         </Td>
-        <Td>{cpuRequests}</Td>
-        <Td>{memoryRequests}</Td>
         <Td>{podRestartCount(pod)}</Td>
-        <Td>{ownerReferences}</Td>
-        <Td>{nodeName}</Td>
-        <Td>{qosClass}</Td>
         <AgeCell timestamp={pod.metadata?.creationTimestamp} />
         <Td>
           <BadgeStatus status={getPodStatus(pod)} />

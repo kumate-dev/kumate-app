@@ -1,7 +1,7 @@
+use serde::Serialize;
 use std::collections::HashMap;
 use tokio::sync::{mpsc::Sender, Mutex};
 use tokio::task::JoinHandle;
-use serde::Serialize;
 
 #[derive(Default)]
 pub struct PortForwardManager {

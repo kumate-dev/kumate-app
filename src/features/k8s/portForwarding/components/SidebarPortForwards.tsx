@@ -1,10 +1,13 @@
 import { useMemo, useState, useCallback } from 'react';
 import { RightSidebarGeneric } from '@/features/k8s/generic/components/RightSidebarGeneric';
+import { BadgeNamespaces } from '@/features/k8s/generic/components/BadgeNamespaces';
 import type { PortForwardItemDto } from '@/api/k8s/portForward';
 import { Table, Tbody, Tr, Td } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Globe, Square } from 'lucide-react';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { ModalPortForwarder } from './ModalPortForwarder';
+import { capitalizeFirstLetter } from '@/utils/string';
 
 export interface SidebarPortForwardsProps {
   item: PortForwardItemDto | null;
@@ -27,12 +30,9 @@ export function SidebarPortForwards({
 }: SidebarPortForwardsProps) {
   const [pfDialogOpen, setPfDialogOpen] = useState(false);
 
-  const handleEdit = useCallback(
-    (i: PortForwardItemDto) => {
-      setPfDialogOpen(true);
-    },
-    []
-  );
+  const handleEdit = useCallback((i: PortForwardItemDto) => {
+    setPfDialogOpen(true);
+  }, []);
 
   const headerRight = useCallback(
     (
@@ -48,9 +48,16 @@ export function SidebarPortForwards({
         <Button
           size="sm"
           variant="secondary"
-          onClick={() => {
-            const url = `http://localhost:${i.localPort}/`;
-            window.open(url, '_blank');
+          onClick={async () => {
+            const isHttps = i.remotePort === 443 || i.remotePort === 8443;
+            const url = `${isHttps ? 'https' : 'http'}://localhost:${i.localPort}/`;
+            try {
+              await openUrl(url);
+            } catch {
+              try {
+                window.open(url, '_blank');
+              } catch {}
+            }
           }}
           title="Open in browser"
         >
@@ -75,42 +82,46 @@ export function SidebarPortForwards({
               title: 'Properties',
               content: (i: PortForwardItemDto) => (
                 <>
-                  <Table>
-                    <Tbody>
-                      <Tr>
-                        <Td className="w-40 text-white/60">Name</Td>
-                        <Td className="text-white/80">{i.resourceName}</Td>
-                      </Tr>
-                      <Tr>
-                        <Td className="w-40 text-white/60">Namespace</Td>
-                        <Td className="text-white/80">{i.namespace}</Td>
-                      </Tr>
-                      <Tr>
-                        <Td className="w-40 text-white/60">Kind</Td>
-                        <Td className="text-white/80">{i.resourceKind}</Td>
-                      </Tr>
-                      <Tr>
-                        <Td className="w-40 text-white/60">Pod Port</Td>
-                        <Td className="text-white/80">{i.remotePort}</Td>
-                      </Tr>
-                      <Tr>
-                        <Td className="w-40 text-white/60">Local Port</Td>
-                        <Td className="text-white/80">{i.localPort}</Td>
-                      </Tr>
-                      <Tr>
-                        <Td className="w-40 text-white/60">Protocol</Td>
-                        <Td className="text-white/80">{i.protocol}</Td>
-                      </Tr>
-                      <Tr>
-                        <Td className="w-40 text-white/60">Status</Td>
-                        <Td className="text-white/80">{i.status}</Td>
-                      </Tr>
-                      <Tr>
-                        <Td className="w-40 text-white/60">Session ID</Td>
-                        <Td className="text-white/80">{i.sessionId}</Td>
-                      </Tr>
-                    </Tbody>
-                  </Table>
+                  <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                    <Table className="table-fixed">
+                      <colgroup>
+                        <col className="w-1/4" />
+                        <col className="w-3/4" />
+                      </colgroup>
+                      <Tbody>
+                        <Tr>
+                          <Td>Name</Td>
+                          <Td className="break-all text-white">{i.resourceName}</Td>
+                        </Tr>
+                        <Tr>
+                          <Td>Namespace</Td>
+                          <Td>
+                            <BadgeNamespaces name={i.namespace} />
+                          </Td>
+                        </Tr>
+                        <Tr>
+                          <Td>Kind</Td>
+                          <Td className="text-white">{capitalizeFirstLetter(i.resourceKind)}</Td>
+                        </Tr>
+                        <Tr>
+                          <Td>Pod Port</Td>
+                          <Td className="text-white">{i.remotePort}</Td>
+                        </Tr>
+                        <Tr>
+                          <Td>Local Port</Td>
+                          <Td className="text-white">{i.localPort}</Td>
+                        </Tr>
+                        <Tr>
+                          <Td>Protocol</Td>
+                          <Td className="text-white">{i.protocol}</Td>
+                        </Tr>
+                        <Tr>
+                          <Td>Status</Td>
+                          <Td className="text-white">{i.status}</Td>
+                        </Tr>
+                      </Tbody>
+                    </Table>
+                  </div>
 
                   <ModalPortForwarder
                     open={pfDialogOpen}
