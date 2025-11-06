@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -39,14 +38,8 @@ export const ModalDeploymentRestart: React.FC<ModalDeploymentRestartProps> = ({
           {patching && <p className="text-yellow-400">Processing, please wait...</p>}
         </div>
         <DialogFooter>
-          <ButtonCancel 
-            onClick={() => onOpenChange(false)} 
-            disabled={patching} 
-          />
-          <ButtonRestart
-            onClick={() => onConfirm(deployment)}
-            disabled={patching}
-          />
+          <ButtonCancel onClick={() => onOpenChange(false)} disabled={patching} />
+          <ButtonRestart onClick={() => onConfirm(deployment)} disabled={patching} />
         </DialogFooter>
       </DialogContent>
     </Dialog>

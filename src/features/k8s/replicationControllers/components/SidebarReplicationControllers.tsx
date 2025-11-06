@@ -83,7 +83,7 @@ export function SidebarReplicationControllers({
             },
           ]
         : [],
-    [item, renderProperties, onEdit, onDelete, updating, deleting]
+    [item, renderProperties]
   );
 
   return (
@@ -95,7 +95,6 @@ export function SidebarReplicationControllers({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

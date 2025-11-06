@@ -126,7 +126,6 @@ export function SidebarServices({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -11,7 +10,6 @@ import {
 import { V1Deployment } from '@kubernetes/client-node';
 import { ButtonCancel } from '@/components/common/ButtonCancel';
 import { ButtonApply } from '@/components/common/ButtonApply';
-
 
 interface ModalDeploymentScaleDialogProps {
   open: boolean;
@@ -57,19 +55,11 @@ export const ModalDeploymentScaleDialog: React.FC<ModalDeploymentScaleDialogProp
               disabled={patching}
             />
           </div>
-          {patching && (
-            <p className="text-yellow-400">Applying changes, please wait...</p>
-          )}
+          {patching && <p className="text-yellow-400">Applying changes, please wait...</p>}
         </div>
         <DialogFooter>
-          <ButtonCancel 
-            onClick={() => onOpenChange(false)} 
-            disabled={patching} 
-          />
-          <ButtonApply
-            onClick={() => onConfirm(deployment)}
-            disabled={patching}
-          />
+          <ButtonCancel onClick={() => onOpenChange(false)} disabled={patching} />
+          <ButtonApply onClick={() => onConfirm(deployment)} disabled={patching} />
         </DialogFooter>
       </DialogContent>
     </Dialog>

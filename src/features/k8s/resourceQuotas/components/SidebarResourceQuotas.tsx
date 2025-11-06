@@ -95,7 +95,6 @@ export function SidebarResourceQuotas({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

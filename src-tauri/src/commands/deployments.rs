@@ -79,8 +79,7 @@ pub async fn restart_deployment(
         }
     });
 
-    K8sResources::<Deployment>::patch(name, namespace, resource_name, patch, "merge".into())
-        .await
+    K8sResources::<Deployment>::patch(name, namespace, resource_name, patch, "merge".into()).await
 }
 
 #[tauri::command]
@@ -94,6 +93,5 @@ pub async fn scale_deployment(
         "spec": { "replicas": replicas }
     });
 
-    K8sResources::<Deployment>::patch(name, namespace, resource_name, patch, "merge".into())
-        .await
+    K8sResources::<Deployment>::patch(name, namespace, resource_name, patch, "merge".into()).await
 }

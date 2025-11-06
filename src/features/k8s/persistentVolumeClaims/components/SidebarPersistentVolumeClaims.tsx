@@ -144,7 +144,6 @@ export function SidebarPersistentVolumeClaims({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

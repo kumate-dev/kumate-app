@@ -160,11 +160,11 @@ export function SidebarDeployments({
               title: 'Properties',
               headerRight: (i: V1Deployment) => (
                 <>
-                  <ButtonRestart 
-                    onClick={() => setConfirmRestartOpen(true)} 
-                    disabled={deleting || !contextName || updating || patching} 
+                  <ButtonRestart
+                    onClick={() => setConfirmRestartOpen(true)}
+                    disabled={deleting || !contextName || updating || patching}
                   />
-                  <ButtonScale 
+                  <ButtonScale
                     onClick={() => {
                       setScale(i.spec?.replicas ?? 0);
                       setScaleDialogOpen(true);
@@ -176,7 +176,7 @@ export function SidebarDeployments({
               content: (i: V1Deployment) => (
                 <>
                   {renderProperties(i)}
-                  
+
                   <ModalDeploymentRestart
                     open={confirmRestartOpen}
                     onOpenChange={setConfirmRestartOpen}
@@ -184,7 +184,7 @@ export function SidebarDeployments({
                     patching={patching}
                     onConfirm={handleRestart}
                   />
-                  
+
                   <ModalDeploymentScaleDialog
                     open={scaleDialogOpen}
                     onOpenChange={setScaleDialogOpen}
@@ -199,7 +199,19 @@ export function SidebarDeployments({
             },
           ]
         : [],
-    [item, renderProperties, confirmRestartOpen, scaleDialogOpen, scale, deleting, contextName, updating, patching, handleRestart, handleScaleApply]
+    [
+      item,
+      renderProperties,
+      confirmRestartOpen,
+      scaleDialogOpen,
+      scale,
+      deleting,
+      contextName,
+      updating,
+      patching,
+      handleRestart,
+      handleScaleApply,
+    ]
   );
 
   return (
@@ -211,7 +223,6 @@ export function SidebarDeployments({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

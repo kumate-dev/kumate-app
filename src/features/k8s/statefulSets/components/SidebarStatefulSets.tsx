@@ -88,7 +88,7 @@ export function SidebarStatefulSets({
             },
           ]
         : [],
-    [item, renderProperties, onEdit, onDelete, updating, deleting]
+    [item, renderProperties]
   );
 
   return (
@@ -100,7 +100,6 @@ export function SidebarStatefulSets({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

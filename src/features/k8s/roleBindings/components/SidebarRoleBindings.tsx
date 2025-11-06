@@ -85,7 +85,6 @@ export function SidebarRoleBindings({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

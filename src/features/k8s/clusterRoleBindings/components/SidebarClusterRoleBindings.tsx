@@ -77,7 +77,6 @@ export function SidebarClusterRoleBindings({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

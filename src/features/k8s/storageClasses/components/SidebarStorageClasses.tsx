@@ -87,7 +87,6 @@ export function SidebarStorageClasses({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

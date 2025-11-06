@@ -28,7 +28,6 @@ export interface SidebarResourcesProps<T> {
   onEdit?: (item: T) => void;
   updating?: boolean;
   deleting?: boolean;
-  hideFooterActions?: boolean;
 }
 
 export function RightSidebarGeneric<T>({
@@ -40,7 +39,6 @@ export function RightSidebarGeneric<T>({
   onEdit,
   updating = false,
   deleting = false,
-  hideFooterActions = false,
 }: SidebarResourcesProps<T>) {
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
@@ -115,7 +113,6 @@ export function RightSidebarGeneric<T>({
   const isEditDisabled = !item || updating;
   const isDeleteDisabled = !item || deleting;
 
-  const hasActions = onEdit || onDelete;
   const shouldShowSidebar = item || visible;
 
   if (!shouldShowSidebar) return null;
@@ -123,18 +120,10 @@ export function RightSidebarGeneric<T>({
   const defaultActions = (
     <>
       {showEditButton && (
-        <ButtonEdit
-          onClick={handleEdit}
-          disabled={isEditDisabled}
-          loading={updating}
-        />
+        <ButtonEdit onClick={handleEdit} disabled={isEditDisabled} loading={updating} />
       )}
       {showDeleteButton && (
-        <ButtonTrash
-          onClick={showDeleteModal}
-          disabled={isDeleteDisabled}
-          loading={deleting}
-        />
+        <ButtonTrash onClick={showDeleteModal} disabled={isDeleteDisabled} loading={deleting} />
       )}
     </>
   );
@@ -179,12 +168,13 @@ export function RightSidebarGeneric<T>({
                 <h3 className="font-medium text-white/80">{section.title}</h3>
                 {item && (
                   <div className="flex items-center gap-2">
-                    {section.headerRight && section.headerRight(item, {
-                      showDeleteModal,
-                      handleEdit,
-                      isEditDisabled,
-                      isDeleteDisabled,
-                    })}
+                    {section.headerRight &&
+                      section.headerRight(item, {
+                        showDeleteModal,
+                        handleEdit,
+                        isEditDisabled,
+                        isDeleteDisabled,
+                      })}
                     {defaultActions}
                   </div>
                 )}
@@ -193,12 +183,6 @@ export function RightSidebarGeneric<T>({
             </div>
           ))}
         </div>
-
-        {hasActions && !hideFooterActions && (
-          <div className="flex flex-shrink-0 justify-between gap-2 border-t border-white/10 p-4">
-            {defaultActions}
-          </div>
-        )}
 
         {showDeleteButton && item && (
           <ModalConfirmDelete

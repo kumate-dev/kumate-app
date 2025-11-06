@@ -116,7 +116,6 @@ export function SidebarPersistentVolumes({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

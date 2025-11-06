@@ -83,7 +83,7 @@ export function SidebarReplicaSets({
             },
           ]
         : [],
-    [item, renderProperties, onEdit, onDelete, updating, deleting]
+    [item, renderProperties]
   );
 
   return (
@@ -95,7 +95,6 @@ export function SidebarReplicaSets({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

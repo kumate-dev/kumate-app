@@ -93,7 +93,7 @@ export function SidebarCronJobs({
             },
           ]
         : [],
-    [item, renderProperties, onEdit, onDelete, updating, deleting]
+    [item, renderProperties]
   );
 
   return (
@@ -105,7 +105,6 @@ export function SidebarCronJobs({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

@@ -76,7 +76,13 @@ function renderProperties(lr: V1LimitRange) {
 
 export function SidebarLimitRanges({ item, setItem, onDelete, onEdit }: SidebarLimitRangesProps) {
   const sections = item
-    ? [{ key: 'properties', title: 'Properties', content: (i: V1LimitRange) => renderProperties(i) }]
+    ? [
+        {
+          key: 'properties',
+          title: 'Properties',
+          content: (i: V1LimitRange) => renderProperties(i),
+        },
+      ]
     : [];
 
   return (

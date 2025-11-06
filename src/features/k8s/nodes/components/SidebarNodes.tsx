@@ -104,7 +104,6 @@ export function SidebarNodes({
       onEdit={onEdit}
       deleting={deleting}
       updating={updating}
-      hideFooterActions
     />
   );
 }

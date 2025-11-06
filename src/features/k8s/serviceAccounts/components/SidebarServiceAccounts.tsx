@@ -80,7 +80,6 @@ export function SidebarServiceAccounts({
       onEdit={onEdit}
       updating={updating}
       deleting={deleting}
-      hideFooterActions
     />
   );
 }

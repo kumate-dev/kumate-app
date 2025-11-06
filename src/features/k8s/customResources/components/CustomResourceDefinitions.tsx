@@ -78,7 +78,13 @@ export default function CustomResourceDefinitions({
   );
 
   const sections = item
-    ? [{ key: 'properties', title: 'Properties', content: (i: CrdDefinition) => renderProperties(i) }]
+    ? [
+        {
+          key: 'properties',
+          title: 'Properties',
+          content: (i: CrdDefinition) => renderProperties(i),
+        },
+      ]
     : [];
 
   return (
