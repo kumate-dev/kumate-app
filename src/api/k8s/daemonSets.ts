@@ -80,3 +80,29 @@ export async function deleteDaemonSets({
     resourceNames,
   });
 }
+
+export async function restartDaemonSet({
+  name,
+  namespace,
+  resourceName,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+}): Promise<V1DaemonSet> {
+  return await invoke<V1DaemonSet>('restart_daemon_set', { name, namespace, resourceName });
+}
+
+export async function scaleDaemonSet({
+  name,
+  namespace,
+  resourceName,
+  replicas,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+  replicas: number;
+}): Promise<V1DaemonSet> {
+  return await invoke<V1DaemonSet>('scale_daemon_set', { name, namespace, resourceName, replicas });
+}

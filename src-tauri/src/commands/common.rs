@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use k8s_openapi::chrono;
+use serde_json::Value;
 use tauri::AppHandle;
 
 use crate::utils::watcher::WatchManager;
@@ -47,4 +49,24 @@ where
 #[tauri::command]
 pub async fn unwatch(state: tauri::State<'_, WatchManager>, name: String) -> Result<(), String> {
     state.unwatch(&name).await
+}
+
+pub fn restart_patch() -> Value {
+    serde_json::json!({
+        "spec": {
+            "template": {
+                "metadata": {
+                    "annotations": {
+                        "kumate.dev/restartedAt": chrono::Utc::now().to_rfc3339()
+                    }
+                }
+            }
+        }
+    })
+}
+
+pub fn scale_patch(replicas: i32) -> Value {
+    serde_json::json!({
+        "spec": { "replicas": replicas }
+    })
 }

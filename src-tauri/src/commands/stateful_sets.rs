@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch, manager::k8s::resources::K8sResources, utils::watcher::WatchManager,
+    commands::common::{restart_patch, scale_patch, watch},
+    manager::k8s::resources::K8sResources,
+    utils::watcher::WatchManager,
 };
 use k8s_openapi::api::apps::v1::StatefulSet;
 use serde_json::Value;
@@ -58,4 +60,37 @@ pub async fn delete_stateful_sets(
     resource_names: Vec<String>,
 ) -> Result<Vec<Result<String, String>>, String> {
     Ok(K8sResources::<StatefulSet>::delete(name, namespace, resource_names).await?)
+}
+
+#[tauri::command]
+pub async fn restart_stateful_set(
+    name: String,
+    namespace: Option<String>,
+    resource_name: String,
+) -> Result<Value, String> {
+    K8sResources::<StatefulSet>::patch(
+        name,
+        namespace,
+        resource_name,
+        restart_patch(),
+        "merge".into(),
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn scale_stateful_set(
+    name: String,
+    namespace: Option<String>,
+    resource_name: String,
+    replicas: i32,
+) -> Result<Value, String> {
+    K8sResources::<StatefulSet>::patch(
+        name,
+        namespace,
+        resource_name,
+        scale_patch(replicas),
+        "merge".into(),
+    )
+    .await
 }

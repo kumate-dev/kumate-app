@@ -1,12 +1,21 @@
 import type { V1ReplicationController } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getReplicationControllerStatus } from '../utils/replicationControllerStatus';
+import { toast } from 'sonner';
+import { ButtonScale } from '@/components/common/ButtonScale';
+import { ButtonRestart } from '@/components/common/ButtonRestart';
+import {
+  restartReplicationController,
+  scaleReplicationController,
+} from '@/api/k8s/replicationControllers';
+import { ModalRestart } from '@/components/common/ModalRestart';
+import { ModalScale } from '@/components/common/ModalScale';
 
 interface SidebarReplicationControllersProps {
   item: V1ReplicationController | null;
@@ -15,6 +24,7 @@ interface SidebarReplicationControllersProps {
   onEdit?: (item: V1ReplicationController) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export function SidebarReplicationControllers({
@@ -22,9 +32,59 @@ export function SidebarReplicationControllers({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarReplicationControllersProps) {
+  const [patching, setPatching] = useState(false);
+  const [confirmRestartOpen, setConfirmRestartOpen] = useState(false);
+  const [scaleDialogOpen, setScaleDialogOpen] = useState(false);
+  const [scale, setScale] = useState<number>(item?.spec?.replicas ?? 0);
+
+  const handleRestart = useCallback(
+    async (rc: V1ReplicationController) => {
+      if (!contextName || !rc.metadata?.name) return;
+      setPatching(true);
+      try {
+        await restartReplicationController({
+          name: contextName,
+          namespace: rc.metadata?.namespace,
+          resourceName: rc.metadata?.name || '',
+        });
+        toast.success('ReplicationController restarted');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(`Restart failed: ${msg}`);
+      } finally {
+        setPatching(false);
+        setConfirmRestartOpen(false);
+      }
+    },
+    [contextName]
+  );
+
+  const handleScaleApply = useCallback(
+    async (rc: V1ReplicationController) => {
+      if (!contextName || !rc.metadata?.name) return;
+      setPatching(true);
+      try {
+        await scaleReplicationController({
+          name: contextName,
+          namespace: rc.metadata?.namespace,
+          resourceName: rc.metadata?.name || '',
+          replicas: Math.max(0, Number(scale) || 0),
+        });
+        toast.success('ReplicationController scaled');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(`Scale failed: ${msg}`);
+      } finally {
+        setPatching(false);
+        setScaleDialogOpen(false);
+      }
+    },
+    [scale, contextName]
+  );
   const renderProperties = useCallback(
     (rc: V1ReplicationController) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -79,11 +139,64 @@ export function SidebarReplicationControllers({
             {
               key: 'properties',
               title: 'Properties',
-              content: (i: V1ReplicationController) => renderProperties(i),
+              headerRight: (i: V1ReplicationController) => (
+                <>
+                  <ButtonScale
+                    onClick={() => {
+                      setScale(i.spec?.replicas ?? 0);
+                      setScaleDialogOpen(true);
+                    }}
+                    disabled={deleting || !contextName || updating || patching}
+                  />
+                  <ButtonRestart
+                    onClick={() => setConfirmRestartOpen(true)}
+                    disabled={deleting || !contextName || updating || patching}
+                  />
+                </>
+              ),
+              content: (rc: V1ReplicationController) => (
+                <>
+                  {renderProperties(rc)}
+
+                  <ModalRestart
+                    open={confirmRestartOpen}
+                    onOpenChange={setConfirmRestartOpen}
+                    patching={patching}
+                    title="Confirm Restart ReplicationController"
+                    resourceLabel="replication controller"
+                    resourceName={rc.metadata?.name}
+                    onConfirm={() => handleRestart(rc)}
+                  />
+
+                  <ModalScale
+                    open={scaleDialogOpen}
+                    onOpenChange={setScaleDialogOpen}
+                    patching={patching}
+                    title="Adjust Replica Count"
+                    resourceLabel="replication controller"
+                    resourceName={rc.metadata?.name}
+                    scale={scale}
+                    onScaleChange={setScale}
+                    onConfirm={() => handleScaleApply(rc)}
+                  />
+                </>
+              ),
             },
           ]
         : [],
-    [item, renderProperties]
+    [
+      item,
+      renderProperties,
+      deleting,
+      contextName,
+      updating,
+      patching,
+      confirmRestartOpen,
+      scaleDialogOpen,
+      scale,
+      handleRestart,
+      handleScaleApply,
+    ]
   );
 
   return (

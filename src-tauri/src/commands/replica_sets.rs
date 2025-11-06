@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch, manager::k8s::resources::K8sResources, utils::watcher::WatchManager,
+    commands::common::{restart_patch, scale_patch, watch},
+    manager::k8s::resources::K8sResources,
+    utils::watcher::WatchManager,
 };
 use k8s_openapi::api::apps::v1::ReplicaSet;
 use serde_json::Value;

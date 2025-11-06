@@ -9,6 +9,12 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getStatefulSetStatus } from '../utils/statefulSetStatus';
 import { Button } from '@/components/ui/button';
 import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
+import { toast } from 'sonner';
+import { ButtonRestart } from '@/components/common/ButtonRestart';
+import { ButtonScale } from '@/components/common/ButtonScale';
+import { restartStatefulSet, scaleStatefulSet } from '@/api/k8s/statefulSets';
+import { ModalRestart } from '@/components/common/ModalRestart';
+import { ModalScale } from '@/components/common/ModalScale';
 
 interface SidebarStatefulSetsProps {
   item: V1StatefulSet | null;
@@ -40,6 +46,55 @@ export function SidebarStatefulSets({
 }: SidebarStatefulSetsProps) {
   const [pfDialogOpen, setPfDialogOpen] = useState(false);
   const [selectedRemotePort, setSelectedRemotePort] = useState<number | undefined>(undefined);
+  const [scale, setScale] = useState<number>(item?.spec?.replicas ?? 0);
+  const [patching, setPatching] = useState(false);
+  const [confirmRestartOpen, setConfirmRestartOpen] = useState(false);
+  const [scaleDialogOpen, setScaleDialogOpen] = useState(false);
+
+  const handleRestart = useCallback(
+    async (ss: V1StatefulSet) => {
+      if (!contextName || !ss.metadata?.name) return;
+      setPatching(true);
+      try {
+        await restartStatefulSet({
+          name: contextName,
+          namespace: ss.metadata?.namespace,
+          resourceName: ss.metadata?.name || '',
+        });
+        toast.success('StatefulSet restarted');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(`Restart failed: ${msg}`);
+      } finally {
+        setPatching(false);
+        setConfirmRestartOpen(false);
+      }
+    },
+    [contextName]
+  );
+
+  const handleScaleApply = useCallback(
+    async (ss: V1StatefulSet) => {
+      if (!contextName || !ss.metadata?.name) return;
+      setPatching(true);
+      try {
+        await scaleStatefulSet({
+          name: contextName,
+          namespace: ss.metadata?.namespace,
+          resourceName: ss.metadata?.name || '',
+          replicas: Math.max(0, Number(scale) || 0),
+        });
+        toast.success('StatefulSet scaled');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(`Scale failed: ${msg}`);
+      } finally {
+        setPatching(false);
+        setScaleDialogOpen(false);
+      }
+    },
+    [scale, contextName]
+  );
   const renderProperties = useCallback(
     (ss: V1StatefulSet) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -151,6 +206,21 @@ export function SidebarStatefulSets({
             {
               key: 'properties',
               title: 'Properties',
+              headerRight: (i: V1StatefulSet) => (
+                <>
+                  <ButtonScale
+                    onClick={() => {
+                      setScale(i.spec?.replicas ?? 0);
+                      setScaleDialogOpen(true);
+                    }}
+                    disabled={deleting || !contextName || updating || patching}
+                  />
+                  <ButtonRestart
+                    onClick={() => setConfirmRestartOpen(true)}
+                    disabled={deleting || !contextName || updating || patching}
+                  />
+                </>
+              ),
               content: (i: V1StatefulSet) => (
                 <>
                   {renderProperties(i)}
@@ -163,12 +233,48 @@ export function SidebarStatefulSets({
                     resourceName={i.metadata?.name || ''}
                     defaultRemotePort={selectedRemotePort}
                   />
+
+                  <ModalRestart
+                    open={confirmRestartOpen}
+                    onOpenChange={setConfirmRestartOpen}
+                    patching={patching}
+                    title="Confirm Restart StatefulSet"
+                    resourceLabel="stateful set"
+                    resourceName={i.metadata?.name}
+                    onConfirm={() => handleRestart(i)}
+                  />
+
+                  <ModalScale
+                    open={scaleDialogOpen}
+                    onOpenChange={setScaleDialogOpen}
+                    patching={patching}
+                    title="Adjust Replica Count"
+                    resourceLabel="stateful set"
+                    resourceName={i.metadata?.name}
+                    scale={scale}
+                    onScaleChange={setScale}
+                    onConfirm={() => handleScaleApply(i)}
+                  />
                 </>
               ),
             },
           ]
         : [],
-    [item, renderProperties, pfDialogOpen, selectedRemotePort, contextName]
+    [
+      item,
+      renderProperties,
+      pfDialogOpen,
+      selectedRemotePort,
+      contextName,
+      confirmRestartOpen,
+      scaleDialogOpen,
+      scale,
+      deleting,
+      updating,
+      patching,
+      handleRestart,
+      handleScaleApply,
+    ]
   );
 
   return (

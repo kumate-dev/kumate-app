@@ -83,3 +83,34 @@ export async function deleteStatefulSets({
     resourceNames,
   });
 }
+
+export async function restartStatefulSet({
+  name,
+  namespace,
+  resourceName,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+}): Promise<V1StatefulSet> {
+  return await invoke<V1StatefulSet>('restart_stateful_set', { name, namespace, resourceName });
+}
+
+export async function scaleStatefulSet({
+  name,
+  namespace,
+  resourceName,
+  replicas,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+  replicas: number;
+}): Promise<V1StatefulSet> {
+  return await invoke<V1StatefulSet>('scale_stateful_set', {
+    name,
+    namespace,
+    resourceName,
+    replicas,
+  });
+}

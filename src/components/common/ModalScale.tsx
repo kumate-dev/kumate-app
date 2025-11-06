@@ -7,25 +7,30 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { V1Deployment } from '@kubernetes/client-node';
 import { ButtonCancel } from '@/components/common/ButtonCancel';
 import { ButtonScale } from '@/components/common/ButtonScale';
 
-interface ModalDeploymentScaleProps {
+export interface ModalScaleProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  deployment: V1Deployment;
-  patching: boolean;
+  patching?: boolean;
+  title?: string;
+  resourceLabel?: string;
+  resourceName?: string;
+  message?: string;
   scale: number;
   onScaleChange: (scale: number) => void;
-  onConfirm: (deployment: V1Deployment) => void;
+  onConfirm: () => void;
 }
 
-export const ModalDeploymentScale: React.FC<ModalDeploymentScaleProps> = ({
+export const ModalScale: React.FC<ModalScaleProps> = ({
   open,
   onOpenChange,
-  deployment,
-  patching,
+  patching = false,
+  title = 'Adjust Replica Count',
+  resourceLabel,
+  resourceName,
+  message,
   scale,
   onScaleChange,
   onConfirm,
@@ -38,38 +43,16 @@ export const ModalDeploymentScale: React.FC<ModalDeploymentScaleProps> = ({
   }, [scale]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-
-    setIsInvalid(false);
-
-    if (value === '') {
-      setInputValue('');
-      return;
-    }
-
-    const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue >= 0) {
-      setInputValue(value);
-      onScaleChange(numValue);
-    }
+    const val = e.target.value;
+    setInputValue(val);
+    const numVal = Number(val);
+    const invalid = val === '' || Number.isNaN(numVal) || numVal < 0 || !/^\d*$/.test(val);
+    setIsInvalid(invalid);
+    if (!invalid) onScaleChange(numVal);
   };
 
   const handleBlur = () => {
-    if (inputValue === '') {
-      setIsInvalid(true);
-      const normalizedValue = 0;
-      setInputValue(normalizedValue.toString());
-      onScaleChange(normalizedValue);
-    } else {
-      const normalizedValue = parseInt(inputValue, 10);
-      if (!isNaN(normalizedValue) && normalizedValue >= 0) {
-        setIsInvalid(false);
-        setInputValue(normalizedValue.toString());
-        onScaleChange(normalizedValue);
-      } else {
-        setIsInvalid(true);
-      }
-    }
+    if (inputValue === '') setIsInvalid(true);
   };
 
   const handleConfirm = () => {
@@ -77,21 +60,23 @@ export const ModalDeploymentScale: React.FC<ModalDeploymentScaleProps> = ({
       setIsInvalid(true);
       return;
     }
-    onConfirm(deployment);
+    onConfirm();
   };
 
   const isApplyDisabled = patching || isInvalid || inputValue === '';
+
+  const defaultMessage = resourceLabel
+    ? `Enter the number of replicas for ${resourceLabel} "${resourceName ?? ''}"`
+    : 'Enter the number of replicas';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Adjust Replica Count</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="mt-2 space-y-3 text-sm text-white/80">
-          <p>
-            {`Enter the number of replicas for deployment "${deployment.metadata?.name ?? ''}"`}
-          </p>
+          <p>{message ?? defaultMessage}</p>
           <div className="flex items-center gap-2">
             <Input
               type="text"

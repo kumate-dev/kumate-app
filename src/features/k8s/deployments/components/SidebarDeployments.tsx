@@ -11,8 +11,8 @@ import { restartDeployment, scaleDeployment } from '@/api/k8s/deployments';
 import { toast } from 'sonner';
 import { ButtonRestart } from '@/components/common/ButtonRestart';
 import { ButtonScale } from '@/components/common/ButtonScale';
-import { ModalDeploymentRestart } from './ModalDeploymentRestart';
-import { ModalDeploymentScale } from './ModalDeploymentScale';
+import { ModalRestart } from '@/components/common/ModalRestart';
+import { ModalScale } from '@/components/common/ModalScale';
 import { Button } from '@/components/ui/button';
 import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
 
@@ -242,22 +242,26 @@ export function SidebarDeployments({
                     defaultRemotePort={selectedRemotePort}
                   />
 
-                  <ModalDeploymentRestart
+                  <ModalRestart
                     open={confirmRestartOpen}
                     onOpenChange={setConfirmRestartOpen}
-                    deployment={i}
                     patching={patching}
-                    onConfirm={handleRestart}
+                    title="Confirm Restart Deployment"
+                    resourceLabel="deployment"
+                    resourceName={i.metadata?.name}
+                    onConfirm={() => handleRestart(i)}
                   />
 
-                  <ModalDeploymentScale
+                  <ModalScale
                     open={scaleDialogOpen}
                     onOpenChange={setScaleDialogOpen}
-                    deployment={i}
                     patching={patching}
+                    title="Adjust Replica Count"
+                    resourceLabel="deployment"
+                    resourceName={i.metadata?.name}
                     scale={scale}
                     onScaleChange={setScale}
-                    onConfirm={handleScaleApply}
+                    onConfirm={() => handleScaleApply(i)}
                   />
                 </>
               ),

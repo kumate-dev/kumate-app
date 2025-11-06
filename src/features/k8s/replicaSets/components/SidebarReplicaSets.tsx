@@ -31,6 +31,7 @@ export function SidebarReplicaSets({
 }: SidebarReplicaSetsProps) {
   const [pfDialogOpen, setPfDialogOpen] = useState(false);
   const [selectedRemotePort, setSelectedRemotePort] = useState<number | undefined>(undefined);
+
   const renderProperties = useCallback(
     (rs: V1ReplicaSet) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">

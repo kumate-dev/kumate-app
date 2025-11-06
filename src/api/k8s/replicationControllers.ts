@@ -91,3 +91,38 @@ export async function deleteReplicationControllers({
     resourceNames,
   });
 }
+
+export async function restartReplicationController({
+  name,
+  namespace,
+  resourceName,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+}): Promise<V1ReplicationController> {
+  return await invoke<V1ReplicationController>('restart_replication_controller', {
+    name,
+    namespace,
+    resourceName,
+  });
+}
+
+export async function scaleReplicationController({
+  name,
+  namespace,
+  resourceName,
+  replicas,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+  replicas: number;
+}): Promise<V1ReplicationController> {
+  return await invoke<V1ReplicationController>('scale_replication_controller', {
+    name,
+    namespace,
+    resourceName,
+    replicas,
+  });
+}

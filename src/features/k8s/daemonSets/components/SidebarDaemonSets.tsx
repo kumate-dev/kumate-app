@@ -9,6 +9,10 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getDaemonSetStatus } from '../utils/daemonSetStatus';
 import { Button } from '@/components/ui/button';
 import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
+import { toast } from 'sonner';
+import { ButtonRestart } from '@/components/common/ButtonRestart';
+import { restartDaemonSet } from '@/api/k8s/daemonSets';
+import { ModalRestart } from '@/components/common/ModalRestart';
 
 interface SidebarDaemonSetsProps {
   item: V1DaemonSet | null;
@@ -31,6 +35,30 @@ export function SidebarDaemonSets({
 }: SidebarDaemonSetsProps) {
   const [pfDialogOpen, setPfDialogOpen] = useState(false);
   const [selectedRemotePort, setSelectedRemotePort] = useState<number | undefined>(undefined);
+  const [patching, setPatching] = useState(false);
+  const [confirmRestartOpen, setConfirmRestartOpen] = useState(false);
+
+  const handleRestart = useCallback(
+    async (ds: V1DaemonSet) => {
+      if (!contextName || !ds.metadata?.name) return;
+      setPatching(true);
+      try {
+        await restartDaemonSet({
+          name: contextName,
+          namespace: ds.metadata?.namespace,
+          resourceName: ds.metadata.name || '',
+        });
+        toast.success('DaemonSet restarted');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(`Restart failed: ${msg}`);
+      } finally {
+        setPatching(false);
+        setConfirmRestartOpen(false);
+      }
+    },
+    [contextName]
+  );
   const renderProperties = useCallback(
     (ds: V1DaemonSet) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -142,6 +170,12 @@ export function SidebarDaemonSets({
             {
               key: 'properties',
               title: 'Properties',
+              headerRight: () => (
+                <ButtonRestart
+                  onClick={() => setConfirmRestartOpen(true)}
+                  disabled={deleting || !contextName || updating || patching}
+                />
+              ),
               content: (i: V1DaemonSet) => (
                 <>
                   {renderProperties(i)}
@@ -154,12 +188,33 @@ export function SidebarDaemonSets({
                     resourceName={i.metadata?.name || ''}
                     defaultRemotePort={selectedRemotePort}
                   />
+
+                  <ModalRestart
+                    open={confirmRestartOpen}
+                    onOpenChange={setConfirmRestartOpen}
+                    patching={patching}
+                    title="Confirm Restart DaemonSet"
+                    resourceLabel="daemon set"
+                    resourceName={i.metadata?.name}
+                    onConfirm={() => handleRestart(i)}
+                  />
                 </>
               ),
             },
           ]
         : [],
-    [item, renderProperties, pfDialogOpen, selectedRemotePort, contextName]
+    [
+      item,
+      renderProperties,
+      pfDialogOpen,
+      selectedRemotePort,
+      contextName,
+      confirmRestartOpen,
+      patching,
+      updating,
+      deleting,
+      handleRestart,
+    ]
   );
 
   return (

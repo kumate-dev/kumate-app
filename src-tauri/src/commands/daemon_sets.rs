@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::watch, manager::k8s::resources::K8sResources, utils::watcher::WatchManager,
+    commands::common::{restart_patch, scale_patch, watch},
+    manager::k8s::resources::K8sResources,
+    utils::watcher::WatchManager,
 };
 use k8s_openapi::api::apps::v1::DaemonSet;
 use serde_json::Value;
@@ -58,4 +60,37 @@ pub async fn delete_daemon_sets(
     resource_names: Vec<String>,
 ) -> Result<Vec<Result<String, String>>, String> {
     Ok(K8sResources::<DaemonSet>::delete(name, namespace, resource_names).await?)
+}
+
+#[tauri::command]
+pub async fn restart_daemon_set(
+    name: String,
+    namespace: Option<String>,
+    resource_name: String,
+) -> Result<Value, String> {
+    K8sResources::<DaemonSet>::patch(
+        name,
+        namespace,
+        resource_name,
+        restart_patch(),
+        "merge".into(),
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn scale_daemon_set(
+    name: String,
+    namespace: Option<String>,
+    resource_name: String,
+    replicas: i32,
+) -> Result<Value, String> {
+    K8sResources::<DaemonSet>::patch(
+        name,
+        namespace,
+        resource_name,
+        scale_patch(replicas),
+        "merge".into(),
+    )
+    .await
 }

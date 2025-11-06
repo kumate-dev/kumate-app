@@ -4,7 +4,7 @@ import { PaneTaskbar } from '@/features/k8s/generic/components/PaneTaskbar';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
+import { ModalDelete } from '@/components/common/ModalDelete';
 import { Skeleton } from '@/components/ui/skeleton';
 import { K8sContext } from '@/api/k8s/contexts';
 import BottomYamlEditor from '@/components/common/BottomYamlEditor';
@@ -85,6 +85,26 @@ export function PaneGeneric<T>({
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Keep sidebar item in sync with live updates from watch (MODIFIED/DELETED)
+  useEffect(() => {
+    if (!selectedItem) return;
+
+    const getKey = (i: any): string => `${i?.metadata?.namespace || ''}/${i?.metadata?.name || ''}`;
+    const selectedKey = getKey(selectedItem as any);
+
+    const next = items.find((i) => getKey(i as any) === selectedKey) || null;
+
+    // If item still exists but reference changed (updated), refresh sidebar item
+    if (next && next !== selectedItem) {
+      setSelectedItem(next);
+    }
+
+    // If item no longer exists (deleted), close sidebar
+    if (!next) {
+      setSelectedItem(null);
+    }
+  }, [items, selectedItem]);
 
   const handleWheelCapture = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -337,7 +357,7 @@ export function PaneGeneric<T>({
         </div>
       </div>
 
-      <ModalConfirmDelete
+      <ModalDelete
         open={openDeleteModal}
         setOpen={setOpenDeleteModal}
         items={selectedItems}

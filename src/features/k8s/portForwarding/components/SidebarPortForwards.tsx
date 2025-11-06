@@ -58,11 +58,7 @@ export function SidebarPortForwards({
             size="sm"
             variant="outline"
             onClick={() => {
-              try {
-                onStop();
-              } finally {
-                setItem(null);
-              }
+              onStop();
             }}
             title="Stop port-forward"
           >
@@ -74,12 +70,7 @@ export function SidebarPortForwards({
             size="sm"
             variant="outline"
             onClick={() => {
-              try {
-                onStart();
-              } finally {
-                // Close sidebar immediately after action
-                setItem(null);
-              }
+              onStart();
             }}
             title="Start port-forward"
           >
@@ -89,7 +80,7 @@ export function SidebarPortForwards({
         )}
       </div>
     ),
-    [onStop, onStart, setItem, updating]
+    [onStop, onStart, updating]
   );
 
   const sections = useMemo(

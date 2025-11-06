@@ -8,7 +8,7 @@ import {
 import { ButtonCancel } from './ButtonCancel';
 import { ButtonDelete } from './ButtonDelete';
 
-interface ModalConfirmDeleteProps<T = unknown> {
+interface ModalDeleteProps<T = unknown> {
   open: boolean;
   setOpen: (open: boolean) => void;
   items?: T[];
@@ -18,7 +18,7 @@ interface ModalConfirmDeleteProps<T = unknown> {
   loading?: boolean;
 }
 
-export function ModalConfirmDelete<T>({
+export function ModalDelete<T>({
   open,
   setOpen,
   items = [],
@@ -26,7 +26,7 @@ export function ModalConfirmDelete<T>({
   title = 'Confirm Delete',
   message,
   loading = false,
-}: ModalConfirmDeleteProps<T>) {
+}: ModalDeleteProps<T>) {
   const count = items.length;
 
   const handleConfirm = () => {

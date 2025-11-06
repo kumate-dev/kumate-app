@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ModalConfirmDelete } from '@/components/common/ModalConfirmDelete';
+import { ModalDelete } from '@/components/common/ModalDelete';
 import { ButtonEdit } from '@/components/common/ButtonEdit';
 import { ButtonTrash } from '@/components/common/ButtonTrash';
 import { startResizing } from '@/utils/resizing';
@@ -185,7 +185,7 @@ export function RightSidebarGeneric<T>({
         </div>
 
         {showDeleteButton && item && (
-          <ModalConfirmDelete
+          <ModalDelete
             open={openDeleteModal}
             setOpen={setOpenDeleteModal}
             items={[item]}
