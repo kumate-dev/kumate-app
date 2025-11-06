@@ -13,7 +13,7 @@ import { useState, useCallback, useMemo } from 'react';
 import BottomLogViewer from '@/components/common/BottomLogViewer';
 import { ButtonShell } from '@/components/common/ButtonShell';
 import { Button } from '@/components/ui/button';
-import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
+import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
 
 interface SidebarPodsProps {
   item: V1Pod | null;

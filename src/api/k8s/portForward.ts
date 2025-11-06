@@ -37,3 +37,19 @@ export function listenPortForward(eventName: string, handler: (e: PortForwardEve
 export async function stopPortForward(sessionId: string): Promise<void> {
   await invoke('stop_port_forward', { sessionId });
 }
+
+export interface PortForwardItemDto {
+  sessionId: string;
+  context: string;
+  namespace: string;
+  resourceKind: 'pod' | 'service' | 'deployment' | 'replicaset' | 'statefulset' | 'daemonset';
+  resourceName: string;
+  localPort: number;
+  remotePort: number;
+  protocol: string;
+  status: string;
+}
+
+export async function listPortForwards(): Promise<PortForwardItemDto[]> {
+  return invoke<PortForwardItemDto[]>('list_port_forwards');
+}

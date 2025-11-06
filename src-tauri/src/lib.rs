@@ -269,6 +269,7 @@ pub fn run() {
             // Port Forwarder
             port_forward::start_port_forward,
             port_forward::stop_port_forward,
+            port_forward::list_port_forwards,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

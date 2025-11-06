@@ -14,7 +14,7 @@ import { ButtonScale } from '@/components/common/ButtonScale';
 import { ModalDeploymentRestart } from './ModalDeploymentRestart';
 import { ModalDeploymentScale } from './ModalDeploymentScale';
 import { Button } from '@/components/ui/button';
-import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
+import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
 
 interface SidebarDeploymentsProps {
   item: V1Deployment | null;

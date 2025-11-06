@@ -8,7 +8,7 @@ import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneri
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getDaemonSetStatus } from '../utils/daemonSetStatus';
 import { Button } from '@/components/ui/button';
-import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
+import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
 
 interface SidebarDaemonSetsProps {
   item: V1DaemonSet | null;

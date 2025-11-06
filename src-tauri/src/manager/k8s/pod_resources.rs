@@ -126,7 +126,6 @@ impl PodResources {
         let client: Client = K8sClient::for_context(&context_name).await?;
         let api: Api<Pod> = K8sClient::api::<Pod>(client, Some(namespace)).await;
 
-        // Configure exec params using builder: no stdin, capture stdout; stderr only when not TTY
         let mut params: AttachParams =
             AttachParams::default().stdin(false).stdout(true).stderr(!tty).tty(tty);
 

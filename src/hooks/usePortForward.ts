@@ -78,15 +78,12 @@ export function usePortForward(opts: UsePortForwardOptions): UsePortForwardRetur
 
   useEffect(() => {
     return () => {
-      try {
-        stop();
-      } catch {}
       if (unlistenRef.current) {
         unlistenRef.current();
         unlistenRef.current = null;
       }
     };
-  }, [stop]);
+  }, []);
 
   return { running, output, error, sessionId: sessionIdRef.current, start, stop, clear };
 }

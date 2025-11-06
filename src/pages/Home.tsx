@@ -43,6 +43,7 @@ import ClusterRoleBindings from '@/features/k8s/clusterRoleBindings/pages/Cluste
 import HelmCharts from '@/features/k8s/helmCharts/pages/HelmCharts';
 import HelmReleases from '@/features/k8s/helmReleases/pages/HelmReleases';
 import Definitions from '@/features/k8s/customResources/pages/Definitions';
+import PortForwarding from '@/features/k8s/portForwarding/pages/PortForwarding';
 
 export default function Home() {
   const [contexts, setContexts] = useState<K8sContext[]>([]);
@@ -123,6 +124,7 @@ export default function Home() {
     ingresses: Ingresses,
     ingress_classes: IngressClasses,
     network_policies: NetworkPolicies,
+    port_forwarding: PortForwarding,
     persistent_volume_claims: PersistentVolumeClaims,
     persistent_volumes: PersistentVolumes,
     storage_classes: StorageClasses,
