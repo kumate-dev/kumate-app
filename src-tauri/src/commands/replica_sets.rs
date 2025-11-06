@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    commands::common::{restart_patch, scale_patch, watch},
+    commands::common::watch,
     manager::k8s::resources::K8sResources,
     utils::watcher::WatchManager,
 };
