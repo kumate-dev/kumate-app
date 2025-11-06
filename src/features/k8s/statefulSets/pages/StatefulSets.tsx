@@ -29,12 +29,12 @@ export default function StatefulSets({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1StatefulSet>(createStatefulSet, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1StatefulSet>(updateStatefulSet, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1StatefulSet>(
-    deleteStatefulSets,
-    context
-  );
+  const { handleCreateResource, creating: creatingStatefulSet } =
+    useCreateK8sResource<V1StatefulSet>(createStatefulSet, context);
+  const { handleUpdateResource, updating: updatingStatefulSet } =
+    useUpdateK8sResource<V1StatefulSet>(updateStatefulSet, context);
+  const { handleDeleteResources, deleting: deletingStatefulSets } =
+    useDeleteK8sResources<V1StatefulSet>(deleteStatefulSets, context);
 
   const handleDeleteStatefulSets = useCallback(
     async (statefulSets: V1StatefulSet[]) => {
@@ -47,6 +47,32 @@ export default function StatefulSets({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateStatefulSet = useCallback(
+    async (manifest: V1StatefulSet): Promise<V1StatefulSet | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create stateful set:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateStatefulSet = useCallback(
+    async (manifest: V1StatefulSet): Promise<V1StatefulSet | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update stateful set:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneStatefulSets
       selectedNamespaces={selectedNamespaces}
@@ -55,10 +81,13 @@ export default function StatefulSets({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteStatefulSets={handleDeleteStatefulSets}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteStatefulSets}
+      onCreate={handleCreateStatefulSet}
+      onUpdate={handleUpdateStatefulSet}
       contextName={context?.name}
+      creating={creatingStatefulSet}
+      updating={updatingStatefulSet}
+      deleting={deletingStatefulSets}
     />
   );
 }

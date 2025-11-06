@@ -6,25 +6,32 @@ import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { SidebarClusterRoleBindings } from './SidebarClusterRoleBindings';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { sortItems } from '@/utils/sort';
+import { templateClusterRoleBinding } from '../../templates/clusterRoleBinding';
 
 export interface PaneClusterRoleBindingsProps {
   items: V1ClusterRoleBinding[];
   loading: boolean;
   error: string;
-  onDeleteClusterRoleBindings: (items: V1ClusterRoleBinding[]) => Promise<void>;
+  onDelete: (items: V1ClusterRoleBinding[]) => Promise<void>;
   onCreate?: (manifest: V1ClusterRoleBinding) => Promise<V1ClusterRoleBinding | undefined>;
   onUpdate?: (manifest: V1ClusterRoleBinding) => Promise<V1ClusterRoleBinding | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneClusterRoleBindings({
   items,
   loading,
   error,
-  onDeleteClusterRoleBindings,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating,
+  updating,
+  deleting,
 }: PaneClusterRoleBindingsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata.name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -51,9 +58,9 @@ export default function PaneClusterRoleBindings({
 
   const handleDeleteSelected = useCallback(
     async (selected: V1ClusterRoleBinding[]) => {
-      await onDeleteClusterRoleBindings(selected);
+      await onDelete(selected);
     },
-    [onDeleteClusterRoleBindings]
+    [onDelete]
   );
 
   const renderRow = (rb: V1ClusterRoleBinding) => (
@@ -69,20 +76,25 @@ export default function PaneClusterRoleBindings({
     </>
   );
 
-  const renderSidebar = (
-    item: V1ClusterRoleBinding,
-    actions: {
-      setItem: (item: V1ClusterRoleBinding | null) => void;
-      onDelete?: (item: V1ClusterRoleBinding) => void;
-      onEdit?: (item: V1ClusterRoleBinding) => void;
-    }
-  ) => (
-    <SidebarClusterRoleBindings
-      item={item}
-      setItem={actions.setItem}
-      onDelete={actions.onDelete}
-      onEdit={actions.onEdit}
-    />
+  const renderSidebar = useCallback(
+    (
+      item: V1ClusterRoleBinding,
+      actions: {
+        setItem: (item: V1ClusterRoleBinding | null) => void;
+        onDelete?: (item: V1ClusterRoleBinding) => void;
+        onEdit?: (item: V1ClusterRoleBinding) => void;
+      }
+    ) => (
+      <SidebarClusterRoleBindings
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
+      />
+    ),
+    [updating, deleting]
   );
 
   return (
@@ -97,12 +109,15 @@ export default function PaneClusterRoleBindings({
       onDelete={handleDeleteSelected}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      yamlTemplate={() => templateClusterRoleBinding()}
       renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

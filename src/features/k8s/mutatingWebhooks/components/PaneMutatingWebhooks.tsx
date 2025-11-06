@@ -12,7 +12,7 @@ export interface PaneMutatingWebhooksProps {
   items: V1MutatingWebhookConfiguration[];
   loading: boolean;
   error: string;
-  onDeleteItems: (items: V1MutatingWebhookConfiguration[]) => Promise<void>;
+  onDelete: (items: V1MutatingWebhookConfiguration[]) => Promise<void>;
   onCreate?: (
     manifest: V1MutatingWebhookConfiguration
   ) => Promise<V1MutatingWebhookConfiguration | undefined>;
@@ -20,16 +20,22 @@ export interface PaneMutatingWebhooksProps {
     manifest: V1MutatingWebhookConfiguration
   ) => Promise<V1MutatingWebhookConfiguration | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneMutatingWebhooks({
   items,
   loading,
   error,
-  onDeleteItems,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneMutatingWebhooksProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -37,9 +43,9 @@ export default function PaneMutatingWebhooks({
   const handleDeleteSelected = useCallback(
     async (toDelete: V1MutatingWebhookConfiguration[]) => {
       if (!toDelete.length) return;
-      await onDeleteItems(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteItems]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -76,6 +82,8 @@ export default function PaneMutatingWebhooks({
       setItem={actions.setItem}
       onDelete={actions.onDelete}
       onEdit={actions.onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 
@@ -90,7 +98,7 @@ export default function PaneMutatingWebhooks({
       emptyText="No mutating webhooks found"
       onDelete={handleDeleteSelected}
       renderSidebar={renderSidebar}
-      yamlTemplate={templateMutatingWebhook}
+      yamlTemplate={() => templateMutatingWebhook}
       onCreate={onCreate}
       onUpdate={onUpdate}
       contextName={contextName}
@@ -98,6 +106,8 @@ export default function PaneMutatingWebhooks({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

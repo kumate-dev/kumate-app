@@ -44,6 +44,32 @@ export default function Ingresses({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateIngress = useCallback(
+    async (manifest: V1Ingress): Promise<V1Ingress | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create ingress:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateIngress = useCallback(
+    async (manifest: V1Ingress): Promise<V1Ingress | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update ingress:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneIngresses
       selectedNamespaces={selectedNamespaces}
@@ -52,9 +78,9 @@ export default function Ingresses({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteIngresses={handleDelete}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDelete}
+      onCreate={handleCreateIngress}
+      onUpdate={handleUpdateIngress}
       contextName={context?.name}
     />
   );

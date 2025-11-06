@@ -15,10 +15,13 @@ export interface PaneServiceAccountsProps {
   namespaceList?: V1Namespace[];
   selectedNamespaces?: string[];
   onSelectNamespace?: (ns: string[]) => void;
-  onDeleteServiceAccounts: (items: V1ServiceAccount[]) => Promise<void>;
+  onDelete: (items: V1ServiceAccount[]) => Promise<void>;
   onCreate?: (manifest: V1ServiceAccount) => Promise<V1ServiceAccount | undefined>;
   onUpdate?: (manifest: V1ServiceAccount) => Promise<V1ServiceAccount | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneServiceAccounts({
@@ -28,10 +31,13 @@ export default function PaneServiceAccounts({
   namespaceList,
   selectedNamespaces,
   onSelectNamespace,
-  onDeleteServiceAccounts,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneServiceAccountsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata.name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -57,9 +63,9 @@ export default function PaneServiceAccounts({
 
   const handleDeleteSelected = useCallback(
     async (selected: V1ServiceAccount[]) => {
-      await onDeleteServiceAccounts(selected);
+      await onDelete(selected);
     },
-    [onDeleteServiceAccounts]
+    [onDelete]
   );
 
   const renderRow = (sa: V1ServiceAccount) => (
@@ -90,6 +96,8 @@ export default function PaneServiceAccounts({
       setItem={actions.setItem}
       onDelete={actions.onDelete}
       onEdit={actions.onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 
@@ -113,6 +121,8 @@ export default function PaneServiceAccounts({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

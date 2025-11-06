@@ -30,15 +30,15 @@ export default function PersistentVolumeClaims({ context }: PaneResourceContextP
     selectedNamespaces
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1PersistentVolumeClaim>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1PersistentVolumeClaim>(
     createPersistentVolumeClaim,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1PersistentVolumeClaim>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1PersistentVolumeClaim>(
     updatePersistentVolumeClaim,
     context
   );
-  const { handleDeleteResources } = useDeleteK8sResources<V1PersistentVolumeClaim>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1PersistentVolumeClaim>(
     deletePersistentVolumeClaims,
     context
   );
@@ -54,6 +54,32 @@ export default function PersistentVolumeClaims({ context }: PaneResourceContextP
     [handleDeleteResources]
   );
 
+  const handleCreatePersistentVolumeClaim = useCallback(
+    async (manifest: V1PersistentVolumeClaim): Promise<V1PersistentVolumeClaim | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create persistent volume claim:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdatePersistentVolumeClaim = useCallback(
+    async (manifest: V1PersistentVolumeClaim): Promise<V1PersistentVolumeClaim | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update persistent volume claim:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PanePersistentVolumeClaims
       selectedNamespaces={selectedNamespaces}
@@ -63,9 +89,12 @@ export default function PersistentVolumeClaims({ context }: PaneResourceContextP
       loading={loading}
       error={error ?? ''}
       onDeletePersistentVolumeClaims={handleDeletePersistentVolumeClaims}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onCreate={handleCreatePersistentVolumeClaim}
+      onUpdate={handleUpdatePersistentVolumeClaim}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

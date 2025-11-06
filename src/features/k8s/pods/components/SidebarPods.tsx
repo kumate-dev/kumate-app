@@ -9,7 +9,7 @@ import { getPodStatus } from '../utils/podStatus';
 import { getContainerStatuses } from '../utils/containerStatus';
 import { ButtonLog } from '@/components/common/ButtonLog';
 import BottomExecTerminal from '@/components/common/BottomExecTerminal';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import BottomLogViewer from '@/components/common/BottomLogViewer';
 import { ButtonShell } from '@/components/common/ButtonShell';
 
@@ -19,164 +19,228 @@ interface SidebarPodsProps {
   onDelete?: (item: V1Pod) => void;
   onEdit?: (item: V1Pod) => void;
   contextName?: string;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: SidebarPodsProps) {
-  const containerStatuses = item ? getContainerStatuses(item) : [];
+export function SidebarPods({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  contextName,
+  updating = false,
+  deleting = false,
+}: SidebarPodsProps) {
+  const containerStatuses = useMemo(() => (item ? getContainerStatuses(item) : []), [item]);
+
   const [logViewerOpen, setLogViewerOpen] = useState(false);
-  const [selectedContainer, setSelectedContainer] = useState<string>('');
+  const [selectedContainer, setSelectedContainer] = useState('');
   const [execOpen, setExecOpen] = useState(false);
 
-  const handleViewLogs = (containerName?: string) => {
+  const handleViewLogs = useCallback((containerName?: string) => {
     setSelectedContainer(containerName || '');
     setLogViewerOpen(true);
-  };
+  }, []);
 
-  const handleCloseLogs = () => {
+  const handleCloseLogs = useCallback(() => {
     setLogViewerOpen(false);
     setSelectedContainer('');
-  };
+  }, []);
 
-  const handleOpenExec = (containerName?: string) => {
+  const handleOpenExec = useCallback((containerName?: string) => {
     setSelectedContainer(containerName || '');
     setExecOpen(true);
-  };
+  }, []);
 
-  const handleCloseExec = () => {
+  const handleCloseExec = useCallback(() => {
     setExecOpen(false);
     setSelectedContainer('');
-  };
+  }, []);
 
-  const renderOverview = (pod: V1Pod) => (
-    <div className="space-y-4">
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-        <Table className="table-fixed">
-          <colgroup>
-            <col className="w-1/4" />
-            <col className="w-3/4" />
-          </colgroup>
-          <Tbody>
-            <Tr>
-              <Td>Name</Td>
-              <Td className="break-all text-white">{pod.metadata?.name ?? '-'}</Td>
-            </Tr>
+  const podProperties = useMemo(() => {
+    if (!item) return null;
 
-            <Tr>
-              <Td>Namespace</Td>
-              <Td>
-                <BadgeNamespaces name={pod.metadata?.namespace ?? ''} />
-              </Td>
-            </Tr>
+    const metadata = item.metadata || {};
+    const spec = item.spec || {};
+    const status = item.status || {};
 
-            <Tr>
-              <Td>Age</Td>
-              <AgeCell timestamp={pod.metadata?.creationTimestamp ?? ''} />
-            </Tr>
+    return {
+      name: metadata.name ?? '-',
+      namespace: metadata.namespace ?? '',
+      creationTimestamp: metadata.creationTimestamp ?? '',
+      labels: metadata.labels,
+      nodeName: (spec as any)?.nodeName ?? '-',
+      qosClass: (status as any)?.qosClass ?? '-',
+      ownerReferences: metadata.ownerReferences?.map((o) => o.name).join(', ') || '-',
+      restartCount:
+        (status as any)?.containerStatuses?.reduce(
+          (acc: number, s: any) => acc + (s.restartCount || 0),
+          0
+        ) ?? 0,
+      podIP: (status as any)?.podIP ?? '-',
+      hostIP: (status as any)?.hostIP ?? '-',
+      serviceAccount: (spec as any)?.serviceAccountName ?? 'default',
+      status: getPodStatus(item),
+      containers: (spec as any)?.containers || [],
+    };
+  }, [item]);
 
-            <TableYamlRow label="Labels" data={pod.metadata?.labels} maxWidthClass="lg" />
+  const renderOverview = useCallback(
+    (pod: V1Pod) => {
+      if (!podProperties) return null;
 
-            <Tr>
-              <Td>Node</Td>
-              <Td>{pod.spec?.nodeName ?? '-'}</Td>
-            </Tr>
+      return (
+        <div className="space-y-4">
+          <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
+            <Table className="table-fixed">
+              <colgroup>
+                <col className="w-1/4" />
+                <col className="w-3/4" />
+              </colgroup>
+              <Tbody>
+                <Tr>
+                  <Td>Name</Td>
+                  <Td className="break-all text-white">{podProperties.name}</Td>
+                </Tr>
 
-            <Tr>
-              <Td>QoS</Td>
-              <Td>{pod.status?.qosClass ?? '-'}</Td>
-            </Tr>
+                <Tr>
+                  <Td>Namespace</Td>
+                  <Td>
+                    <BadgeNamespaces name={podProperties.namespace} />
+                  </Td>
+                </Tr>
 
-            <Tr>
-              <Td>Controlled By</Td>
-              <Td>{pod.metadata?.ownerReferences?.map((o) => o.name).join(', ') || '-'}</Td>
-            </Tr>
+                <Tr>
+                  <Td>Age</Td>
+                  <AgeCell timestamp={podProperties.creationTimestamp} />
+                </Tr>
 
-            <Tr>
-              <Td>Restarts</Td>
-              <Td>
-                {pod.status?.containerStatuses?.reduce(
-                  (acc, s) => acc + (s.restartCount || 0),
-                  0
-                ) ?? 0}
-              </Td>
-            </Tr>
+                <TableYamlRow label="Labels" data={podProperties.labels} maxWidthClass="lg" />
 
-            <Tr>
-              <Td>Pod IP</Td>
-              <Td>{pod.status?.podIP ?? '-'}</Td>
-            </Tr>
+                <Tr>
+                  <Td>Node</Td>
+                  <Td>{podProperties.nodeName}</Td>
+                </Tr>
 
-            <Tr>
-              <Td>Host IP</Td>
-              <Td>{pod.status?.hostIP ?? '-'}</Td>
-            </Tr>
+                <Tr>
+                  <Td>QoS</Td>
+                  <Td>{podProperties.qosClass}</Td>
+                </Tr>
 
-            <Tr>
-              <Td>Service Account</Td>
-              <Td>{pod.spec?.serviceAccountName ?? 'default'}</Td>
-            </Tr>
+                <Tr>
+                  <Td>Controlled By</Td>
+                  <Td>{podProperties.ownerReferences}</Td>
+                </Tr>
 
-            <Tr>
-              <Td>Status</Td>
-              <Td>
-                <BadgeStatus status={getPodStatus(pod)} />
-              </Td>
-            </Tr>
-          </Tbody>
-        </Table>
-      </div>
+                <Tr>
+                  <Td>Restarts</Td>
+                  <Td>{podProperties.restartCount}</Td>
+                </Tr>
 
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-        <div className="p-4">
-          <div className="space-y-3">
-            {pod.spec?.containers?.map((container, _) => {
-              const status = containerStatuses.find((s) => s.name === container.name);
-              const isReady = status?.ready ?? false;
+                <Tr>
+                  <Td>Pod IP</Td>
+                  <Td>{podProperties.podIP}</Td>
+                </Tr>
 
-              return (
-                <div
-                  key={container.name}
-                  className="flex items-start justify-between rounded-lg border border-white/10 p-3"
-                >
-                  <div className="flex flex-1 items-start gap-3">
+                <Tr>
+                  <Td>Host IP</Td>
+                  <Td>{podProperties.hostIP}</Td>
+                </Tr>
+
+                <Tr>
+                  <Td>Service Account</Td>
+                  <Td>{podProperties.serviceAccount}</Td>
+                </Tr>
+
+                <Tr>
+                  <Td>Status</Td>
+                  <Td>
+                    <BadgeStatus status={podProperties.status} />
+                  </Td>
+                </Tr>
+              </Tbody>
+            </Table>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
+            <div className="p-4">
+              <div className="space-y-3">
+                {podProperties.containers.map((container: any) => {
+                  const status = containerStatuses.find((s) => s.name === container.name);
+                  const isReady = status?.ready ?? false;
+
+                  return (
                     <div
-                      className={`mt-1.5 h-3 w-3 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}
-                      title={isReady ? 'Ready' : 'Not Ready'}
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-white">{container.name}</div>
-                      <div className="text-sm text-white/60">{container.image}</div>
-                      {status?.message && (
-                        <div className="mt-1 text-sm text-red-400">{status.message}</div>
-                      )}
+                      key={container.name}
+                      className="flex items-start justify-between rounded-lg border border-white/10 p-3"
+                    >
+                      <div className="flex flex-1 items-start gap-3">
+                        <div
+                          className={`mt-1.5 h-3 w-3 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}
+                          title={isReady ? 'Ready' : 'Not Ready'}
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-white">{container.name}</div>
+                          <div className="text-sm text-white/60">{container.image}</div>
+                          {status?.message && (
+                            <div className="mt-1 text-sm text-red-400">{status.message}</div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-shrink-0 gap-2">
+                        <ButtonLog onClick={() => handleViewLogs(container.name)} />
+                        <ButtonShell onClick={() => handleOpenExec(container.name)} />
+                      </div>
                     </div>
-                  </div>
+                  );
+                })}
 
-                  <div className="flex flex-shrink-0 gap-2">
-                    <ButtonLog onViewLogs={() => handleViewLogs(container.name)} />
-                    <ButtonShell onOpenShell={() => handleOpenExec(container.name)} />
-                  </div>
-                </div>
-              );
-            })}
-
-            {!pod.spec?.containers?.length && (
-              <div className="py-4 text-center text-white/60">No containers</div>
-            )}
+                {podProperties.containers.length === 0 && (
+                  <div className="py-4 text-center text-white/60">No containers</div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      );
+    },
+    [podProperties, containerStatuses, handleViewLogs, handleOpenExec]
   );
 
-  const sections = item
-    ? [
-        {
-          key: 'properties',
-          title: 'Properties',
-          content: (i: V1Pod) => renderOverview(i),
-        },
-      ]
-    : [];
+  const sections = useMemo(
+    () =>
+      item
+        ? [
+            {
+              key: 'properties',
+              title: 'Properties',
+              content: renderOverview,
+            },
+          ]
+        : [],
+    [item, renderOverview]
+  );
+
+  const logViewerTitle = useMemo(
+    () =>
+      item
+        ? `Logs: ${item.metadata?.name}${selectedContainer ? ` - ${selectedContainer}` : ''}`
+        : '',
+    [item, selectedContainer]
+  );
+
+  const execTerminalTitle = useMemo(
+    () =>
+      item
+        ? `Shell: ${item.metadata?.name}${selectedContainer ? ` - ${selectedContainer}` : ''}`
+        : '',
+    [item, selectedContainer]
+  );
+
+  const shouldShowLogViewer = item && logViewerOpen;
+  const shouldShowExecTerminal = item && execOpen;
 
   return (
     <>
@@ -186,12 +250,14 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: Si
         sections={sections}
         onDelete={onDelete}
         onEdit={onEdit}
+        updating={updating}
+        deleting={deleting}
       />
 
-      {item && (
+      {shouldShowLogViewer && (
         <BottomLogViewer
           open={logViewerOpen}
-          title={`Logs: ${item.metadata?.name}${selectedContainer ? ` - ${selectedContainer}` : ''}`}
+          title={logViewerTitle}
           podName={item.metadata?.name || ''}
           namespace={item.metadata?.namespace || ''}
           contextName={contextName}
@@ -200,10 +266,10 @@ export function SidebarPods({ item, setItem, onDelete, onEdit, contextName }: Si
         />
       )}
 
-      {item && (
+      {shouldShowExecTerminal && (
         <BottomExecTerminal
           open={execOpen}
-          title={`Shell: ${item.metadata?.name}${selectedContainer ? ` - ${selectedContainer}` : ''}`}
+          title={execTerminalTitle}
           podName={item.metadata?.name || ''}
           namespace={item.metadata?.namespace || ''}
           contextName={contextName}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface DropdownProps {
   trigger: React.ReactNode;
@@ -7,27 +7,39 @@ interface DropdownProps {
   disabled?: boolean;
 }
 
-export function Dropdown({ trigger, children, className, disabled = false }: DropdownProps) {
+export function Dropdown({ trigger, children, className = '', disabled = false }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (ref.current && !ref.current.contains(e.target as Node)) {
+      setOpen(false);
     }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  useEffect(() => {
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [open, handleClickOutside]);
+
+  const handleTriggerClick = useCallback(() => {
+    if (!disabled) {
+      setOpen((prev) => !prev);
+    }
+  }, [disabled]);
+
+  const dropdownClass = `relative ${className} ${disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : ''}`;
+
   return (
-    <div
-      className={`relative ${className} ${disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : ''}`}
-      ref={ref}
-      aria-disabled={disabled}
-    >
-      <div onClick={() => !disabled && setOpen(!open)}>{trigger}</div>
+    <div className={dropdownClass} ref={ref} aria-disabled={disabled}>
+      <div onClick={handleTriggerClick}>{trigger}</div>
       {open && (
         <div className="absolute z-30 mt-1 min-w-full rounded border border-white/20 bg-neutral-900 p-1 shadow-lg">
           <div className="whitespace-nowrap">{children}</div>

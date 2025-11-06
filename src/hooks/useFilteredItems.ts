@@ -1,7 +1,15 @@
 import { useMemo } from 'react';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 
-export function useFilteredItems<T>(
+interface FilterableItem {
+  metadata?: {
+    namespace?: string;
+    name?: string;
+    [key: string]: unknown;
+  };
+}
+
+export function useFilteredItems<T extends FilterableItem>(
   items: T[],
   selectedNamespaces: string[] = [ALL_NAMESPACES],
   q: string,
@@ -10,39 +18,49 @@ export function useFilteredItems<T>(
   sortOrder: 'asc' | 'desc' = 'asc'
 ): T[] {
   return useMemo(() => {
-    const term = q.trim().toLowerCase();
+    const searchTerm = q.trim().toLowerCase();
+    const hasNamespaceFilter =
+      selectedNamespaces.length !== 1 || selectedNamespaces[0] !== ALL_NAMESPACES;
+    const shouldFilter = searchTerm || hasNamespaceFilter;
 
-    const filtered =
-      term || selectedNamespaces.length !== 1 || selectedNamespaces[0] !== ALL_NAMESPACES
-        ? items.filter((item) => {
-            const meta: any = (item as any).metadata ?? {};
+    if (!shouldFilter && !sortBy) {
+      return items;
+    }
 
-            if (
-              meta.namespace &&
-              !selectedNamespaces.includes(ALL_NAMESPACES) &&
-              !selectedNamespaces.includes(meta.namespace)
-            ) {
-              return false;
-            }
+    const filteredItems = shouldFilter
+      ? items.filter((item) => {
+          const { metadata = {} } = item;
+          const { namespace } = metadata;
 
-            if (!term) return true;
+          if (namespace && hasNamespaceFilter && !selectedNamespaces.includes(namespace)) {
+            return false;
+          }
 
-            return keys.some((key) => {
-              const val = meta[key];
-              return val != null && String(val).toLowerCase().includes(term);
-            });
-          })
-        : items;
+          if (!searchTerm) return true;
 
-    if (!filtered.length) return filtered;
+          return keys.some((key) => {
+            const value = metadata[key];
+            return value != null && String(value).toLowerCase().includes(searchTerm);
+          });
+        })
+      : items;
 
-    return filtered.sort((a, b) => {
-      const aVal = ((a as any).metadata?.[sortBy] ?? '') as string;
-      const bVal = ((b as any).metadata?.[sortBy] ?? '') as string;
+    if (!sortBy || filteredItems.length <= 1) {
+      return filteredItems;
+    }
 
-      return sortOrder === 'asc'
-        ? aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' })
-        : bVal.localeCompare(aVal, undefined, { numeric: true, sensitivity: 'base' });
+    const sortedItems = [...filteredItems].sort((a, b) => {
+      const aValue = String(a.metadata?.[sortBy] ?? '');
+      const bValue = String(b.metadata?.[sortBy] ?? '');
+
+      const compareResult = aValue.localeCompare(bValue, undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      });
+
+      return sortOrder === 'asc' ? compareResult : -compareResult;
     });
+
+    return sortedItems;
   }, [items, selectedNamespaces, q, keys, sortBy, sortOrder]);
 }

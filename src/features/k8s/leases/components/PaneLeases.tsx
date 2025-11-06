@@ -16,7 +16,7 @@ export interface PaneLeasesProps {
   namespaceList?: any[];
   selectedNamespaces?: string[];
   onSelectNamespace?: (ns: string[]) => void;
-  onDeleteLeases: (items: V1Lease[]) => Promise<void>;
+  onDelete: (items: V1Lease[]) => Promise<void>;
   onCreate?: (manifest: V1Lease) => Promise<V1Lease | undefined>;
   onUpdate?: (manifest: V1Lease) => Promise<V1Lease | undefined>;
   contextName?: string;
@@ -29,7 +29,7 @@ export default function PaneLeases({
   namespaceList,
   selectedNamespaces,
   onSelectNamespace,
-  onDeleteLeases,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
@@ -40,9 +40,9 @@ export default function PaneLeases({
   const handleDeleteSelected = useCallback(
     async (toDelete: V1Lease[]) => {
       if (!toDelete.length) return;
-      await onDeleteLeases(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteLeases]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [

@@ -1,4 +1,5 @@
 import { Input } from '@/components/ui/input';
+import { useCallback } from 'react';
 
 interface SearchProps {
   query: string;
@@ -7,12 +8,14 @@ interface SearchProps {
 }
 
 export function Search({ query, onQueryChange, className = 'max-w-xs' }: SearchProps) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onQueryChange(e.target.value);
+    },
+    [onQueryChange]
+  );
+
   return (
-    <Input
-      placeholder="Search..."
-      value={query}
-      onChange={(e) => onQueryChange(e.target.value)}
-      className={className}
-    />
+    <Input placeholder="Search..." value={query} onChange={handleChange} className={className} />
   );
 }

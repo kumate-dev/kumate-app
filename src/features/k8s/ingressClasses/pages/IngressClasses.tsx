@@ -22,15 +22,15 @@ export default function IngressClasses({ context }: PaneResourceContextProps) {
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1IngressClass>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1IngressClass>(
     createIngressClass,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1IngressClass>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1IngressClass>(
     updateIngressClass,
     context
   );
-  const { handleDeleteResources } = useDeleteK8sResources<V1IngressClass>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1IngressClass>(
     deleteIngressClasses,
     context
   );
@@ -46,15 +46,44 @@ export default function IngressClasses({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateIngressClass = useCallback(
+    async (manifest: V1IngressClass): Promise<V1IngressClass | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create ingress class:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateIngressClass = useCallback(
+    async (manifest: V1IngressClass): Promise<V1IngressClass | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update ingress class:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneIngressClasses
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteIngressClasses={handleDelete}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDelete}
+      onCreate={handleCreateIngressClass}
+      onUpdate={handleUpdateIngressClass}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

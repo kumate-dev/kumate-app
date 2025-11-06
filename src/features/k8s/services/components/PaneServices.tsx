@@ -16,10 +16,13 @@ export interface PaneServicesProps {
   items: V1Service[];
   loading: boolean;
   error: string;
-  onDeleteServices: (services: V1Service[]) => Promise<void>;
+  onDelete: (services: V1Service[]) => Promise<void>;
   onCreate?: (manifest: V1Service) => Promise<V1Service | undefined>;
   onUpdate?: (manifest: V1Service) => Promise<V1Service | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneServices({
@@ -29,10 +32,13 @@ export default function PaneServices({
   items,
   loading,
   error,
-  onDeleteServices,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneServicesProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -40,9 +46,9 @@ export default function PaneServices({
   const handleDeleteSelected = useCallback(
     async (toDelete: V1Service[]) => {
       if (!toDelete.length) return;
-      await onDeleteServices(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteServices]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -104,9 +110,11 @@ export default function PaneServices({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -129,6 +137,8 @@ export default function PaneServices({
       onUpdate={onUpdate}
       renderSidebar={renderSidebar}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

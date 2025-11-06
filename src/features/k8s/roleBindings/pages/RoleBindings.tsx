@@ -55,7 +55,7 @@ export default function RoleBindings({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteRoleBindings={handleDeleteRoleBindings}
+      onDelete={handleDeleteRoleBindings}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}

@@ -29,9 +29,16 @@ export default function ReplicaSets({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1ReplicaSet>(createReplicaSet, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1ReplicaSet>(updateReplicaSet, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1ReplicaSet>(deleteReplicaSets, context);
+  const { handleCreateResource, creating: creatingReplicaSet } = useCreateK8sResource<V1ReplicaSet>(
+    createReplicaSet,
+    context
+  );
+  const { handleUpdateResource, updating: updatingReplicaSet } = useUpdateK8sResource<V1ReplicaSet>(
+    updateReplicaSet,
+    context
+  );
+  const { handleDeleteResources, deleting: deletingReplicaSets } =
+    useDeleteK8sResources<V1ReplicaSet>(deleteReplicaSets, context);
 
   const handleDeleteReplicaSets = useCallback(
     async (replicaSets: V1ReplicaSet[]) => {
@@ -44,6 +51,32 @@ export default function ReplicaSets({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateReplicaSet = useCallback(
+    async (manifest: V1ReplicaSet): Promise<V1ReplicaSet | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create replica set:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateReplicaSet = useCallback(
+    async (manifest: V1ReplicaSet): Promise<V1ReplicaSet | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update replica set:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneReplicaSets
       selectedNamespaces={selectedNamespaces}
@@ -52,10 +85,13 @@ export default function ReplicaSets({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteReplicaSets={handleDeleteReplicaSets}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteReplicaSets}
+      onCreate={handleCreateReplicaSet}
+      onUpdate={handleUpdateReplicaSet}
       contextName={context?.name}
+      creating={creatingReplicaSet}
+      updating={updatingReplicaSet}
+      deleting={deletingReplicaSets}
     />
   );
 }

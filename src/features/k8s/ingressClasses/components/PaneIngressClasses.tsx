@@ -11,20 +11,26 @@ export interface PaneIngressClassesProps {
   items: V1IngressClass[];
   loading: boolean;
   error: string;
-  onDeleteIngressClasses: (items: V1IngressClass[]) => Promise<void>;
+  onDelete: (items: V1IngressClass[]) => Promise<void>;
   onCreate?: (manifest: V1IngressClass) => Promise<V1IngressClass | undefined>;
   onUpdate?: (manifest: V1IngressClass) => Promise<V1IngressClass | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export function PaneIngressClasses({
   items,
   loading,
   error,
-  onDeleteIngressClasses,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating,
+  updating,
+  deleting,
 }: PaneIngressClassesProps) {
   const [sortBy, setSortBy] = useState('Name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -49,9 +55,9 @@ export function PaneIngressClasses({
 
   const handleDeleteSelected = useCallback(
     async (items: V1IngressClass[]) => {
-      await onDeleteIngressClasses(items);
+      await onDelete(items);
     },
-    [onDeleteIngressClasses]
+    [onDelete]
   );
 
   const renderRow = (ingc: V1IngressClass) => {
@@ -79,9 +85,11 @@ export function PaneIngressClasses({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -103,6 +111,8 @@ export function PaneIngressClasses({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

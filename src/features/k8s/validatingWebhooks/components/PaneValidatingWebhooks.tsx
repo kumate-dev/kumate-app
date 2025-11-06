@@ -12,7 +12,7 @@ export interface PaneValidatingWebhooksProps {
   items: V1ValidatingWebhookConfiguration[];
   loading: boolean;
   error: string;
-  onDeleteItems: (items: V1ValidatingWebhookConfiguration[]) => Promise<void>;
+  onDelete: (items: V1ValidatingWebhookConfiguration[]) => Promise<void>;
   onCreate?: (
     manifest: V1ValidatingWebhookConfiguration
   ) => Promise<V1ValidatingWebhookConfiguration | undefined>;
@@ -20,16 +20,22 @@ export interface PaneValidatingWebhooksProps {
     manifest: V1ValidatingWebhookConfiguration
   ) => Promise<V1ValidatingWebhookConfiguration | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneValidatingWebhooks({
   items,
   loading,
   error,
-  onDeleteItems,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneValidatingWebhooksProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -37,9 +43,9 @@ export default function PaneValidatingWebhooks({
   const handleDeleteSelected = useCallback(
     async (toDelete: V1ValidatingWebhookConfiguration[]) => {
       if (!toDelete.length) return;
-      await onDeleteItems(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteItems]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -76,6 +82,8 @@ export default function PaneValidatingWebhooks({
       setItem={actions.setItem}
       onDelete={actions.onDelete}
       onEdit={actions.onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 
@@ -90,7 +98,7 @@ export default function PaneValidatingWebhooks({
       emptyText="No validating webhooks found"
       onDelete={handleDeleteSelected}
       renderSidebar={renderSidebar}
-      yamlTemplate={templateValidatingWebhook}
+      yamlTemplate={(defaultNamespace?: string) => templateValidatingWebhook}
       onCreate={onCreate}
       onUpdate={onUpdate}
       contextName={contextName}
@@ -98,6 +106,8 @@ export default function PaneValidatingWebhooks({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

@@ -9,6 +9,8 @@ interface SidebarDefinitionsProps {
   setItem: (item: CrdDefinition | null) => void;
   onDelete?: (item: CrdDefinition) => void;
   onEdit?: (item: CrdDefinition) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function CustomResourceDefinitions({
@@ -16,6 +18,8 @@ export default function CustomResourceDefinitions({
   setItem,
   onDelete,
   onEdit,
+  updating,
+  deleting,
 }: SidebarDefinitionsProps) {
   const renderOverview = (def: CrdDefinition) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -84,6 +88,8 @@ export default function CustomResourceDefinitions({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

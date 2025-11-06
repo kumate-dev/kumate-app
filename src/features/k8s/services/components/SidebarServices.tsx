@@ -10,9 +10,18 @@ interface SidebarServicesProps {
   setItem: (item: V1Service | null) => void;
   onDelete?: (item: V1Service) => void;
   onEdit?: (item: V1Service) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarServices({ item, setItem, onDelete, onEdit }: SidebarServicesProps) {
+export function SidebarServices({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarServicesProps) {
   const renderOverview = (svc: V1Service) => {
     const clusterIPs = svc.spec?.clusterIPs || (svc.spec?.clusterIP ? [svc.spec.clusterIP] : []);
     const externalIPs = svc.spec?.externalIPs || [];
@@ -115,6 +124,8 @@ export function SidebarServices({ item, setItem, onDelete, onEdit }: SidebarServ
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

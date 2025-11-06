@@ -45,6 +45,32 @@ export default function Services({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateService = useCallback(
+    async (manifest: V1Service): Promise<V1Service | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create service:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateService = useCallback(
+    async (manifest: V1Service): Promise<V1Service | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update service:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneServices
       selectedNamespaces={selectedNamespaces}
@@ -53,9 +79,9 @@ export default function Services({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteServices={handleDeleteServices}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteServices}
+      onCreate={handleCreateService}
+      onUpdate={handleUpdateService}
       contextName={context?.name}
     />
   );

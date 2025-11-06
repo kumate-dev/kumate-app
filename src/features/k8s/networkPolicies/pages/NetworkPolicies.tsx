@@ -54,6 +54,32 @@ export default function NetworkPolicies({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateNetworkPolicy = useCallback(
+    async (manifest: V1NetworkPolicy): Promise<V1NetworkPolicy | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create network policy:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateNetworkPolicy = useCallback(
+    async (manifest: V1NetworkPolicy): Promise<V1NetworkPolicy | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update network policy:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneNetworkPolicies
       selectedNamespaces={selectedNamespaces}
@@ -63,8 +89,8 @@ export default function NetworkPolicies({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDeleteNetworkPolicies={handleDeleteNetworkPolicies}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onCreate={handleCreateNetworkPolicy}
+      onUpdate={handleUpdateNetworkPolicy}
       contextName={context?.name}
     />
   );

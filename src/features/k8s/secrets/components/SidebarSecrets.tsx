@@ -12,9 +12,18 @@ interface SidebarSecretsProps {
   setItem: (item: V1Secret | null) => void;
   onDelete?: (item: V1Secret) => void;
   onEdit?: (item: V1Secret) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarSecrets({ item, setItem, onDelete, onEdit }: SidebarSecretsProps) {
+export function SidebarSecrets({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarSecretsProps) {
   const renderOverview = (secret: V1Secret) => {
     const dataKeys = secret.data ? Object.keys(secret.data) : [];
 
@@ -91,6 +100,8 @@ export function SidebarSecrets({ item, setItem, onDelete, onEdit }: SidebarSecre
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

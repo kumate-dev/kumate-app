@@ -9,9 +9,18 @@ interface SidebarClusterRoleBindingsProps {
   setItem: (item: V1ClusterRoleBinding | null) => void;
   onDelete?: (item: V1ClusterRoleBinding) => void;
   onEdit?: (item: V1ClusterRoleBinding) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarClusterRoleBindings({ item, setItem, onDelete, onEdit }: SidebarClusterRoleBindingsProps) {
+export function SidebarClusterRoleBindings({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating,
+  deleting,
+}: SidebarClusterRoleBindingsProps) {
   const renderOverview = (rb: V1ClusterRoleBinding) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -60,6 +69,14 @@ export function SidebarClusterRoleBindings({ item, setItem, onDelete, onEdit }: 
     : [];
 
   return (
-    <RightSidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <RightSidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
+    />
   );
 }

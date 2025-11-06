@@ -10,6 +10,8 @@ interface SidebarResourceQuotasProps {
   setItem: (item: V1ResourceQuota | null) => void;
   onDelete?: (item: V1ResourceQuota) => void;
   onEdit?: (item: V1ResourceQuota) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 function renderOverview(rq: V1ResourceQuota) {
@@ -71,6 +73,8 @@ export function SidebarResourceQuotas({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarResourceQuotasProps) {
   const sections = item
     ? [
@@ -89,6 +93,8 @@ export function SidebarResourceQuotas({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

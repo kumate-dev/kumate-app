@@ -1,5 +1,5 @@
 import { relativeAge } from '@/utils/time';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface RelativeAgeProps {
   iso?: string;
@@ -8,13 +8,18 @@ interface RelativeAgeProps {
 export function RelativeAge({ iso }: RelativeAgeProps) {
   const [age, setAge] = useState(() => relativeAge(iso));
 
+  const updateAge = useCallback(() => {
+    setAge(relativeAge(iso));
+  }, [iso]);
+
   useEffect(() => {
     if (!iso) return;
-    const id = setInterval(() => {
-      setAge(relativeAge(iso));
-    }, 1000);
+
+    updateAge();
+    const id = setInterval(updateAge, 1000);
+
     return () => clearInterval(id);
-  }, [iso]);
+  }, [iso, updateAge]);
 
   return <span>{age}</span>;
 }

@@ -10,9 +10,18 @@ interface SidebarConfigMapsProps {
   setItem: (item: V1ConfigMap | null) => void;
   onDelete?: (item: V1ConfigMap) => void;
   onEdit?: (item: V1ConfigMap) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarConfigMaps({ item, setItem, onDelete, onEdit }: SidebarConfigMapsProps) {
+export function SidebarConfigMaps({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarConfigMapsProps) {
   const renderOverview = (cm: V1ConfigMap) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -65,6 +74,8 @@ export function SidebarConfigMaps({ item, setItem, onDelete, onEdit }: SidebarCo
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

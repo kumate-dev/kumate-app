@@ -22,18 +22,16 @@ export default function ValidatingWebhooks({ context }: PaneResourceContextProps
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1ValidatingWebhookConfiguration>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1ValidatingWebhookConfiguration>(
     createValidatingWebhook,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1ValidatingWebhookConfiguration>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1ValidatingWebhookConfiguration>(
     updateValidatingWebhook,
     context
   );
-  const { handleDeleteResources } = useDeleteK8sResources<V1ValidatingWebhookConfiguration>(
-    deleteValidatingWebhooks,
-    context
-  );
+  const { handleDeleteResources, deleting } =
+    useDeleteK8sResources<V1ValidatingWebhookConfiguration>(deleteValidatingWebhooks, context);
 
   const handleDeleteItems = useCallback(
     async (itemsToDelete: V1ValidatingWebhookConfiguration[]) => {
@@ -46,15 +44,48 @@ export default function ValidatingWebhooks({ context }: PaneResourceContextProps
     [handleDeleteResources]
   );
 
+  const handleCreateValidatingWebhook = useCallback(
+    async (
+      manifest: V1ValidatingWebhookConfiguration
+    ): Promise<V1ValidatingWebhookConfiguration | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create validating webhook configuration:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateValidatingWebhook = useCallback(
+    async (
+      manifest: V1ValidatingWebhookConfiguration
+    ): Promise<V1ValidatingWebhookConfiguration | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update validating webhook configuration:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneValidatingWebhooks
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteItems={handleDeleteItems}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteItems}
+      onCreate={handleCreateValidatingWebhook}
+      onUpdate={handleUpdateValidatingWebhook}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

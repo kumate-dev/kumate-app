@@ -12,6 +12,8 @@ interface SidebarPodDisruptionBudgetsProps {
   setItem: (item: V1PodDisruptionBudget | null) => void;
   onDelete?: (item: V1PodDisruptionBudget) => void;
   onEdit?: (item: V1PodDisruptionBudget) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 function renderOverview(pdb: V1PodDisruptionBudget) {
@@ -100,6 +102,8 @@ export function SidebarPodDisruptionBudgets({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarPodDisruptionBudgetsProps) {
   const sections = item
     ? [
@@ -118,6 +122,8 @@ export function SidebarPodDisruptionBudgets({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

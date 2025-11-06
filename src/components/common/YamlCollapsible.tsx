@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { stringify } from 'yaml';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -15,23 +15,33 @@ export function YamlCollapsible<T extends Record<string, any>>({
 }: YamlCollapsibleProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggle = () => setIsOpen((prev) => !prev);
+  const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
 
-  if (!data) return <span className="text-white/60">-</span>;
+  const { isObject, keys, hasData } = useMemo(() => {
+    const isObjectType = typeof data === 'object' && !Array.isArray(data) && data !== null;
+    const objectKeys = isObjectType ? Object.keys(data as Record<string, any>) : [];
 
-  const isObject = typeof data === 'object' && !Array.isArray(data);
-  const keys = isObject ? Object.keys(data) : [];
+    return {
+      isObject: isObjectType,
+      keys: objectKeys,
+      hasData: data !== null && data !== undefined,
+    };
+  }, [data]);
 
-  const collapsedMessage = () => {
+  const collapsedMessage = useMemo(() => {
+    if (!hasData) return null;
+
     if (!isObject) {
       const val = data as string;
-      const truncated = val.length > truncateLength ? val.slice(0, truncateLength) + '…' : val;
+      const truncated = val.length > truncateLength ? `${val.slice(0, truncateLength)}...` : val;
       return <pre className="m-0 max-w-full truncate whitespace-pre">{truncated}</pre>;
     }
 
     if (keys.length === 1) {
-      const val = stringify({ [keys[0]]: data[keys[0]] });
-      const truncated = val.length > truncateLength ? val.slice(0, truncateLength) + '…' : val;
+      const key = keys[0];
+      const value = (data as Record<string, any>)[key];
+      const val = stringify({ [key]: value });
+      const truncated = val.length > truncateLength ? `${val.slice(0, truncateLength)}...` : val;
       return <pre className="m-0 max-w-full truncate whitespace-pre">{truncated}</pre>;
     }
 
@@ -40,11 +50,19 @@ export function YamlCollapsible<T extends Record<string, any>>({
         {keys.length} {label}s
       </span>
     );
-  };
+  }, [data, hasData, isObject, keys, label, truncateLength]);
+
+  const shouldShowToggle = isObject && keys.length > 1;
+  const shouldShowExpanded = isOpen || keys.length <= 1;
+  const shouldShowCollapsed = !isObject || keys.length === 1;
+
+  if (!hasData) {
+    return <span className="text-white/60">-</span>;
+  }
 
   return (
     <div className="flex w-full min-w-0 flex-col">
-      {isObject && keys.length > 1 && (
+      {shouldShowToggle && (
         <button
           type="button"
           onClick={toggle}
@@ -52,19 +70,19 @@ export function YamlCollapsible<T extends Record<string, any>>({
         >
           {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           <span>
-            {keys.length} {label}{' '}
+            {keys.length} {label}
+            {keys.length !== 1 ? 's' : ''}
           </span>
         </button>
       )}
+
       <div>
-        {isOpen || keys.length <= 1 ? (
+        {shouldShowExpanded ? (
           <pre className="max-w-full overflow-x-auto rounded bg-white/10 p-2 text-xs whitespace-pre text-white">
             {typeof data === 'string' ? data : stringify(data)}
           </pre>
-        ) : !isObject ? (
-          collapsedMessage()
-        ) : keys.length === 1 ? (
-          collapsedMessage()
+        ) : shouldShowCollapsed ? (
+          collapsedMessage
         ) : null}
       </div>
     </div>

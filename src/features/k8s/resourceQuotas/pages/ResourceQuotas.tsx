@@ -28,15 +28,15 @@ export default function ResourceQuotas({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1ResourceQuota>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1ResourceQuota>(
     createResourceQuota,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1ResourceQuota>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1ResourceQuota>(
     updateResourceQuota,
     context
   );
-  const { handleDeleteResources } = useDeleteK8sResources<V1ResourceQuota>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1ResourceQuota>(
     deleteResourceQuotas,
     context
   );
@@ -52,6 +52,32 @@ export default function ResourceQuotas({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateResourceQuota = useCallback(
+    async (manifest: V1ResourceQuota): Promise<V1ResourceQuota | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create resource quota:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateResourceQuota = useCallback(
+    async (manifest: V1ResourceQuota): Promise<V1ResourceQuota | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update resource quota:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneResourceQuotas
       selectedNamespaces={selectedNamespaces}
@@ -60,10 +86,13 @@ export default function ResourceQuotas({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteResourceQuotas={handleDeleteResourceQuotas}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteResourceQuotas}
+      onCreate={handleCreateResourceQuota}
+      onUpdate={handleUpdateResourceQuota}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

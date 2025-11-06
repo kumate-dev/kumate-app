@@ -29,18 +29,12 @@ export default function ReplicationControllers({ context }: PaneResourceContextP
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1ReplicationController>(
-    createReplicationController,
-    context
-  );
-  const { handleUpdateResource } = useUpdateK8sResource<V1ReplicationController>(
-    updateReplicationController,
-    context
-  );
-  const { handleDeleteResources } = useDeleteK8sResources<V1ReplicationController>(
-    deleteReplicationControllers,
-    context
-  );
+  const { handleCreateResource, creating: creatingReplicationController } =
+    useCreateK8sResource<V1ReplicationController>(createReplicationController, context);
+  const { handleUpdateResource, updating: updatingReplicationController } =
+    useUpdateK8sResource<V1ReplicationController>(updateReplicationController, context);
+  const { handleDeleteResources, deleting: deletingReplicationControllers } =
+    useDeleteK8sResources<V1ReplicationController>(deleteReplicationControllers, context);
 
   const handleDeleteReplicationControllers = useCallback(
     async (replicationControllers: V1ReplicationController[]) => {
@@ -61,10 +55,13 @@ export default function ReplicationControllers({ context }: PaneResourceContextP
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteReplicationControllers={handleDeleteReplicationControllers}
+      onDelete={handleDeleteReplicationControllers}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}
+      creating={creatingReplicationController}
+      updating={updatingReplicationController}
+      deleting={deletingReplicationControllers}
     />
   );
 }

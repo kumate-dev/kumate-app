@@ -46,7 +46,7 @@ export default function Roles({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteRoles={handleDeleteRoles}
+      onDelete={handleDeleteRoles}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}

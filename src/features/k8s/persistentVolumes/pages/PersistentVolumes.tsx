@@ -22,17 +22,17 @@ export default function PersistentVolumes({ context }: PaneResourceContextProps)
     context
   );
 
-  const { handleDeleteResources } = useDeleteK8sResources<V1PersistentVolume>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1PersistentVolume>(
     deletePersistentVolumes,
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1PersistentVolume>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1PersistentVolume>(
     createPersistentVolume,
     context
   );
 
-  const { handleUpdateResource } = useUpdateK8sResource<V1PersistentVolume>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1PersistentVolume>(
     updatePersistentVolume,
     context
   );
@@ -63,10 +63,13 @@ export default function PersistentVolumes({ context }: PaneResourceContextProps)
       items={items}
       loading={loading}
       error={error}
-      onDeletePersistentVolumes={onDelete}
+      onDelete={onDelete}
       onCreate={onCreate}
       onUpdate={onUpdate}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

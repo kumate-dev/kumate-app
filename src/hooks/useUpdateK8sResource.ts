@@ -1,37 +1,58 @@
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
-export function useUpdateK8sResource<T>(
-  updateFn: (params: { name: string; namespace?: string; manifest: T }) => Promise<T>,
+interface UpdateResourceParams<T> {
+  name: string;
+  namespace?: string;
+  manifest: T;
+}
+
+interface ResourceManifest {
+  kind?: string;
+  metadata?: {
+    namespace?: string;
+    name?: string;
+  };
+}
+
+export function useUpdateK8sResource<T extends ResourceManifest>(
+  updateFn: (params: UpdateResourceParams<T>) => Promise<T>,
   context?: { name: string } | null
 ) {
   const [updating, setUpdating] = useState(false);
+  const updateFnRef = useRef(updateFn);
+  const contextRef = useRef(context);
 
-  const handleUpdateResource = async (manifest: T) => {
-    const name = context?.name;
+  updateFnRef.current = updateFn;
+  contextRef.current = context;
+
+  const handleUpdateResource = useCallback(async (manifest: T): Promise<T | undefined> => {
+    const name = contextRef.current?.name;
     if (!name) {
       toast.error('Missing context name for application.');
-      return;
+      return undefined;
     }
 
-    const resourceName = (manifest as any).kind;
+    const resourceName = manifest.kind || 'Resource';
+    const namespace = manifest.metadata?.namespace;
 
     setUpdating(true);
     try {
-      await updateFn({
-        name: name,
-        namespace: (manifest as any).metadata?.namespace,
-        manifest: manifest,
+      const result = await updateFnRef.current({
+        name,
+        namespace,
+        manifest,
       });
       toast.success(`${resourceName} ${name} updated successfully`);
-      return manifest;
+      return result;
     } catch (error) {
-      toast.error(`Failed to update ${resourceName}: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to update ${resourceName}: ${errorMessage}`);
       throw error;
     } finally {
       setUpdating(false);
     }
-  };
+  }, []);
 
   return {
     handleUpdateResource,

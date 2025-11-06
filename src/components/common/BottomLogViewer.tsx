@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Check } from 'lucide-react';
 import { startResizing } from '@/utils/resizing';
 import { ButtonCancel } from './ButtonCancel';
@@ -35,7 +35,7 @@ export default function BottomLogViewer({
   const [isResizing, setIsResizing] = useState(false);
   const [editorHeight, setEditorHeight] = useState(() => window.innerHeight * 0.5);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedTail, setSelectedTail] = useState<number>(50);
+  const [selectedTail, setSelectedTail] = useState(50);
 
   const logEndRef = useRef<HTMLDivElement>(null);
 
@@ -82,14 +82,51 @@ export default function BottomLogViewer({
     [editorHeight]
   );
 
-  const toggleExpand = () => {
+  const toggleExpand = useCallback(() => {
     if (isExpanded) {
       setEditorHeight(window.innerHeight * 0.5);
     } else {
       setEditorHeight(window.innerHeight - 40);
     }
     setIsExpanded(!isExpanded);
-  };
+  }, [isExpanded]);
+
+  const handleTailSelect = useCallback(
+    (val: number) => {
+      setTailLines(val);
+      setSelectedTail(val);
+    },
+    [setTailLines]
+  );
+
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onClose();
+    },
+    [onClose]
+  );
+
+  const handleContainerClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const tailOptions = useMemo(() => [50, 100, 500, 1000, -1], []);
+  const displayTitle = useMemo(() => title ?? 'Pod Logs', [title]);
+
+  const containerClass = useMemo(
+    () =>
+      `fixed right-0 bottom-0 left-0 z-[60] border-l border-neutral-200 bg-white/95 shadow-xl backdrop-blur-sm transition-transform duration-300 dark:border-white/10 dark:bg-neutral-900/95 ${
+        isResizing ? 'select-none' : ''
+      }`,
+    [isResizing]
+  );
+
+  const logContentClass = useMemo(
+    () =>
+      'relative h-full overflow-auto rounded-md border border-neutral-200 bg-neutral-50 font-mono text-sm break-words whitespace-pre-wrap dark:border-white/20 dark:bg-black',
+    []
+  );
 
   if (!open) return null;
 
@@ -99,15 +136,13 @@ export default function BottomLogViewer({
         className={`fixed inset-0 z-[55] bg-black/40 transition-opacity duration-300 ${
           open ? 'opacity-100' : 'opacity-0'
         }`}
-        onClick={onClose}
+        onClick={handleBackdropClick}
       />
 
       <div
-        className={`fixed right-0 bottom-0 left-0 z-[60] border-l border-neutral-200 bg-white/95 shadow-xl backdrop-blur-sm transition-transform duration-300 dark:border-white/10 dark:bg-neutral-900/95 ${
-          isResizing ? 'select-none' : ''
-        }`}
+        className={containerClass}
         style={{ height: `${editorHeight}px` }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleContainerClick}
       >
         <div
           className="absolute top-0 right-0 left-0 h-2 cursor-ns-resize bg-transparent hover:bg-neutral-200/60 active:bg-neutral-200/80 dark:hover:bg-white/10 dark:active:bg-white/20"
@@ -116,7 +151,7 @@ export default function BottomLogViewer({
 
         <div className="flex items-center gap-2 border-b border-neutral-200 px-4 py-3 dark:border-white/10">
           <div className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-800 dark:text-white/80">
-            {title ?? 'Pod Logs'}
+            {displayTitle}
           </div>
 
           <div className="flex items-center gap-2">
@@ -130,14 +165,11 @@ export default function BottomLogViewer({
               }
               disabled={isStreaming}
             >
-              {[50, 100, 500, 1000, -1].map((val) => (
+              {tailOptions.map((val) => (
                 <div
                   key={val}
                   className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-neutral-100 dark:hover:bg-white/10"
-                  onClick={() => {
-                    setTailLines(val);
-                    setSelectedTail(val);
-                  }}
+                  onClick={() => handleTailSelect(val)}
                 >
                   <Check
                     className={`h-4 w-4 text-green-400 ${
@@ -151,23 +183,23 @@ export default function BottomLogViewer({
               ))}
             </Dropdown>
 
-            <ButtonDownloadLog onDownloadLogs={downloadLogs} />
-            <ButtonClear onClearLogs={clearLogs} />
+            <ButtonDownloadLog onClick={downloadLogs} />
+            <ButtonClear onClick={clearLogs} />
 
             {!isStreaming ? (
-              <ButtonStart onStart={startStreaming} disabled={loading} />
+              <ButtonStart onClick={startStreaming} disabled={loading || isStreaming} />
             ) : (
-              <ButtonStop onStop={stopStreaming} />
+              <ButtonStop onClick={stopStreaming} disabled={!isStreaming} />
             )}
 
-            <ButtonCancel onCancel={onClose} />
+            <ButtonCancel onClick={onClose} />
 
-            <ButtonExpand onExpand={toggleExpand} isExpanded={isExpanded} />
+            <ButtonExpand onClick={toggleExpand} isExpanded={isExpanded} />
           </div>
         </div>
 
         <div className="h-[calc(100%-49px)] p-4">
-          <div className="relative h-full overflow-auto rounded-md border border-neutral-200 bg-neutral-50 font-mono text-sm break-words whitespace-pre-wrap dark:border-white/20 dark:bg-black">
+          <div className={logContentClass}>
             {loading && !logs && (
               <div className="flex h-full items-center justify-center text-neutral-500 dark:text-white/60">
                 Loading logs...

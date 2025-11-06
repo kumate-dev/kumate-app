@@ -21,16 +21,16 @@ export default function RuntimeClasses({ context }: PaneResourceContextProps) {
     context
   );
 
-  const { handleDeleteResources } = useDeleteK8sResources<V1RuntimeClass>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1RuntimeClass>(
     deleteRuntimeClasses,
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1RuntimeClass>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1RuntimeClass>(
     createRuntimeClass,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1RuntimeClass>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1RuntimeClass>(
     updateRuntimeClass,
     context
   );
@@ -51,10 +51,13 @@ export default function RuntimeClasses({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteRuntimeClasses={handleDeleteRuntimeClasses}
+      onDelete={handleDeleteRuntimeClasses}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

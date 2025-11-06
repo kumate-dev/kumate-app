@@ -11,9 +11,18 @@ interface SidebarNamespacesProps {
   setItem: (item: V1Namespace | null) => void;
   onDelete?: (item: V1Namespace) => void;
   onEdit?: (item: V1Namespace) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarNamespaces({ item, setItem, onDelete, onEdit }: SidebarNamespacesProps) {
+export function SidebarNamespaces({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarNamespacesProps) {
   const renderOverview = (ns: V1Namespace) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -65,6 +74,8 @@ export function SidebarNamespaces({ item, setItem, onDelete, onEdit }: SidebarNa
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

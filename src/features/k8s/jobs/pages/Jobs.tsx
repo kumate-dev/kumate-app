@@ -23,9 +23,18 @@ export default function Jobs({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1Job>(createJob, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1Job>(updateJob, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1Job>(deleteJobs, context);
+  const { handleCreateResource, creating: creatingJob } = useCreateK8sResource<V1Job>(
+    createJob,
+    context
+  );
+  const { handleUpdateResource, updating: updatingJob } = useUpdateK8sResource<V1Job>(
+    updateJob,
+    context
+  );
+  const { handleDeleteResources, deleting: deletingJobs } = useDeleteK8sResources<V1Job>(
+    deleteJobs,
+    context
+  );
 
   const handleDeleteJobs = useCallback(
     async (jobs: V1Job[]) => {
@@ -38,6 +47,32 @@ export default function Jobs({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateJob = useCallback(
+    async (manifest: V1Job): Promise<V1Job | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create job:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateJob = useCallback(
+    async (manifest: V1Job): Promise<V1Job | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update job:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneJobs
       selectedNamespaces={selectedNamespaces}
@@ -46,10 +81,13 @@ export default function Jobs({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteJobs={handleDeleteJobs}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteJobs}
+      onCreate={handleCreateJob}
+      onUpdate={handleUpdateJob}
       contextName={context?.name}
+      creating={creatingJob}
+      updating={updatingJob}
+      deleting={deletingJobs}
     />
   );
 }

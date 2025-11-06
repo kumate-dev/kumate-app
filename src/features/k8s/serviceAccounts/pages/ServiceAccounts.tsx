@@ -29,15 +29,15 @@ export default function ServiceAccounts({ context }: PaneResourceContextProps) {
     selectedNamespaces
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1ServiceAccount>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1ServiceAccount>(
     createServiceAccount,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1ServiceAccount>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1ServiceAccount>(
     updateServiceAccount,
     context
   );
-  const { handleDeleteResources } = useDeleteK8sResources<V1ServiceAccount>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1ServiceAccount>(
     deleteServiceAccounts,
     context
   );
@@ -61,10 +61,13 @@ export default function ServiceAccounts({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteServiceAccounts={handleDeleteServiceAccounts}
+      onDelete={handleDeleteServiceAccounts}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

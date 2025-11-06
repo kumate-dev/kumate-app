@@ -6,25 +6,32 @@ import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { SidebarClusterRoles } from './SidebarClusterRoles';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { sortItems } from '@/utils/sort';
+import { templateClusterRole } from '../../templates/clusterRole';
 
 export interface PaneClusterRolesProps {
   items: V1ClusterRole[];
   loading: boolean;
   error: string;
-  onDeleteClusterRoles: (items: V1ClusterRole[]) => Promise<void>;
+  onDelete: (items: V1ClusterRole[]) => Promise<void>;
   onCreate?: (manifest: V1ClusterRole) => Promise<V1ClusterRole | undefined>;
   onUpdate?: (manifest: V1ClusterRole) => Promise<V1ClusterRole | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneClusterRoles({
   items,
   loading,
   error,
-  onDeleteClusterRoles,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating,
+  updating,
+  deleting,
 }: PaneClusterRolesProps) {
   const [sortBy, setSortBy] = useState<string>('metadata.name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -49,9 +56,9 @@ export default function PaneClusterRoles({
 
   const handleDeleteSelected = useCallback(
     async (selected: V1ClusterRole[]) => {
-      await onDeleteClusterRoles(selected);
+      await onDelete(selected);
     },
-    [onDeleteClusterRoles]
+    [onDelete]
   );
 
   const renderRow = (role: V1ClusterRole) => (
@@ -66,20 +73,25 @@ export default function PaneClusterRoles({
     </>
   );
 
-  const renderSidebar = (
-    item: V1ClusterRole,
-    actions: {
-      setItem: (item: V1ClusterRole | null) => void;
-      onDelete?: (item: V1ClusterRole) => void;
-      onEdit?: (item: V1ClusterRole) => void;
-    }
-  ) => (
-    <SidebarClusterRoles
-      item={item}
-      setItem={actions.setItem}
-      onDelete={actions.onDelete}
-      onEdit={actions.onEdit}
-    />
+  const renderSidebar = useCallback(
+    (
+      item: V1ClusterRole,
+      actions: {
+        setItem: (item: V1ClusterRole | null) => void;
+        onDelete?: (item: V1ClusterRole) => void;
+        onEdit?: (item: V1ClusterRole) => void;
+      }
+    ) => (
+      <SidebarClusterRoles
+        item={item}
+        setItem={actions.setItem}
+        onDelete={actions.onDelete}
+        onEdit={actions.onEdit}
+        updating={updating ?? false}
+        deleting={deleting ?? false}
+      />
+    ),
+    [updating, deleting]
   );
 
   return (
@@ -94,12 +106,15 @@ export default function PaneClusterRoles({
       onDelete={handleDeleteSelected}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      yamlTemplate={() => templateClusterRole()}
       renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

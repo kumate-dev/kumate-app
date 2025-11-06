@@ -52,7 +52,7 @@ export default function LimitRanges({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteLimitRanges={handleDeleteLimitRanges}
+      onDelete={handleDeleteLimitRanges}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}

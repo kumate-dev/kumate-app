@@ -7,29 +7,42 @@ import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNamespaceStatus } from '../utils/namespaceStatus';
 import { SidebarNamespaces } from './SidebarNamespaces';
+import { templateNamespace } from '../../templates/namespace';
 import { sortItems } from '@/utils/sort';
 
 export interface PaneNamespacesProps {
   items: V1Namespace[];
   loading: boolean;
   error: string;
-  onDeleteNamespaces?: (namespaces: V1Namespace[]) => Promise<void>;
+  onDelete?: (namespaces: V1Namespace[]) => Promise<void>;
+  contextName?: string;
+  deleting?: boolean;
+  onCreate?: (manifest: V1Namespace) => Promise<V1Namespace | undefined>;
+  onUpdate?: (manifest: V1Namespace) => Promise<V1Namespace | undefined>;
+  creating?: boolean;
+  updating?: boolean;
 }
 
 export default function PaneNamespaces({
   items,
   loading,
   error,
-  onDeleteNamespaces,
+  onDelete,
+  contextName,
+  deleting = false,
+  onCreate,
+  onUpdate,
+  creating = false,
+  updating = false,
 }: PaneNamespacesProps) {
   const [sortBy, setSortBy] = useState<keyof V1Namespace>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const handleDeleteSelected = useCallback(
     async (toDelete: V1Namespace[]) => {
-      if (!toDelete.length || !onDeleteNamespaces) return;
-      await onDeleteNamespaces(toDelete);
+      if (!toDelete.length || !onDelete) return;
+      await onDelete(toDelete);
     },
-    [onDeleteNamespaces]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -72,6 +85,8 @@ export default function PaneNamespaces({
       setItem={actions.setItem}
       onDelete={actions.onDelete}
       onEdit={actions.onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 
@@ -90,6 +105,12 @@ export default function PaneNamespaces({
       colSpan={columns.length}
       renderRow={renderRow}
       renderSidebar={renderSidebar}
+      yamlTemplate={() => templateNamespace}
+      contextName={contextName}
+      onCreate={onCreate}
+      onUpdate={onUpdate}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

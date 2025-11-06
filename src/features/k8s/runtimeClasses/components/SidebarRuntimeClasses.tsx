@@ -9,6 +9,8 @@ export interface SidebarRuntimeClassesProps {
   setItem: (item: V1RuntimeClass | null) => void;
   onDelete?: (item: V1RuntimeClass) => void;
   onEdit?: (item: V1RuntimeClass) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 function renderOverview(rc: V1RuntimeClass) {
@@ -46,6 +48,8 @@ export function SidebarRuntimeClasses({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarRuntimeClassesProps) {
   const sections = item
     ? [
@@ -64,6 +68,8 @@ export function SidebarRuntimeClasses({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

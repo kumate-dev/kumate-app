@@ -9,6 +9,8 @@ export interface SidebarPriorityClassesProps {
   setItem: (item: V1PriorityClass | null) => void;
   onDelete?: (item: V1PriorityClass) => void;
   onEdit?: (item: V1PriorityClass) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 function renderOverview(pc: V1PriorityClass) {
@@ -39,8 +41,8 @@ function renderOverview(pc: V1PriorityClass) {
         </Tbody>
       </Table>
 
-      <TableYamlRow data={pc.metadata?.labels} title="Labels" maxWidthClass="lg" />
-      <TableYamlRow data={pc.metadata?.annotations} title="Annotations" maxWidthClass="lg" />
+      <TableYamlRow label="Labels" data={pc.metadata?.labels} maxWidthClass="lg" />
+      <TableYamlRow label="Annotations" data={pc.metadata?.annotations} maxWidthClass="lg" />
     </div>
   );
 }
@@ -50,6 +52,8 @@ export function SidebarPriorityClasses({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarPriorityClassesProps) {
   const sections = item
     ? [
@@ -68,6 +72,8 @@ export function SidebarPriorityClasses({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

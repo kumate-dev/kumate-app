@@ -15,10 +15,13 @@ export interface PaneEndpointsProps {
   items: V1Endpoints[];
   loading: boolean;
   error: string;
-  onDeleteEndpoints: (eps: V1Endpoints[]) => Promise<void>;
+  onDelete: (eps: V1Endpoints[]) => Promise<void>;
   onCreate?: (manifest: V1Endpoints) => Promise<V1Endpoints | undefined>;
   onUpdate?: (manifest: V1Endpoints) => Promise<V1Endpoints | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export function PaneEndpoints({
@@ -28,10 +31,13 @@ export function PaneEndpoints({
   items,
   loading,
   error,
-  onDeleteEndpoints,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneEndpointsProps) {
   const [sortBy, setSortBy] = useState('Name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -56,9 +62,9 @@ export function PaneEndpoints({
 
   const handleDeleteSelected = useCallback(
     async (eps: V1Endpoints[]) => {
-      await onDeleteEndpoints(eps);
+      await onDelete(eps);
     },
-    [onDeleteEndpoints]
+    [onDelete]
   );
 
   const renderRow = (ep: V1Endpoints) => (
@@ -85,9 +91,11 @@ export function PaneEndpoints({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -111,6 +119,8 @@ export function PaneEndpoints({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

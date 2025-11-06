@@ -1,5 +1,6 @@
 import type { V1Deployment } from '@kubernetes/client-node';
 import { Table, Tbody, Td, Tr } from '@/components/ui/table';
+import { useCallback, useMemo } from 'react';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
@@ -12,6 +13,8 @@ interface SidebarDeploymentsProps {
   setItem: (item: V1Deployment | null) => void;
   onDelete?: (item: V1Deployment) => void;
   onEdit?: (item: V1Deployment) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export function SidebarK8sDeployments({
@@ -19,77 +22,86 @@ export function SidebarK8sDeployments({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarDeploymentsProps) {
-  const renderOverview = (dep: V1Deployment) => (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-      <Table className="table-fixed">
-        <colgroup>
-          <col className="w-1/4" />
-          <col className="w-3/4" />
-        </colgroup>
-        <Tbody>
-          <Tr>
-            <Td>Name</Td>
-            <Td className="break-all text-white">{dep.metadata?.name ?? '-'}</Td>
-          </Tr>
+  const renderOverview = useCallback(
+    (dep: V1Deployment) => (
+      <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
+        <Table className="table-fixed">
+          <colgroup>
+            <col className="w-1/4" />
+            <col className="w-3/4" />
+          </colgroup>
+          <Tbody>
+            <Tr>
+              <Td>Name</Td>
+              <Td className="break-all text-white">{dep.metadata?.name ?? '-'}</Td>
+            </Tr>
 
-          <Tr>
-            <Td>Age</Td>
-            <AgeCell timestamp={dep.metadata?.creationTimestamp ?? ''} />
-          </Tr>
+            <Tr>
+              <Td>Age</Td>
+              <AgeCell timestamp={dep.metadata?.creationTimestamp ?? ''} />
+            </Tr>
 
-          <Tr>
-            <Td>Namespace</Td>
-            <Td>
-              <BadgeNamespaces name={dep.metadata?.namespace ?? ''} />
-            </Td>
-          </Tr>
+            <Tr>
+              <Td>Namespace</Td>
+              <Td>
+                <BadgeNamespaces name={dep.metadata?.namespace ?? ''} />
+              </Td>
+            </Tr>
 
-          <TableYamlRow label="Labels" data={dep.metadata?.labels} maxWidthClass="lg" />
-          <TableYamlRow label="Annotations" data={dep.metadata?.annotations} maxWidthClass="xl" />
+            <TableYamlRow label="Labels" data={dep.metadata?.labels} maxWidthClass="lg" />
+            <TableYamlRow label="Annotations" data={dep.metadata?.annotations} maxWidthClass="xl" />
 
-          <Tr>
-            <Td>Replicas</Td>
-            <Td>
-              {`${dep.spec?.replicas ?? 0} desired, ${dep.status?.updatedReplicas ?? 0} updated, ${
-                dep.status?.replicas ?? 0
-              } total, ${dep.status?.availableReplicas ?? 0} available, ${
-                dep.status?.unavailableReplicas ?? 0
-              } unavailable`}
-            </Td>
-          </Tr>
+            <Tr>
+              <Td>Replicas</Td>
+              <Td>
+                {`${dep.spec?.replicas ?? 0} desired, ${dep.status?.updatedReplicas ?? 0} updated, ${
+                  dep.status?.replicas ?? 0
+                } total, ${dep.status?.availableReplicas ?? 0} available, ${
+                  dep.status?.unavailableReplicas ?? 0
+                } unavailable`}
+              </Td>
+            </Tr>
 
-          <TableYamlRow
-            label="Selector"
-            data={dep.spec?.selector?.matchLabels}
-            maxWidthClass="lg"
-          />
+            <TableYamlRow
+              label="Selector"
+              data={dep.spec?.selector?.matchLabels}
+              maxWidthClass="lg"
+            />
 
-          <Tr>
-            <Td>Strategy Type</Td>
-            <Td>{dep.spec?.strategy?.type ?? '-'}</Td>
-          </Tr>
+            <Tr>
+              <Td>Strategy Type</Td>
+              <Td>{dep.spec?.strategy?.type ?? '-'}</Td>
+            </Tr>
 
-          <Tr>
-            <Td>Status</Td>
-            <Td>
-              <BadgeStatus status={getDeploymentStatus(dep)} />
-            </Td>
-          </Tr>
-        </Tbody>
-      </Table>
-    </div>
+            <Tr>
+              <Td>Status</Td>
+              <Td>
+                <BadgeStatus status={getDeploymentStatus(dep)} />
+              </Td>
+            </Tr>
+          </Tbody>
+        </Table>
+      </div>
+    ),
+    []
   );
 
-  const sections = item
-    ? [
-        {
-          key: 'properties',
-          title: 'Properties',
-          content: (i: V1Deployment) => renderOverview(i),
-        },
-      ]
-    : [];
+  const sections = useMemo(
+    () =>
+      item
+        ? [
+            {
+              key: 'properties',
+              title: 'Properties',
+              content: (i: V1Deployment) => renderOverview(i),
+            },
+          ]
+        : [],
+    [item, renderOverview]
+  );
 
   return (
     <RightSidebarGeneric
@@ -98,6 +110,8 @@ export function SidebarK8sDeployments({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

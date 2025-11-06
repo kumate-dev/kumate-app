@@ -17,6 +17,8 @@ export interface SidebarResourcesProps<T> {
   }[];
   onDelete?: (item: T) => void;
   onEdit?: (item: T) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export function RightSidebarGeneric<T>({
@@ -26,6 +28,8 @@ export function RightSidebarGeneric<T>({
   sections = [],
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarResourcesProps<T>) {
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
@@ -35,13 +39,30 @@ export function RightSidebarGeneric<T>({
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (item) setVisible(true);
+    if (item) {
+      setVisible(true);
+    }
   }, [item]);
 
-  const closeSidebar = () => {
+  const closeSidebar = useCallback(() => {
     setVisible(false);
     setTimeout(() => setItem(null), 300);
-  };
+  }, [setItem]);
+
+  const handleEdit = useCallback(() => {
+    if (item && onEdit) {
+      onEdit(item);
+      closeSidebar();
+    }
+  }, [item, onEdit, closeSidebar]);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (item && onDelete) {
+      onDelete(item);
+      setOpenDeleteModal(false);
+      closeSidebar();
+    }
+  }, [item, onDelete, closeSidebar]);
 
   const onResize = useCallback(
     (e: React.MouseEvent) => {
@@ -60,7 +81,28 @@ export function RightSidebarGeneric<T>({
     [sidebarWidth]
   );
 
-  if (!item && !visible) return null;
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      closeSidebar();
+    },
+    [closeSidebar]
+  );
+
+  const handleSidebarClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const showDeleteModal = useCallback(() => {
+    setOpenDeleteModal(true);
+  }, []);
+
+  const hasActions = onEdit || onDelete;
+  const shouldShowSidebar = item || visible;
+  const isEditDisabled = !item || updating;
+  const isDeleteDisabled = !item || deleting;
+
+  if (!shouldShowSidebar) return null;
 
   return (
     <>
@@ -68,7 +110,7 @@ export function RightSidebarGeneric<T>({
         className={`fixed inset-0 z-40 cursor-default bg-black/40 transition-opacity duration-300 ${
           visible ? 'opacity-100' : 'opacity-0'
         }`}
-        onClick={closeSidebar}
+        onClick={handleBackdropClick}
       />
 
       <div
@@ -77,7 +119,7 @@ export function RightSidebarGeneric<T>({
           visible ? 'translate-x-0' : 'translate-x-full'
         } ${isResizing ? 'select-none' : ''}`}
         style={{ width: `${sidebarWidth}px` }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleSidebarClick}
       >
         <div
           className="absolute top-0 left-0 h-full w-1 cursor-ew-resize bg-transparent hover:bg-white/10 active:bg-white/20"
@@ -85,7 +127,12 @@ export function RightSidebarGeneric<T>({
         />
 
         <div className="flex shrink-0 justify-end border-b border-white/10">
-          <Button variant="ghost" className="text-white/70" onClick={closeSidebar}>
+          <Button
+            variant="ghost"
+            className="text-white/70 hover:bg-white/10 hover:text-white"
+            onClick={closeSidebar}
+            title="Close sidebar"
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -93,40 +140,38 @@ export function RightSidebarGeneric<T>({
         <div className="flex-1 space-y-4 overflow-auto p-4">
           {sections.map((section) => (
             <div key={section.key}>
-              <h3 className="mb-2 text-white/80">{section.title}</h3>
-
+              <h3 className="mb-2 font-medium text-white/80">{section.title}</h3>
               {item && <div className="space-y-2">{section.content(item)}</div>}
             </div>
           ))}
         </div>
 
-        <div className="flex flex-shrink-0 justify-between gap-2 border-t border-white/10 p-4">
-          {onEdit && item && (
-            <ButtonEdit
-              onEdit={() => {
-                onEdit(item);
-                closeSidebar();
-              }}
-            />
-          )}
-          {onDelete && <ButtonTrash onDelete={() => setOpenDeleteModal(true)} />}
-        </div>
-      </div>
+        {hasActions && (
+          <div className="flex flex-shrink-0 justify-between gap-2 border-t border-white/10 p-4">
+            {onEdit && (
+              <ButtonEdit onClick={handleEdit} disabled={isEditDisabled} loading={updating} />
+            )}
+            {onDelete && (
+              <ButtonTrash
+                onClick={showDeleteModal}
+                disabled={isDeleteDisabled}
+                loading={deleting}
+              />
+            )}
+          </div>
+        )}
 
-      {onDelete && item && (
-        <ModalConfirmDelete
-          open={openDeleteModal}
-          setOpen={setOpenDeleteModal}
-          items={[item]}
-          onConfirm={() => {
-            if (!item || !onDelete) return;
-            onDelete(item);
-            setOpenDeleteModal(false);
-            closeSidebar();
-          }}
-          title="Confirm Delete"
-        />
-      )}
+        {onDelete && item && (
+          <ModalConfirmDelete
+            open={openDeleteModal}
+            setOpen={setOpenDeleteModal}
+            items={[item]}
+            onConfirm={handleDeleteConfirm}
+            title="Confirm Delete"
+            loading={deleting}
+          />
+        )}
+      </div>
     </>
   );
 }

@@ -19,12 +19,13 @@ export interface PaneReplicationControllersProps {
   items: V1ReplicationController[];
   loading: boolean;
   error: string;
-  onDeleteReplicationControllers: (
-    replicationControllers: V1ReplicationController[]
-  ) => Promise<void>;
+  onDelete: (replicationControllers: V1ReplicationController[]) => Promise<void>;
   onCreate?: (manifest: ReplicationController) => Promise<ReplicationController | undefined>;
   onUpdate?: (manifest: ReplicationController) => Promise<ReplicationController | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneReplicationControllers({
@@ -34,10 +35,13 @@ export default function PaneReplicationControllers({
   items,
   loading,
   error,
-  onDeleteReplicationControllers,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneReplicationControllersProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -45,9 +49,9 @@ export default function PaneReplicationControllers({
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
-    await onDeleteReplicationControllers(selectedItems);
+    await onDelete(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, onDeleteReplicationControllers]);
+  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -100,9 +104,11 @@ export default function PaneReplicationControllers({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -126,6 +132,8 @@ export default function PaneReplicationControllers({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

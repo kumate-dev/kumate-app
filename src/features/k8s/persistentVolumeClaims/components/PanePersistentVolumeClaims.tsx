@@ -23,6 +23,9 @@ export interface PanePersistentVolumeClaimsProps {
   onCreate?: (manifest: V1PersistentVolumeClaim) => Promise<V1PersistentVolumeClaim | undefined>;
   onUpdate?: (manifest: V1PersistentVolumeClaim) => Promise<V1PersistentVolumeClaim | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 const getPvcStatus = (pvc: V1PersistentVolumeClaim): K8sStatus => {
@@ -58,6 +61,9 @@ export default function PanePersistentVolumeClaims({
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PanePersistentVolumeClaimsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -132,9 +138,11 @@ export default function PanePersistentVolumeClaims({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -157,6 +165,8 @@ export default function PanePersistentVolumeClaims({
       onUpdate={onUpdate}
       renderSidebar={renderSidebar}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

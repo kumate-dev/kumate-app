@@ -39,6 +39,32 @@ export default function Leases({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateLease = useCallback(
+    async (manifest: V1Lease): Promise<V1Lease | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create lease:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateLease = useCallback(
+    async (manifest: V1Lease): Promise<V1Lease | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update lease:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneLeases
       selectedNamespaces={selectedNamespaces}
@@ -47,9 +73,9 @@ export default function Leases({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteLeases={handleDeleteLeases}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteLeases}
+      onCreate={handleCreateLease}
+      onUpdate={handleUpdateLease}
       contextName={context?.name}
     />
   );

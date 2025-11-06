@@ -31,15 +31,15 @@ export default function PodDisruptionBudgets({ context }: PaneResourceContextPro
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1PodDisruptionBudget>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1PodDisruptionBudget>(
     createPodDisruptionBudget,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1PodDisruptionBudget>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1PodDisruptionBudget>(
     updatePodDisruptionBudget,
     context
   );
-  const { handleDeleteResources } = useDeleteK8sResources<V1PodDisruptionBudget>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1PodDisruptionBudget>(
     deletePodDisruptionBudgets,
     context
   );
@@ -63,10 +63,13 @@ export default function PodDisruptionBudgets({ context }: PaneResourceContextPro
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeletePodDisruptionBudgets={handleDeletePodDisruptionBudgets}
+      onDelete={handleDeletePodDisruptionBudgets}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

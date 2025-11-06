@@ -29,9 +29,18 @@ export default function Endpoints({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1Endpoints>(createEndpoints, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1Endpoints>(updateEndpoints, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1Endpoints>(deleteEndpoints, context);
+  const { handleCreateResource, creating } = useCreateK8sResource<V1Endpoints>(
+    createEndpoints,
+    context
+  );
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1Endpoints>(
+    updateEndpoints,
+    context
+  );
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1Endpoints>(
+    deleteEndpoints,
+    context
+  );
 
   const handleDelete = useCallback(
     async (eps: V1Endpoints[]) => {
@@ -44,6 +53,32 @@ export default function Endpoints({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateEndpoints = useCallback(
+    async (manifest: V1Endpoints): Promise<V1Endpoints | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create endpoints:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateEndpoints = useCallback(
+    async (manifest: V1Endpoints): Promise<V1Endpoints | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update endpoints:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneEndpoints
       selectedNamespaces={selectedNamespaces}
@@ -52,10 +87,13 @@ export default function Endpoints({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteEndpoints={handleDelete}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDelete}
+      onCreate={handleCreateEndpoints}
+      onUpdate={handleUpdateEndpoints}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

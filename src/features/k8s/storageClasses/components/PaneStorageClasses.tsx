@@ -12,20 +12,26 @@ export interface PaneStorageClassesProps {
   items: V1StorageClass[];
   loading: boolean;
   error: string;
-  onDeleteStorageClasses: (items: V1StorageClass[]) => Promise<void>;
+  onDelete: (items: V1StorageClass[]) => Promise<void>;
   onCreate?: (manifest: V1StorageClass) => Promise<V1StorageClass | undefined>;
   onUpdate?: (manifest: V1StorageClass) => Promise<V1StorageClass | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneStorageClasses({
   items,
   loading,
   error,
-  onDeleteStorageClasses,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating,
+  updating,
+  deleting,
 }: PaneStorageClassesProps) {
   const [sortBy, setSortBy] = useState('Name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -56,9 +62,9 @@ export default function PaneStorageClasses({
 
   const handleDeleteSelected = useCallback(
     async (items: V1StorageClass[]) => {
-      await onDeleteStorageClasses(items);
+      await onDelete(items);
     },
-    [onDeleteStorageClasses]
+    [onDelete]
   );
 
   const renderRow = (sc: V1StorageClass) => (
@@ -86,9 +92,11 @@ export default function PaneStorageClasses({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -109,6 +117,8 @@ export default function PaneStorageClasses({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

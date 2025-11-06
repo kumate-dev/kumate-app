@@ -10,9 +10,18 @@ interface SidebarServiceAccountsProps {
   setItem: (item: V1ServiceAccount | null) => void;
   onDelete?: (item: V1ServiceAccount) => void;
   onEdit?: (item: V1ServiceAccount) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarServiceAccounts({ item, setItem, onDelete, onEdit }: SidebarServiceAccountsProps) {
+export function SidebarServiceAccounts({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarServiceAccountsProps) {
   const renderOverview = (sa: V1ServiceAccount) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -63,6 +72,14 @@ export function SidebarServiceAccounts({ item, setItem, onDelete, onEdit }: Side
     : [];
 
   return (
-    <RightSidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <RightSidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
+    />
   );
 }

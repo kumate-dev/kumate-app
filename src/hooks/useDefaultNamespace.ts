@@ -5,8 +5,9 @@ export function useDefaultNamespace(
   allNamespacesKey = 'ALL_NAMESPACES'
 ): string | undefined {
   return useMemo(() => {
-    if (!selectedNamespaces || selectedNamespaces.length === 0) return undefined;
-    const ns = selectedNamespaces[0];
-    return ns === allNamespacesKey ? undefined : ns;
+    if (!selectedNamespaces?.length) return undefined;
+
+    const firstNamespace = selectedNamespaces[0];
+    return firstNamespace === allNamespacesKey ? undefined : firstNamespace;
   }, [selectedNamespaces, allNamespacesKey]);
 }

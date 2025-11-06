@@ -17,10 +17,13 @@ export interface PanePodDisruptionBudgetsProps {
   items: V1PodDisruptionBudget[];
   loading: boolean;
   error: string;
-  onDeletePodDisruptionBudgets: (pdbs: V1PodDisruptionBudget[]) => Promise<void>;
+  onDelete: (pdbs: V1PodDisruptionBudget[]) => Promise<void>;
   onCreate?: (manifest: V1PodDisruptionBudget) => Promise<V1PodDisruptionBudget | undefined>;
   onUpdate?: (manifest: V1PodDisruptionBudget) => Promise<V1PodDisruptionBudget | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PanePodDisruptionBudgets({
@@ -30,19 +33,22 @@ export default function PanePodDisruptionBudgets({
   items,
   loading,
   error,
-  onDeletePodDisruptionBudgets,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PanePodDisruptionBudgetsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const handleDeleteSelected = useCallback(
     async (toDelete: V1PodDisruptionBudget[]) => {
       if (!toDelete.length) return;
-      await onDeletePodDisruptionBudgets(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeletePodDisruptionBudgets]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -95,9 +101,11 @@ export default function PanePodDisruptionBudgets({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -120,6 +128,8 @@ export default function PanePodDisruptionBudgets({
       onUpdate={onUpdate}
       renderSidebar={renderSidebar}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

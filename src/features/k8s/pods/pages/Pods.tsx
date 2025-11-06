@@ -23,19 +23,55 @@ export default function Pods({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1Pod>(createPod, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1Pod>(updatePod, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1Pod>(deletePods, context);
+
+  const { handleCreateResource, creating: creatingPod } = useCreateK8sResource<V1Pod>(
+    createPod,
+    context
+  );
+  const { handleUpdateResource, updating: updatingPod } = useUpdateK8sResource<V1Pod>(
+    updatePod,
+    context
+  );
+  const { handleDeleteResources, deleting: deletingPods } = useDeleteK8sResources<V1Pod>(
+    deletePods,
+    context
+  );
 
   const handleDeletePods = useCallback(
     async (pods: V1Pod[]) => {
-      if (pods.length === 0) {
+      if (!pods?.length) {
         toast.error('No pods selected');
         return;
       }
       await handleDeleteResources(pods);
     },
     [handleDeleteResources]
+  );
+
+  const handleCreatePod = useCallback(
+    async (manifest: V1Pod): Promise<V1Pod | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create pod:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdatePod = useCallback(
+    async (manifest: V1Pod): Promise<V1Pod | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update pod:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
   );
 
   return (
@@ -46,10 +82,13 @@ export default function Pods({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
+      onCreate={handleCreatePod}
       onDelete={handleDeletePods}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onUpdate={handleUpdatePod}
       contextName={context?.name}
+      creating={creatingPod}
+      updating={updatingPod}
+      deleting={deletingPods}
     />
   );
 }

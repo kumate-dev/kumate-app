@@ -22,6 +22,9 @@ export interface PaneDeploymentsProps {
   onCreate?: (manifest: V1Deployment) => Promise<V1Deployment | undefined>;
   onUpdate?: (manifest: V1Deployment) => Promise<V1Deployment | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneDeployments({
@@ -35,6 +38,9 @@ export default function PaneDeployments({
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneDeploymentsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -88,9 +94,11 @@ export default function PaneDeployments({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -114,6 +122,8 @@ export default function PaneDeployments({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

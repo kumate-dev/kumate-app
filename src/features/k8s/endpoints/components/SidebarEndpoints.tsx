@@ -10,9 +10,18 @@ export interface SidebarEndpointsProps {
   setItem: (item: V1Endpoints | null) => void;
   onDelete?: (item: V1Endpoints) => void;
   onEdit?: (item: V1Endpoints) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarEndpoints({ item, setItem, onDelete, onEdit }: SidebarEndpointsProps) {
+export function SidebarEndpoints({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarEndpointsProps) {
   const renderOverview = (ep: V1Endpoints) => {
     const subsetsCount = (ep.subsets || []).length;
     return (
@@ -53,10 +62,12 @@ export function SidebarEndpoints({ item, setItem, onDelete, onEdit }: SidebarEnd
   return (
     <RightSidebarGeneric
       item={item}
-      setItem={setItem as any}
-      onDelete={onDelete as any}
-      onEdit={onEdit as any}
+      setItem={setItem}
+      onDelete={onDelete}
+      onEdit={onEdit}
       sections={[{ key: 'properties', title: 'Properties', content: renderOverview }]}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

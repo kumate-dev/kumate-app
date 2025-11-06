@@ -9,32 +9,41 @@ export function useSelectedNamespaces(context?: K8sContext | null) {
   const namespacesContext = useNamespaceStore((s) => s.namespacesContext);
   const setNamespaces = useNamespaceStore((s) => s.setNamespaces);
 
+  const contextName = context?.name;
+  const currentNamespaces = contextName ? namespaces[contextName] : [];
+
+  const isDataAvailable = namespacesContext === contextName && currentNamespaces.length > 0;
+
   useEffect(() => {
+    if (!contextName || isDataAvailable) return;
+
     let active = true;
 
-    async function list() {
-      if (!context?.name) return;
-
-      if (namespacesContext === context.name && (namespaces[context.name] || []).length > 0) return;
-
+    const fetchNamespaces = async () => {
       try {
-        const res: V1Namespace[] = await listNamespaces({ name: context.name });
+        const response: V1Namespace[] = await listNamespaces({ name: contextName });
+
         if (!active) return;
 
-        const sorted = (res || [])
-          .map((item) => ({ ...item, _name: item.metadata?.name || '' }))
+        const sortedNamespaces = (response || [])
+          .map((namespace) => ({
+            ...namespace,
+            _name: namespace.metadata?.name || '',
+          }))
           .sort((a, b) => a._name.localeCompare(b._name));
 
-        setNamespaces(context.name, sorted);
-      } catch {}
-    }
+        setNamespaces(contextName, sortedNamespaces);
+      } catch (error) {
+        console.error('Failed to fetch namespaces:', error);
+      }
+    };
 
-    list();
+    fetchNamespaces();
 
     return () => {
       active = false;
     };
-  }, [context?.name, namespacesContext, namespaces, setNamespaces]);
+  }, [contextName, isDataAvailable, setNamespaces]);
 
-  return context?.name ? namespaces[context.name] || [] : [];
+  return currentNamespaces;
 }

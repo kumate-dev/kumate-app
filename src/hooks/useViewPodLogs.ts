@@ -22,7 +22,7 @@ export interface UseViewPodLogsReturn {
   fetchLogs: () => Promise<void>;
   startStreaming: () => Promise<void>;
   stopStreaming: () => void;
-  downloadLogs: () => void;
+  downloadLogs: () => Promise<void>;
   clearLogs: () => void;
   setTailLines: (lines: number) => void;
 }
@@ -36,19 +36,43 @@ export function useViewPodLogs({
   tailLines: initialTailLines = 100,
   autoStream = true,
 }: UseViewPodLogsProps): UseViewPodLogsReturn {
-  const [logs, setLogs] = useState<string>('');
+  const [logs, setLogs] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [tailLines, setTailLines] = useState(initialTailLines);
 
   const unlistenRef = useRef<(() => void) | null>(null);
-  const eventNameRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
   const autoStreamStartedRef = useRef(false);
+  const contextNameRef = useRef(contextName);
+
+  useEffect(() => {
+    contextNameRef.current = contextName;
+  }, [contextName]);
+
+  const handleLogEvent = useCallback((event: any) => {
+    if (!isMountedRef.current) return;
+
+    switch (event.type) {
+      case 'LOG_LINE':
+        if (event.log) {
+          setLogs((prev) => prev + event.log + '\n');
+        }
+        break;
+      case 'LOG_ERROR':
+        setError(event.error || 'Log stream error');
+        setIsStreaming(false);
+        break;
+      case 'LOG_COMPLETED':
+        setIsStreaming(false);
+        break;
+    }
+  }, []);
 
   const fetchLogs = useCallback(async () => {
-    if (!contextName) {
+    const currentContext = contextNameRef.current;
+    if (!currentContext) {
       setError('Context name is required');
       return;
     }
@@ -58,7 +82,7 @@ export function useViewPodLogs({
 
     try {
       const logData = await getPodLogs({
-        context: contextName,
+        context: currentContext,
         namespace,
         podName,
         containerName,
@@ -68,73 +92,72 @@ export function useViewPodLogs({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch logs');
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  }, [contextName, namespace, podName, containerName, tailLines]);
+  }, [namespace, podName, containerName, tailLines]);
 
   const startStreaming = useCallback(async () => {
-    if (!contextName || isStreaming) return;
+    const currentContext = contextNameRef.current;
+    if (!currentContext || isStreaming) return;
 
     setLoading(true);
     setError(null);
     setIsStreaming(true);
 
     try {
-      const { unlisten, eventName } = await watchPodLogs({
-        context: contextName,
+      const { unlisten } = await watchPodLogs({
+        context: currentContext,
         namespace,
         podName,
         containerName,
         tailLines,
-        onEvent: (event) => {
-          if (!isMountedRef.current) return;
-
-          if (event.type === 'LOG_LINE' && event.log) {
-            setLogs((prev) => prev + event.log + '\n');
-          } else if (event.type === 'LOG_ERROR') {
-            setError(event.error || 'Log stream error');
-            setIsStreaming(false);
-          } else if (event.type === 'LOG_COMPLETED') {
-            setIsStreaming(false);
-          }
-        },
+        onEvent: handleLogEvent,
       });
 
       unlistenRef.current = unlisten;
-      eventNameRef.current = eventName;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start log stream');
       setIsStreaming(false);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  }, [contextName, namespace, podName, containerName, tailLines, isStreaming]);
+  }, [namespace, podName, containerName, tailLines, isStreaming, handleLogEvent]);
 
   const stopStreaming = useCallback(() => {
-    if (unlistenRef.current) {
-      unlistenRef.current();
-      unlistenRef.current = null;
+    const currentContext = contextNameRef.current;
+
+    unlistenRef.current?.();
+    unlistenRef.current = null;
+
+    if (currentContext) {
+      unwatch({ name: currentContext });
     }
-    if (contextName) {
-      unwatch({ name: contextName });
-    }
-    eventNameRef.current = null;
+
     setIsStreaming(false);
     setLoading(false);
-  }, [contextName]);
+  }, []);
 
   const downloadLogs = useCallback(async () => {
+    if (!logs) return;
+
     try {
       const filePath = await save({
         defaultPath: `${podName}-${containerName || 'logs'}.log`,
-        filters: [{ name: 'Log', extensions: ['log'] }],
+        filters: [{ name: 'Log', extensions: ['log', 'txt'] }],
       });
+
       if (!filePath) return;
+
       await writeTextFile(filePath, logs);
     } catch (err) {
-      setError(`Download failed: ${err instanceof Error ? err.message : String(err)}`);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`Download failed: ${errorMessage}`);
     }
-  }, [logs, podName, containerName, setError]);
+  }, [logs, podName, containerName]);
 
   const clearLogs = useCallback(() => {
     setLogs('');

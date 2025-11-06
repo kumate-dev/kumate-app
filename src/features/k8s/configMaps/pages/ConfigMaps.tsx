@@ -44,6 +44,32 @@ export default function ConfigMaps({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateConfigMap = useCallback(
+    async (manifest: V1ConfigMap): Promise<V1ConfigMap | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create configmap:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateConfigMap = useCallback(
+    async (manifest: V1ConfigMap): Promise<V1ConfigMap | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update configmap:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneConfigMaps
       selectedNamespaces={selectedNamespaces}
@@ -52,9 +78,9 @@ export default function ConfigMaps({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteConfigMaps={handleDeleteConfigMaps}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteConfigMaps}
+      onCreate={handleCreateConfigMap}
+      onUpdate={handleUpdateConfigMap}
       contextName={context?.name}
     />
   );

@@ -3,6 +3,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import type { V1Namespace } from '@kubernetes/client-node';
 import { EventHandler, EventType } from '@/types/k8sEvent';
 import { K8sResponse } from '@/types/k8sResponse';
+import { createCustomResource, updateCustomResource } from './customResources';
 
 export interface NamespaceEvent {
   type: EventType;
@@ -44,4 +45,46 @@ export async function deleteNamespaces({
     name,
     resourceNames,
   });
+}
+
+export async function createNamespace({
+  name,
+  manifest,
+}: {
+  name: string;
+  manifest: V1Namespace;
+}): Promise<V1Namespace> {
+  const result = await createCustomResource({
+    name,
+    manifest: manifest as unknown as Record<string, any>,
+    crd: {
+      group: '',
+      version: 'v1',
+      kind: 'Namespace',
+      plural: 'namespaces',
+      isNamespaced: false,
+    },
+  });
+  return result as V1Namespace;
+}
+
+export async function updateNamespace({
+  name,
+  manifest,
+}: {
+  name: string;
+  manifest: V1Namespace;
+}): Promise<V1Namespace> {
+  const result = await updateCustomResource({
+    name,
+    manifest: manifest as unknown as Record<string, any>,
+    crd: {
+      group: '',
+      version: 'v1',
+      kind: 'Namespace',
+      plural: 'namespaces',
+      isNamespaced: false,
+    },
+  });
+  return result as V1Namespace;
 }

@@ -9,6 +9,8 @@ interface SidebarStorageClassesProps {
   setItem: (item: V1StorageClass | null) => void;
   onDelete?: (item: V1StorageClass) => void;
   onEdit?: (item: V1StorageClass) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export function SidebarStorageClasses({
@@ -16,6 +18,8 @@ export function SidebarStorageClasses({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarStorageClassesProps) {
   const renderOverview = (sc: V1StorageClass) => {
     return (
@@ -81,6 +85,8 @@ export function SidebarStorageClasses({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

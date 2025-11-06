@@ -10,9 +10,18 @@ interface SidebarRoleBindingsProps {
   setItem: (item: V1RoleBinding | null) => void;
   onDelete?: (item: V1RoleBinding) => void;
   onEdit?: (item: V1RoleBinding) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarRoleBindings({ item, setItem, onDelete, onEdit }: SidebarRoleBindingsProps) {
+export function SidebarRoleBindings({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarRoleBindingsProps) {
   const renderOverview = (rb: V1RoleBinding) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -68,6 +77,14 @@ export function SidebarRoleBindings({ item, setItem, onDelete, onEdit }: Sidebar
     : [];
 
   return (
-    <RightSidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <RightSidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
+    />
   );
 }

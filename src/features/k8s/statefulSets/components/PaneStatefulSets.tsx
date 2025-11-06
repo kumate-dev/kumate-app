@@ -19,10 +19,13 @@ export interface PaneStatefulSetsProps {
   items: V1StatefulSet[];
   loading: boolean;
   error: string;
-  onDeleteStatefulSets: (statefulSets: V1StatefulSet[]) => Promise<void>;
+  onDelete: (statefulSets: V1StatefulSet[]) => Promise<void>;
   onCreate?: (manifest: StatefulSet) => Promise<StatefulSet | undefined>;
   onUpdate?: (manifest: StatefulSet) => Promise<StatefulSet | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneStatefulSets({
@@ -32,10 +35,13 @@ export default function PaneStatefulSets({
   items,
   loading,
   error,
-  onDeleteStatefulSets,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneStatefulSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -43,9 +49,9 @@ export default function PaneStatefulSets({
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
-    await onDeleteStatefulSets(selectedItems);
+    await onDelete(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, onDeleteStatefulSets]);
+  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -97,9 +103,11 @@ export default function PaneStatefulSets({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -123,6 +131,8 @@ export default function PaneStatefulSets({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

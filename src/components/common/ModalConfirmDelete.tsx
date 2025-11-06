@@ -15,6 +15,7 @@ interface ModalConfirmDeleteProps<T = unknown> {
   onConfirm: () => void;
   title?: string;
   message?: string;
+  loading?: boolean;
 }
 
 export function ModalConfirmDelete<T>({
@@ -24,11 +25,24 @@ export function ModalConfirmDelete<T>({
   onConfirm,
   title = 'Confirm Delete',
   message,
+  loading = false,
 }: ModalConfirmDeleteProps<T>) {
   const count = items.length;
 
+  const handleConfirm = () => {
+    if (!loading) {
+      onConfirm();
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!loading) {
+      setOpen(open);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -39,15 +53,15 @@ export function ModalConfirmDelete<T>({
             {message ??
               `Are you sure you want to delete ${count} selected item${count > 1 ? 's' : ''}?`}
           </p>
+          {loading && <p className="text-yellow-400">Deletion in progress, please wait...</p>}
         </div>
 
         <DialogFooter>
-          <ButtonCancel onCancel={() => setOpen(false)} disabled={count === 0} />
+          <ButtonCancel onClick={() => setOpen(false)} disabled={loading || count === 0} />
           <ButtonDelete
-            onDelete={() => {
-              onConfirm();
-              setOpen(false);
-            }}
+            onClick={handleConfirm}
+            disabled={loading || count === 0}
+            loading={loading}
           />
         </DialogFooter>
       </DialogContent>

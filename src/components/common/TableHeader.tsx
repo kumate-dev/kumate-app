@@ -1,6 +1,6 @@
 import { Th } from '@/components/ui/table';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Checkbox } from '../ui/checkbox';
 
 export type SortKey = string;
@@ -34,19 +34,54 @@ export const TableHeader = <T extends string>({
   selectedItems = [],
   totalItems = [],
 }: TableHeaderProps<T>) => {
-  const handleSort = (column: T, sortable?: boolean) => {
-    if (!sortable || !setSortBy || !setSortOrder) return;
+  const handleSort = useCallback(
+    (column: T, sortable?: boolean) => {
+      if (!sortable || !setSortBy || !setSortOrder) return;
 
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
+      if (sortBy === column) {
+        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSortBy(column);
+        setSortOrder('asc');
+      }
+    },
+    [sortBy, sortOrder, setSortBy, setSortOrder]
+  );
+
+  const { allSelected, isIndeterminate } = useMemo(
+    () => ({
+      allSelected: totalItems.length > 0 && selectedItems.length === totalItems.length,
+      isIndeterminate: selectedItems.length > 0 && selectedItems.length < totalItems.length,
+    }),
+    [selectedItems.length, totalItems.length]
+  );
+
+  const handleToggleAll = useCallback(
+    (checked: boolean) => {
+      onToggleAll?.(!!checked);
+    },
+    [onToggleAll]
+  );
+
+  const renderSortIcon = useCallback((isActive: boolean, currentSortOrder?: 'asc' | 'desc') => {
+    if (!isActive) {
+      return (
+        <span className="block h-3 w-3 opacity-0 transition-opacity group-hover:opacity-50">
+          <ChevronUp className="h-3 w-3" />
+        </span>
+      );
     }
-  };
 
-  const allSelected = totalItems.length > 0 && selectedItems.length === totalItems.length;
-  const isIndeterminate = selectedItems.length > 0 && selectedItems.length < totalItems.length;
+    return currentSortOrder === 'asc' ? (
+      <ChevronUp className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
+    ) : (
+      <ChevronDown className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
+    );
+  }, []);
+
+  const getAlignClass = useCallback((align: 'left' | 'center' | 'right' = 'left') => {
+    return align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+  }, []);
 
   return (
     <thead className="sticky top-0 bg-neutral-900/100">
@@ -56,15 +91,14 @@ export const TableHeader = <T extends string>({
             <Checkbox
               checked={allSelected}
               indeterminate={isIndeterminate}
-              onCheckedChange={(checked) => onToggleAll(!!checked)}
+              onCheckedChange={handleToggleAll}
             />
           </Th>
         )}
 
         {columns.map(({ label, key, sortable = true, align = 'left', width }) => {
           const isActive = sortBy === key;
-          const alignClass =
-            align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+          const alignClass = getAlignClass(align);
 
           return (
             <Th
@@ -79,17 +113,7 @@ export const TableHeader = <T extends string>({
                 >
                   <span className="truncate">{label}</span>
                   <span className="inline-flex h-3 w-3 items-center justify-center">
-                    {isActive ? (
-                      sortOrder === 'asc' ? (
-                        <ChevronUp className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
-                      ) : (
-                        <ChevronDown className="h-3 w-3 transition-transform duration-150 group-hover:scale-110" />
-                      )
-                    ) : (
-                      <span className="block h-3 w-3 opacity-0 transition-opacity group-hover:opacity-50">
-                        <ChevronUp className="h-3 w-3" />
-                      </span>
-                    )}
+                    {renderSortIcon(isActive, sortOrder)}
                   </span>
                 </button>
               ) : (

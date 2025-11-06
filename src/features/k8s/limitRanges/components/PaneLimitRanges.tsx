@@ -15,7 +15,7 @@ export interface PaneLimitRangesProps {
   items: V1LimitRange[];
   loading: boolean;
   error: string;
-  onDeleteLimitRanges: (limitRanges: V1LimitRange[]) => Promise<void>;
+  onDelete: (limitRanges: V1LimitRange[]) => Promise<void>;
   onCreate?: (manifest: V1LimitRange) => Promise<V1LimitRange | undefined>;
   onUpdate?: (manifest: V1LimitRange) => Promise<V1LimitRange | undefined>;
   contextName?: string;
@@ -28,7 +28,7 @@ export default function PaneLimitRanges({
   items,
   loading,
   error,
-  onDeleteLimitRanges,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
@@ -38,9 +38,9 @@ export default function PaneLimitRanges({
   const handleDeleteSelected = useCallback(
     async (toDelete: V1LimitRange[]) => {
       if (!toDelete.length) return;
-      await onDeleteLimitRanges(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteLimitRanges]
+    [onDelete]
   );
 
   const renderLimitMap = (map?: Record<string, string>): { display: string; title: string } => {

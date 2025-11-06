@@ -12,6 +12,8 @@ interface SidebarPVCProps {
   setItem: (item: V1PersistentVolumeClaim | null) => void;
   onDelete?: (item: V1PersistentVolumeClaim) => void;
   onEdit?: (item: V1PersistentVolumeClaim) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 const getPvcStatus = (pvc: V1PersistentVolumeClaim): K8sStatus => {
@@ -41,6 +43,8 @@ export function SidebarPersistentVolumeClaims({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarPVCProps) {
   const renderOverview = (pvc: V1PersistentVolumeClaim) => {
     const capacity = (pvc.status?.capacity as any)?.storage || '';
@@ -138,6 +142,8 @@ export function SidebarPersistentVolumeClaims({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

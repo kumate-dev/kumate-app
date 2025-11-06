@@ -30,11 +30,6 @@ export default function Definitions({ context }: PaneResourceContextProps) {
     undefined
   );
 
-  const handleDeleteSelected = useCallback(async (_selected: CrdDefinition[]) => {
-    // Definitions page is read-only; deletion is not supported.
-    return;
-  }, []);
-
   const columns: ColumnDef<string>[] = [
     { key: 'resource', label: 'Resource' },
     { key: 'group', label: 'Group' },
@@ -64,15 +59,13 @@ export default function Definitions({ context }: PaneResourceContextProps) {
       item: CrdDefinition,
       actions: {
         setItem: (item: CrdDefinition | null) => void;
-        onDelete?: (item: CrdDefinition) => void;
-        onEdit?: (item: CrdDefinition) => void;
       }
     ) => (
       <CustomResourceDefinitions
         item={item}
         setItem={actions.setItem}
-        onDelete={actions.onDelete}
-        onEdit={actions.onEdit}
+        updating={false}
+        deleting={false}
       />
     ),
     []
@@ -89,7 +82,6 @@ export default function Definitions({ context }: PaneResourceContextProps) {
       showNamespace={false}
       contextName={context?.name}
       emptyText="No Custom Resource Definitions"
-      onDelete={handleDeleteSelected}
     />
   );
 }

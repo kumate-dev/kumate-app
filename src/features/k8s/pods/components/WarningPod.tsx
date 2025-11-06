@@ -8,8 +8,6 @@ interface WarningPodProps {
 }
 
 export const WarningPod: React.FC<WarningPodProps> = ({ warnings, className = '', children }) => {
-  console.log(warnings);
-
   const warningContainers = warnings.filter((warning) => !warning.ready && warning.reason);
 
   if (warningContainers.length === 0) {

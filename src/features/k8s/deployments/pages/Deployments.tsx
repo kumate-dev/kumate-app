@@ -29,9 +29,16 @@ export default function Deployments({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1Deployment>(createDeployment, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1Deployment>(updateDeployment, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1Deployment>(deleteDeployments, context);
+  const { handleCreateResource, creating: creatingDeployment } = useCreateK8sResource<V1Deployment>(
+    createDeployment,
+    context
+  );
+  const { handleUpdateResource, updating: updatingDeployment } = useUpdateK8sResource<V1Deployment>(
+    updateDeployment,
+    context
+  );
+  const { handleDeleteResources, deleting: deletingDeployments } =
+    useDeleteK8sResources<V1Deployment>(deleteDeployments, context);
 
   const handleDeleteDeployments = useCallback(
     async (deployments: V1Deployment[]) => {
@@ -44,6 +51,32 @@ export default function Deployments({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateDeployment = useCallback(
+    async (manifest: V1Deployment): Promise<V1Deployment | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create deployment:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateDeployment = useCallback(
+    async (manifest: V1Deployment): Promise<V1Deployment | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update deployment:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneDeployments
       selectedNamespaces={selectedNamespaces}
@@ -53,9 +86,12 @@ export default function Deployments({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDelete={handleDeleteDeployments}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onCreate={handleCreateDeployment}
+      onUpdate={handleUpdateDeployment}
       contextName={context?.name}
+      creating={creatingDeployment}
+      updating={updatingDeployment}
+      deleting={deletingDeployments}
     />
   );
 }

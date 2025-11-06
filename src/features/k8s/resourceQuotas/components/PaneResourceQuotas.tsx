@@ -16,10 +16,13 @@ export interface PaneResourceQuotasProps {
   items: V1ResourceQuota[];
   loading: boolean;
   error: string;
-  onDeleteResourceQuotas: (resourceQuotas: V1ResourceQuota[]) => Promise<void>;
+  onDelete: (resourceQuotas: V1ResourceQuota[]) => Promise<void>;
   onCreate?: (manifest: V1ResourceQuota) => Promise<V1ResourceQuota | undefined>;
   onUpdate?: (manifest: V1ResourceQuota) => Promise<V1ResourceQuota | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneResourceQuotas({
@@ -29,19 +32,22 @@ export default function PaneResourceQuotas({
   items,
   loading,
   error,
-  onDeleteResourceQuotas,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating,
+  updating,
+  deleting,
 }: PaneResourceQuotasProps) {
   const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const handleDeleteSelected = useCallback(
     async (toDelete: V1ResourceQuota[]) => {
       if (!toDelete.length) return;
-      await onDeleteResourceQuotas(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteResourceQuotas]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -91,9 +97,11 @@ export default function PaneResourceQuotas({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -116,6 +124,8 @@ export default function PaneResourceQuotas({
       onCreate={onCreate}
       onUpdate={onUpdate}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

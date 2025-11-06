@@ -9,9 +9,18 @@ interface Props {
   setItem: (item: V1MutatingWebhookConfiguration | null) => void;
   onDelete?: (item: V1MutatingWebhookConfiguration) => void;
   onEdit?: (item: V1MutatingWebhookConfiguration) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export default function SidebarMutatingWebhooks({ item, setItem, onDelete, onEdit }: Props) {
+export default function SidebarMutatingWebhooks({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: Props) {
   const renderOverview = (mw: V1MutatingWebhookConfiguration) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -57,6 +66,8 @@ export default function SidebarMutatingWebhooks({ item, setItem, onDelete, onEdi
       onDelete={onDelete}
       onEdit={onEdit}
       sections={sections}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

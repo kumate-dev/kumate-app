@@ -59,7 +59,7 @@ export default function BottomYamlEditor({
     }
   }, [yamlError, yamlText, saving, initialYaml, mode]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!canSave) return;
     try {
       setSaving(true);
@@ -71,16 +71,38 @@ export default function BottomYamlEditor({
     } finally {
       setSaving(false);
     }
-  };
+  }, [canSave, yamlText, onSave, onClose]);
 
-  const toggleExpand = () => {
+  const toggleExpand = useCallback(() => {
     if (isExpanded) {
       setEditorHeight(window.innerHeight * 0.5);
     } else {
       setEditorHeight(window.innerHeight - 40);
     }
     setIsExpanded(!isExpanded);
-  };
+  }, [isExpanded]);
+
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onClose();
+    },
+    [onClose]
+  );
+
+  const handleContainerClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const displayTitle = useMemo(() => title ?? 'YAML Editor', [title]);
+
+  const containerClass = useMemo(
+    () =>
+      `fixed right-0 bottom-0 left-0 z-[60] border-l border-white/10 bg-neutral-900/95 shadow-xl backdrop-blur-sm transition-transform duration-300 ${
+        isResizing ? 'select-none' : ''
+      }`,
+    [isResizing]
+  );
 
   if (!open) return null;
 
@@ -90,15 +112,13 @@ export default function BottomYamlEditor({
         className={`fixed inset-0 z-[55] bg-black/40 transition-opacity duration-300 ${
           open ? 'opacity-100' : 'opacity-0'
         }`}
-        onClick={onClose}
+        onClick={handleBackdropClick}
       />
 
       <div
-        className={`fixed right-0 bottom-0 left-0 z-[60] border-l border-white/10 bg-neutral-900/95 shadow-xl backdrop-blur-sm transition-transform duration-300 ${
-          isResizing ? 'select-none' : ''
-        }`}
+        className={containerClass}
         style={{ height: `${editorHeight}px` }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleContainerClick}
       >
         <div
           className="absolute top-0 right-0 left-0 h-2 cursor-ns-resize bg-transparent hover:bg-white/10 active:bg-white/20"
@@ -107,16 +127,12 @@ export default function BottomYamlEditor({
 
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
           <div className="min-w-0 flex-1 truncate text-sm font-medium text-white/80">
-            {title ?? 'YAML Editor'}
+            {displayTitle}
           </div>
           <div className="flex items-center gap-2">
-            <ButtonCancel onCancel={onClose} disabled={saving} />
-            <ButtonSave
-              onSave={handleSave}
-              disabled={!canSave}
-              text={saving ? 'Saving...' : 'Save'}
-            />
-            <ButtonExpand onExpand={toggleExpand} isExpanded={isExpanded} />
+            <ButtonCancel onClick={onClose} disabled={saving} />
+            <ButtonSave onClick={handleSave} disabled={!canSave} loading={saving} />
+            <ButtonExpand onClick={toggleExpand} isExpanded={isExpanded} />
           </div>
         </div>
 

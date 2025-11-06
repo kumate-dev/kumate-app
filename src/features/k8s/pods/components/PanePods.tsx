@@ -27,6 +27,9 @@ export interface PanePodsProps {
   onCreate?: (manifest: V1Pod) => Promise<V1Pod | undefined>;
   onUpdate?: (manifest: V1Pod) => Promise<V1Pod | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PanePods({
@@ -40,95 +43,121 @@ export default function PanePods({
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PanePodsProps) {
-  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const columns: ColumnDef<string>[] = [
-    { label: 'Name', key: 'name', sortable: true },
-    { label: '', key: 'warning', sortable: false },
-    { label: 'Namespace', key: 'namespace', sortable: true },
-    { label: 'Containers', key: 'containers', sortable: true },
-    { label: 'CPU', key: 'cpu', sortable: true },
-    { label: 'Memory', key: 'memory', sortable: true },
-    { label: 'Restart', key: 'restart', sortable: true },
-    { label: 'Controlled By', key: 'controlledBy', sortable: true },
-    { label: 'Node', key: 'node', sortable: true },
-    { label: 'QoS', key: 'qos', sortable: true },
-    { label: 'Age', key: 'age', sortable: true },
-    { label: 'Status', key: 'status', sortable: false },
-  ];
+  const columns = useMemo(
+    (): ColumnDef<string>[] => [
+      { label: 'Name', key: 'name', sortable: true },
+      { label: '', key: 'warning', sortable: false },
+      { label: 'Namespace', key: 'namespace', sortable: true },
+      { label: 'Containers', key: 'containers', sortable: true },
+      { label: 'CPU', key: 'cpu', sortable: true },
+      { label: 'Memory', key: 'memory', sortable: true },
+      { label: 'Restart', key: 'restart', sortable: true },
+      { label: 'Controlled By', key: 'controlledBy', sortable: true },
+      { label: 'Node', key: 'node', sortable: true },
+      { label: 'QoS', key: 'qos', sortable: true },
+      { label: 'Age', key: 'age', sortable: true },
+      { label: 'Status', key: 'status', sortable: false },
+    ],
+    []
+  );
 
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
-      name: (item: V1Pod) => item.metadata?.name || '',
-      namespace: (item: V1Pod) => item.metadata?.namespace || '',
-      containers: (item: V1Pod) => item.spec?.containers?.length || 0,
-      cpu: (item: V1Pod) => {
-        const cpuRequests = item.spec?.containers
-          ?.map((c) => c.resources?.requests?.cpu)
+  const valueGetters = useMemo(
+    () => ({
+      name: (pod: V1Pod) => pod.metadata?.name || '',
+      namespace: (pod: V1Pod) => pod.metadata?.namespace || '',
+      containers: (pod: V1Pod) => pod.spec?.containers?.length || 0,
+      cpu: (pod: V1Pod) => {
+        const cpuRequests = pod.spec?.containers
+          ?.map((container) => container.resources?.requests?.cpu)
           .filter(Boolean);
         return cpuRequests?.length || 0;
       },
-      memory: (item: V1Pod) => {
-        const memoryRequests = item.spec?.containers
-          ?.map((c) => c.resources?.requests?.memory)
+      memory: (pod: V1Pod) => {
+        const memoryRequests = pod.spec?.containers
+          ?.map((container) => container.resources?.requests?.memory)
           .filter(Boolean);
         return memoryRequests?.length || 0;
       },
-      restart: (item: V1Pod) => podRestartCount(item),
-      controlledBy: (item: V1Pod) => item.metadata?.ownerReferences?.[0]?.name || '',
-      node: (item: V1Pod) => item.spec?.nodeName || '',
-      qos: (item: V1Pod) => item.status?.qosClass || '',
-      age: (item: V1Pod) => new Date(item.metadata?.creationTimestamp || '').getTime(),
-      status: (item: V1Pod) => getPodStatus(item),
-      warning: (item: V1Pod) => {
-        const containerStatuses = getContainerStatuses(item);
+      restart: (pod: V1Pod) => podRestartCount(pod),
+      controlledBy: (pod: V1Pod) => pod.metadata?.ownerReferences?.[0]?.name || '',
+      node: (pod: V1Pod) => pod.spec?.nodeName || '',
+      qos: (pod: V1Pod) => pod.status?.qosClass || '',
+      age: (pod: V1Pod) => new Date(pod.metadata?.creationTimestamp || '').getTime(),
+      status: (pod: V1Pod) => getPodStatus(pod),
+      warning: (pod: V1Pod) => {
+        const containerStatuses = getContainerStatuses(pod);
         return containerStatuses.some((status) => !status.ready) ? 1 : 0;
       },
-    };
+    }),
+    []
+  );
 
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  const sortedItems = useMemo(
+    () => sortItems(items, sortBy, sortOrder, valueGetters),
+    [items, sortBy, sortOrder, valueGetters]
+  );
 
-  const renderRow = (pod: V1Pod) => {
+  const renderRow = useCallback((pod: V1Pod) => {
     const containerStatuses = getContainerStatuses(pod);
     const hasWarning = containerStatuses.some((status) => !status.ready);
+    const podName = pod.metadata?.name ?? '';
+    const namespace = pod.metadata?.namespace ?? '';
+    const cpuRequests =
+      pod.spec?.containers
+        ?.map((c) => c.resources?.requests?.cpu)
+        .filter(Boolean)
+        .join(', ') || '-';
+    const memoryRequests =
+      pod.spec?.containers
+        ?.map((c) => c.resources?.requests?.memory)
+        .filter(Boolean)
+        .join(', ') || '-';
+    const ownerReferences = pod.metadata?.ownerReferences?.map((o) => o.name).join(', ') || '-';
+    const nodeName = pod.spec?.nodeName || '-';
+    const qosClass = pod.status?.qosClass || '-';
+
     return (
       <>
         <Td className="max-w-truncate align-middle">
-          <span className="block truncate" title={pod.metadata?.name ?? ''}>
-            {pod.metadata?.name}
+          <span className="block truncate" title={podName}>
+            {podName}
           </span>
         </Td>
         <Td className="text-center align-middle">
-          {hasWarning ? (
+          {hasWarning && (
             <WarningPod warnings={containerStatuses}>
               <div>
                 <IconWarning />
               </div>
             </WarningPod>
-          ) : null}
+          )}
         </Td>
         <Td>
-          <BadgeNamespaces name={pod.metadata?.namespace ?? ''} />
+          <BadgeNamespaces name={namespace} />
         </Td>
         <Td className="align-middle">
-          <DotContainers containerStatuses={getContainerStatuses(pod)} />
+          <DotContainers containerStatuses={containerStatuses} />
         </Td>
-        <Td>{pod.spec?.containers?.map((c) => c.resources?.requests?.cpu).join(', ') || '-'}</Td>
-        <Td>{pod.spec?.containers?.map((c) => c.resources?.requests?.memory).join(', ') || '-'}</Td>
+        <Td>{cpuRequests}</Td>
+        <Td>{memoryRequests}</Td>
         <Td>{podRestartCount(pod)}</Td>
-        <Td>{pod.metadata?.ownerReferences?.map((o) => o.name).join(', ') || '-'}</Td>
-        <Td>{pod.spec?.nodeName || '-'}</Td>
-        <Td>{pod.status?.qosClass || '-'}</Td>
+        <Td>{ownerReferences}</Td>
+        <Td>{nodeName}</Td>
+        <Td>{qosClass}</Td>
         <AgeCell timestamp={pod.metadata?.creationTimestamp} />
         <Td>
           <BadgeStatus status={getPodStatus(pod)} />
         </Td>
       </>
     );
-  };
+  }, []);
 
   const renderSidebar = useCallback(
     (
@@ -145,6 +174,8 @@ export default function PanePods({
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
         contextName={contextName}
+        updating={updating}
+        deleting={deleting}
       />
     ),
     [contextName]
@@ -171,6 +202,9 @@ export default function PanePods({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

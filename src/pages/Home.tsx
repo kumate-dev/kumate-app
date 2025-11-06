@@ -101,12 +101,10 @@ export default function Home() {
     // Workloads
     pods: Pods,
     deployments: Deployments,
-    horizontal_pod_autoscalers: HorizontalPodAutoscalers,
-    pod_disruption_budgets: PodDisruptionBudgets,
     replica_sets: ReplicaSets,
-    replication_controllers: ReplicationControllers,
-    stateful_sets: StatefulSets,
     daemon_sets: DaemonSets,
+    stateful_sets: StatefulSets,
+    replication_controllers: ReplicationControllers,
     jobs: Jobs,
     cron_jobs: CronJobs,
 
@@ -128,6 +126,9 @@ export default function Home() {
     persistent_volume_claims: PersistentVolumeClaims,
     persistent_volumes: PersistentVolumes,
     storage_classes: StorageClasses,
+    horizontal_pod_autoscalers: HorizontalPodAutoscalers,
+    pod_disruption_budgets: PodDisruptionBudgets,
+
     // Helm
     helm_charts: HelmCharts,
     helm_releases: HelmReleases,

@@ -2,21 +2,37 @@ import { Button } from '@/components/ui/button';
 import React from 'react';
 
 interface ButtonClearProps {
-  onClearLogs: () => void;
+  onClick: () => void;
   className?: string;
   text?: string;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
-export const ButtonClear: React.FC<ButtonClearProps> = ({ onClearLogs, className, text }) => {
+export const ButtonClear: React.FC<ButtonClearProps> = ({
+  onClick,
+  className = '',
+  text,
+  disabled = false,
+  loading = false,
+}) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!disabled && !loading) {
+      onClick();
+    }
+  };
+
   return (
     <Button
       variant="outline"
       size="sm"
       className={`flex gap-1 px-3 ${className}`}
-      onClick={onClearLogs}
-      title="Clear Logs"
+      onClick={handleClick}
+      title={loading ? 'Clearing...' : 'Clear'}
+      disabled={disabled || loading}
     >
-      {text ?? 'Clear'}
+      {text ?? (loading ? 'Clearing...' : 'Clear')}
     </Button>
   );
 };

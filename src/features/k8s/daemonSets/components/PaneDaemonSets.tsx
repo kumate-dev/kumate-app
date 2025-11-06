@@ -19,10 +19,13 @@ export interface PaneDaemonSetsProps {
   items: V1DaemonSet[];
   loading: boolean;
   error: string;
-  onDeleteDaemonSets: (daemonSets: V1DaemonSet[]) => Promise<void>;
+  onDelete: (daemonSets: V1DaemonSet[]) => Promise<void>;
   onCreate?: (manifest: DaemonSet) => Promise<DaemonSet | undefined>;
   onUpdate?: (manifest: DaemonSet) => Promise<DaemonSet | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneDaemonSets({
@@ -32,10 +35,13 @@ export default function PaneDaemonSets({
   items,
   loading,
   error,
-  onDeleteDaemonSets,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneDaemonSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -43,9 +49,9 @@ export default function PaneDaemonSets({
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedItems.length === 0) return;
-    await onDeleteDaemonSets(selectedItems);
+    await onDelete(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, onDeleteDaemonSets]);
+  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -95,9 +101,11 @@ export default function PaneDaemonSets({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -121,6 +129,8 @@ export default function PaneDaemonSets({
       onCreate={onCreate}
       onUpdate={onUpdate}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

@@ -19,10 +19,13 @@ export interface PaneReplicaSetsProps {
   items: V1ReplicaSet[];
   loading: boolean;
   error: string;
-  onDeleteReplicaSets: (replicaSets: V1ReplicaSet[]) => Promise<void>;
+  onDelete: (replicaSets: V1ReplicaSet[]) => Promise<void>;
   onCreate?: (manifest: ReplicaSet) => Promise<ReplicaSet | undefined>;
   onUpdate?: (manifest: ReplicaSet) => Promise<ReplicaSet | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneReplicaSets({
@@ -32,10 +35,13 @@ export default function PaneReplicaSets({
   items,
   loading,
   error,
-  onDeleteReplicaSets,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneReplicaSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -43,9 +49,9 @@ export default function PaneReplicaSets({
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
-    await onDeleteReplicaSets(selectedItems);
+    await onDelete(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, onDeleteReplicaSets]);
+  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -98,9 +104,11 @@ export default function PaneReplicaSets({
         onDelete={actions.onDelete}
         // ReplicaSets do not support edit via YAML yet
         onEdit={undefined}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -124,6 +132,8 @@ export default function PaneReplicaSets({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,10 @@ interface DialogContentProps
 }
 
 export function DialogContent({ className = '', children, ...props }: DialogContentProps) {
+  const handleCloseClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fixed inset-0 z-[100] bg-black/20 backdrop-blur-sm" />
@@ -23,7 +27,13 @@ export function DialogContent({ className = '', children, ...props }: DialogCont
       >
         {children}
         <DialogPrimitive.Close asChild>
-          <Button variant="ghost" size="sm" className="absolute top-3 right-3 p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-3 right-3 p-2 hover:bg-white/10"
+            onClick={handleCloseClick}
+            title="Close dialog"
+          >
             <X className="h-4 w-4" />
           </Button>
         </DialogPrimitive.Close>
@@ -34,16 +44,17 @@ export function DialogContent({ className = '', children, ...props }: DialogCont
 
 interface SimpleContainerProps {
   children?: React.ReactNode;
+  className?: string;
 }
 
-export function DialogHeader({ children }: SimpleContainerProps) {
-  return <div className="mb-3 flex items-center justify-between">{children}</div>;
+export function DialogHeader({ children, className = '' }: SimpleContainerProps) {
+  return <div className={`mb-3 flex items-center justify-between ${className}`}>{children}</div>;
 }
 
-export function DialogTitle({ children }: SimpleContainerProps) {
-  return <h2 className="text-base font-semibold text-white">{children}</h2>;
+export function DialogTitle({ children, className = '' }: SimpleContainerProps) {
+  return <h2 className={`text-base font-semibold text-white ${className}`}>{children}</h2>;
 }
 
-export function DialogFooter({ children }: SimpleContainerProps) {
-  return <div className="mt-4 flex items-center justify-end gap-2">{children}</div>;
+export function DialogFooter({ children, className = '' }: SimpleContainerProps) {
+  return <div className={`mt-4 flex items-center justify-end gap-2 ${className}`}>{children}</div>;
 }

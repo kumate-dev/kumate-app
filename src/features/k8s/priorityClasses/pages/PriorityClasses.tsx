@@ -21,16 +21,16 @@ export default function PriorityClasses({ context }: PaneResourceContextProps) {
     context
   );
 
-  const { handleDeleteResources } = useDeleteK8sResources<V1PriorityClass>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1PriorityClass>(
     deletePriorityClasses,
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1PriorityClass>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1PriorityClass>(
     createPriorityClass,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1PriorityClass>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1PriorityClass>(
     updatePriorityClass,
     context
   );
@@ -46,15 +46,44 @@ export default function PriorityClasses({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreatePriorityClass = useCallback(
+    async (manifest: V1PriorityClass): Promise<V1PriorityClass | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create priority class:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdatePriorityClass = useCallback(
+    async (manifest: V1PriorityClass): Promise<V1PriorityClass | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update priority class:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PanePriorityClasses
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeletePriorityClasses={handleDeletePriorityClasses}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeletePriorityClasses}
+      onCreate={handleCreatePriorityClass}
+      onUpdate={handleUpdatePriorityClass}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

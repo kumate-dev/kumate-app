@@ -15,10 +15,13 @@ export interface PaneRoleBindingsProps {
   namespaceList?: V1Namespace[];
   selectedNamespaces?: string[];
   onSelectNamespace?: (ns: string[]) => void;
-  onDeleteRoleBindings: (items: V1RoleBinding[]) => Promise<void>;
+  onDelete: (items: V1RoleBinding[]) => Promise<void>;
   onCreate?: (manifest: V1RoleBinding) => Promise<V1RoleBinding | undefined>;
   onUpdate?: (manifest: V1RoleBinding) => Promise<V1RoleBinding | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneRoleBindings({
@@ -28,10 +31,13 @@ export default function PaneRoleBindings({
   namespaceList,
   selectedNamespaces,
   onSelectNamespace,
-  onDeleteRoleBindings,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating,
+  updating,
+  deleting,
 }: PaneRoleBindingsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata.name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -59,9 +65,9 @@ export default function PaneRoleBindings({
 
   const handleDeleteSelected = useCallback(
     async (selected: V1RoleBinding[]) => {
-      await onDeleteRoleBindings(selected);
+      await onDelete(selected);
     },
-    [onDeleteRoleBindings]
+    [onDelete]
   );
 
   const renderRow = (rb: V1RoleBinding) => (
@@ -93,6 +99,8 @@ export default function PaneRoleBindings({
       setItem={actions.setItem}
       onDelete={actions.onDelete}
       onEdit={actions.onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 
@@ -116,6 +124,8 @@ export default function PaneRoleBindings({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

@@ -12,20 +12,26 @@ export interface PanePersistentVolumesProps {
   items: V1PersistentVolume[];
   loading: boolean;
   error: string;
-  onDeletePersistentVolumes: (items: V1PersistentVolume[]) => Promise<void>;
+  onDelete: (items: V1PersistentVolume[]) => Promise<void>;
   onCreate?: (manifest: V1PersistentVolume) => Promise<V1PersistentVolume | undefined>;
   onUpdate?: (manifest: V1PersistentVolume) => Promise<V1PersistentVolume | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PanePersistentVolumes({
   items,
   loading,
   error,
-  onDeletePersistentVolumes,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PanePersistentVolumesProps) {
   const [sortBy, setSortBy] = useState('Name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -58,9 +64,9 @@ export default function PanePersistentVolumes({
 
   const handleDeleteSelected = useCallback(
     async (items: V1PersistentVolume[]) => {
-      await onDeletePersistentVolumes(items);
+      await onDelete(items);
     },
-    [onDeletePersistentVolumes]
+    [onDelete]
   );
 
   const renderRow = (pv: V1PersistentVolume) => (
@@ -89,9 +95,11 @@ export default function PanePersistentVolumes({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -107,6 +115,8 @@ export default function PanePersistentVolumes({
       yamlTemplate={templatePersistentVolume}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      creating={creating}
+      deleting={deleting}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

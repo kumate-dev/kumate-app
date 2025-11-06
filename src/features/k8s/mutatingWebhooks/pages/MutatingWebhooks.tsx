@@ -22,15 +22,15 @@ export default function MutatingWebhooks({ context }: PaneResourceContextProps) 
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1MutatingWebhookConfiguration>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1MutatingWebhookConfiguration>(
     createMutatingWebhook,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1MutatingWebhookConfiguration>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1MutatingWebhookConfiguration>(
     updateMutatingWebhook,
     context
   );
-  const { handleDeleteResources } = useDeleteK8sResources<V1MutatingWebhookConfiguration>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1MutatingWebhookConfiguration>(
     deleteMutatingWebhooks,
     context
   );
@@ -46,15 +46,48 @@ export default function MutatingWebhooks({ context }: PaneResourceContextProps) 
     [handleDeleteResources]
   );
 
+  const handleCreateMutatingWebhook = useCallback(
+    async (
+      manifest: V1MutatingWebhookConfiguration
+    ): Promise<V1MutatingWebhookConfiguration | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create mutating webhook configuration:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateMutatingWebhook = useCallback(
+    async (
+      manifest: V1MutatingWebhookConfiguration
+    ): Promise<V1MutatingWebhookConfiguration | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update mutating webhook configuration:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneMutatingWebhooks
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteItems={handleDeleteItems}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteItems}
+      onCreate={handleCreateMutatingWebhook}
+      onUpdate={handleUpdateMutatingWebhook}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

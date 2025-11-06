@@ -10,9 +10,18 @@ interface SidebarRolesProps {
   setItem: (item: V1Role | null) => void;
   onDelete?: (item: V1Role) => void;
   onEdit?: (item: V1Role) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarRoles({ item, setItem, onDelete, onEdit }: SidebarRolesProps) {
+export function SidebarRoles({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarRolesProps) {
   const renderOverview = (role: V1Role) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -62,6 +71,14 @@ export function SidebarRoles({ item, setItem, onDelete, onEdit }: SidebarRolesPr
     : [];
 
   return (
-    <RightSidebarGeneric item={item} setItem={setItem} sections={sections} onDelete={onDelete} onEdit={onEdit} />
+    <RightSidebarGeneric
+      item={item}
+      setItem={setItem}
+      sections={sections}
+      onDelete={onDelete}
+      onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
+    />
   );
 }

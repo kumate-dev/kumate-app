@@ -19,10 +19,13 @@ export interface PaneJobsProps {
   items: V1Job[];
   loading: boolean;
   error: string;
-  onDeleteJobs: (jobs: V1Job[]) => Promise<void>;
+  onDelete: (jobs: V1Job[]) => Promise<void>;
   contextName?: string;
   onCreate?: (manifest: Job) => Promise<Job | undefined>;
   onUpdate?: (manifest: Job) => Promise<Job | undefined>;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneJobs({
@@ -32,10 +35,13 @@ export default function PaneJobs({
   items,
   loading,
   error,
-  onDeleteJobs,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneJobsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -43,9 +49,9 @@ export default function PaneJobs({
 
   const handleDeleteSelected = useCallback(async () => {
     if (!selectedItems.length) return;
-    await onDeleteJobs(selectedItems);
+    await onDelete(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, onDeleteJobs]);
+  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -95,9 +101,11 @@ export default function PaneJobs({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -121,6 +129,8 @@ export default function PaneJobs({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

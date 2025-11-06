@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { UnlistenFn } from '@tauri-apps/api/event';
 import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES } from '@/constants/k8s';
 import { WatchEvent } from '@/types/k8sEvent';
@@ -18,106 +18,116 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const listFnRef = useRef(listFn);
+  const watchFnRef = useRef(watchFn);
+  listFnRef.current = listFn;
+  watchFnRef.current = watchFn;
+
   useEffect(() => {
-    if (!context?.name || !listFn) return;
+    if (!context?.name || !listFnRef.current) return;
 
     const clusterName = context.name;
-    const nsList = namespaces && !namespaces.includes(ALL_NAMESPACES) ? namespaces : undefined;
+    const nsList = namespaces?.includes(ALL_NAMESPACES) ? undefined : namespaces;
 
     let active = true;
     let unlisten: UnlistenFn | null = null;
 
-    const withTimeout = <U>(p: Promise<U>, ms: number) =>
-      new Promise<U>((resolve, reject) => {
-        const t = setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms);
-        p.then((v) => {
-          clearTimeout(t);
-          resolve(v);
-        }).catch((e) => {
-          clearTimeout(t);
-          reject(e);
-        });
-      });
+    const withTimeout = <U>(promise: Promise<U>, ms: number): Promise<U> =>
+      Promise.race([
+        promise,
+        new Promise<U>((_, reject) =>
+          setTimeout(() => reject(new Error(`Request timed out after ${ms}ms`)), ms)
+        ),
+      ]);
 
-    function dedupeResources(items: T[]): T[] {
+    const getItemKey = (item: T): string =>
+      `${item.metadata?.namespace || ''}/${item.metadata?.name || ''}`;
+
+    const dedupeResources = (resources: T[]): T[] => {
       const seen = new Set<string>();
-      return items.filter((item) => {
-        const metadata = item.metadata;
-        const key = `${metadata?.namespace || ''}/${metadata?.name || ''}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
+      return resources.filter((item) => {
+        const key = getItemKey(item);
+        return !seen.has(key) && seen.add(key);
       });
-    }
+    };
 
-    async function list() {
+    const handleWatchEvent = (evt: WatchEvent<T>): void => {
+      const { type, object } = evt;
+      const key = getItemKey(object);
+
+      setItems((prev) => {
+        const itemMap = new Map(prev.map((item) => [getItemKey(item), item]));
+
+        switch (type) {
+          case 'ADDED':
+          case 'MODIFIED':
+            itemMap.set(key, object);
+            break;
+          case 'DELETED':
+            itemMap.delete(key);
+            break;
+        }
+
+        return Array.from(itemMap.values());
+      });
+    };
+
+    const listResources = async (): Promise<void> => {
       setLoading(true);
       setError('');
+
       try {
         const results = await withTimeout(
-          listFn({ name: clusterName, namespaces: nsList }),
+          listFnRef.current({ name: clusterName, namespaces: nsList }),
           K8S_REQUEST_TIMEOUT
         );
-        if (active) setItems(dedupeResources(results || []));
-      } catch (e: any) {
-        if (active) setError(e?.message || String(e));
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
 
-    async function watch() {
-      if (!watchFn) return;
+        if (active) {
+          setItems(dedupeResources(results || []));
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const watchResources = async (): Promise<void> => {
+      if (!watchFnRef.current) return;
+
       try {
-        const { unlisten: u } = await withTimeout(
-          watchFn({
+        const { unlisten: watchUnlisten } = await withTimeout(
+          watchFnRef.current({
             name: clusterName,
             namespaces: nsList,
-            onEvent: (evt) => {
-              const { type, object } = evt;
-              const metadata = object.metadata;
-              const key = `${metadata?.namespace || ''}/${metadata?.name || ''}`;
-
-              setItems((prev) => {
-                const map = new Map(
-                  prev.map((i) => {
-                    const m = i.metadata;
-                    return [`${m?.namespace || ''}/${m?.name || ''}`, i];
-                  })
-                );
-
-                switch (type) {
-                  case 'ADDED':
-                  case 'MODIFIED':
-                    map.set(key, object);
-                    break;
-                  case 'DELETED':
-                    map.delete(key);
-                    break;
-                }
-
-                return Array.from(map.values());
-              });
-            },
+            onEvent: handleWatchEvent,
           }),
           K8S_REQUEST_TIMEOUT
         );
 
-        unlisten = u;
+        unlisten = watchUnlisten;
       } catch (err) {
         console.error('Failed to start watch:', err);
       }
-    }
+    };
 
-    list();
-    watch();
+    const executeOperations = async (): Promise<void> => {
+      await listResources();
+      await watchResources();
+    };
+
+    executeOperations();
 
     return () => {
       active = false;
       unlisten?.();
       unwatch({ name: clusterName });
     };
-  }, [context?.name, namespaces, listFn, watchFn]);
+  }, [context?.name, namespaces]);
 
   return { items, loading, error };
 }

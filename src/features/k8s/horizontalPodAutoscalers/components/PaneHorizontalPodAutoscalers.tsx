@@ -17,7 +17,7 @@ export interface PaneHorizontalPodAutoscalersProps {
   items: V1HorizontalPodAutoscaler[];
   loading: boolean;
   error: string;
-  onDeleteHorizontalPodAutoscalers: (hpas: V1HorizontalPodAutoscaler[]) => Promise<void>;
+  onDelete: (hpas: V1HorizontalPodAutoscaler[]) => Promise<void>;
   onCreate?: (
     manifest: V1HorizontalPodAutoscaler
   ) => Promise<V1HorizontalPodAutoscaler | undefined>;
@@ -34,7 +34,7 @@ export default function PaneHorizontalPodAutoscalers({
   items,
   loading,
   error,
-  onDeleteHorizontalPodAutoscalers,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
@@ -44,9 +44,9 @@ export default function PaneHorizontalPodAutoscalers({
   const handleDeleteSelected = useCallback(
     async (toDelete: V1HorizontalPodAutoscaler[]) => {
       if (!toDelete.length) return;
-      await onDeleteHorizontalPodAutoscalers(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteHorizontalPodAutoscalers]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [

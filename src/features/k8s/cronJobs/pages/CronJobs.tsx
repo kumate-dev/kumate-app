@@ -29,9 +29,18 @@ export default function CronJobs({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1CronJob>(createCronJob, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1CronJob>(updateCronJob, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1CronJob>(deleteCronJobs, context);
+  const { handleCreateResource, creating: creatingCronJob } = useCreateK8sResource<V1CronJob>(
+    createCronJob,
+    context
+  );
+  const { handleUpdateResource, updating: updatingCronJob } = useUpdateK8sResource<V1CronJob>(
+    updateCronJob,
+    context
+  );
+  const { handleDeleteResources, deleting: deletingCronJobs } = useDeleteK8sResources<V1CronJob>(
+    deleteCronJobs,
+    context
+  );
 
   const handleDeleteCronJobs = useCallback(
     async (cronJobs: V1CronJob[]) => {
@@ -44,6 +53,32 @@ export default function CronJobs({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateCronJob = useCallback(
+    async (manifest: V1CronJob): Promise<V1CronJob | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create cronjob:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateCronJob = useCallback(
+    async (manifest: V1CronJob): Promise<V1CronJob | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update cronjob:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneCronJobs
       selectedNamespaces={selectedNamespaces}
@@ -52,10 +87,13 @@ export default function CronJobs({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteCronJobs={handleDeleteCronJobs}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteCronJobs}
+      onCreate={handleCreateCronJob}
+      onUpdate={handleUpdateCronJob}
       contextName={context?.name}
+      creating={creatingCronJob}
+      updating={updatingCronJob}
+      deleting={deletingCronJobs}
     />
   );
 }

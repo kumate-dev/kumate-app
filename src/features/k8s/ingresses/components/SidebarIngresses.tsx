@@ -10,9 +10,18 @@ export interface SidebarIngressesProps {
   setItem: (item: V1Ingress | null) => void;
   onDelete?: (item: V1Ingress) => void;
   onEdit?: (item: V1Ingress) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
-export function SidebarIngresses({ item, setItem, onDelete, onEdit }: SidebarIngressesProps) {
+export function SidebarIngresses({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  updating = false,
+  deleting = false,
+}: SidebarIngressesProps) {
   const renderOverview = (ing: V1Ingress) => {
     return (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -66,6 +75,8 @@ export function SidebarIngresses({ item, setItem, onDelete, onEdit }: SidebarIng
       onDelete={onDelete as any}
       onEdit={onEdit as any}
       sections={sections}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

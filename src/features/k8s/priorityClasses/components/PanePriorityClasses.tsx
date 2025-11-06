@@ -12,20 +12,26 @@ export interface PanePriorityClassesProps {
   items: V1PriorityClass[];
   loading: boolean;
   error: string;
-  onDeletePriorityClasses: (items: V1PriorityClass[]) => Promise<void>;
+  onDelete: (items: V1PriorityClass[]) => Promise<void>;
   onCreate?: (manifest: V1PriorityClass) => Promise<V1PriorityClass | undefined>;
   onUpdate?: (manifest: V1PriorityClass) => Promise<V1PriorityClass | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PanePriorityClasses({
   items,
   loading,
   error,
-  onDeletePriorityClasses,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PanePriorityClassesProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -33,9 +39,9 @@ export default function PanePriorityClasses({
   const handleDeleteSelected = useCallback(
     async (toDelete: V1PriorityClass[]) => {
       if (!toDelete.length) return;
-      await onDeletePriorityClasses(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeletePriorityClasses]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -82,9 +88,11 @@ export default function PanePriorityClasses({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -105,6 +113,8 @@ export default function PanePriorityClasses({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

@@ -17,10 +17,13 @@ export interface PaneSecretsProps {
   items: V1Secret[];
   loading: boolean;
   error: string;
-  onDeleteSecrets: (secrets: V1Secret[]) => Promise<void>;
+  onDelete: (secrets: V1Secret[]) => Promise<void>;
   onCreate?: (manifest: V1Secret) => Promise<V1Secret | undefined>;
   onUpdate?: (manifest: V1Secret) => Promise<V1Secret | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneSecrets({
@@ -30,19 +33,22 @@ export default function PaneSecrets({
   items,
   loading,
   error,
-  onDeleteSecrets,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneSecretsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const handleDeleteSelected = useCallback(
     async (toDelete: V1Secret[]) => {
       if (!toDelete.length) return;
-      await onDeleteSecrets(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteSecrets]
+    [onDelete]
   );
 
   const getDataKeys = (secret: V1Secret): string => {
@@ -97,9 +103,11 @@ export default function PaneSecrets({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -122,6 +130,8 @@ export default function PaneSecrets({
       onUpdate={onUpdate}
       renderSidebar={renderSidebar}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

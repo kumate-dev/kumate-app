@@ -65,7 +65,7 @@ export default function HorizontalPodAutoscalers({ context }: PaneResourceContex
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteHorizontalPodAutoscalers={handleDeleteHorizontalPodAutoscalers}
+      onDelete={handleDeleteHorizontalPodAutoscalers}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}

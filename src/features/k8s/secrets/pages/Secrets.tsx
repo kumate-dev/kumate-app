@@ -30,9 +30,12 @@ export default function Secrets({ context }: PaneResourceContextProps) {
     selectedNamespaces
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1Secret>(createSecret, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1Secret>(updateSecret, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1Secret>(deleteSecrets, context);
+  const { handleCreateResource, creating } = useCreateK8sResource<V1Secret>(createSecret, context);
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1Secret>(updateSecret, context);
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1Secret>(
+    deleteSecrets,
+    context
+  );
 
   const handleDeleteSecrets = useCallback(
     async (secrets: V1Secret[]) => {
@@ -45,6 +48,32 @@ export default function Secrets({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateSecret = useCallback(
+    async (manifest: V1Secret): Promise<V1Secret | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create secret:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateSecret = useCallback(
+    async (manifest: V1Secret): Promise<V1Secret | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update secret:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneSecrets
       selectedNamespaces={selectedNamespaces}
@@ -53,10 +82,13 @@ export default function Secrets({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteSecrets={handleDeleteSecrets}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteSecrets}
+      onCreate={handleCreateSecret}
+      onUpdate={handleUpdateSecret}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

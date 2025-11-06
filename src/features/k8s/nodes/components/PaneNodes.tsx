@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { V1Node } from '@kubernetes/client-node';
 import { Td, Tr } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -13,9 +13,17 @@ export interface PaneNodesProps {
   items: V1Node[];
   loading: boolean;
   error: string;
+  onDeleteNodes?: (nodes: V1Node[]) => Promise<void>;
+  deleting?: boolean;
 }
 
-export default function PaneNodes({ items, loading, error }: PaneNodesProps) {
+export default function PaneNodes({
+  items,
+  loading,
+  error,
+  onDeleteNodes,
+  deleting = false,
+}: PaneNodesProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -79,12 +87,17 @@ export default function PaneNodes({ items, loading, error }: PaneNodesProps) {
       setItem={actions.setItem}
       onDelete={actions.onDelete}
       onEdit={actions.onEdit}
+      deleting={deleting}
     />
   );
 
-  const handleDeleteSelected = async (_items: V1Node[]) => {
-    // No-op delete handler for Nodes (cluster-scoped resource). Implement if needed.
-  };
+  const handleDeleteSelected = useCallback(
+    async (toDelete: V1Node[]) => {
+      if (!toDelete.length || !onDeleteNodes) return;
+      await onDeleteNodes(toDelete);
+    },
+    [onDeleteNodes]
+  );
 
   return (
     <PaneGeneric
@@ -101,6 +114,7 @@ export default function PaneNodes({ items, loading, error }: PaneNodesProps) {
       onDelete={handleDeleteSelected}
       renderRow={renderRow}
       renderSidebar={renderSidebar}
+      deleting={deleting}
     />
   );
 }

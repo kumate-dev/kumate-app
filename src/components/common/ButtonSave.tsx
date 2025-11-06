@@ -1,24 +1,40 @@
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import React from 'react';
 
 interface ButtonSaveProps {
-  onSave: () => void;
+  onClick: () => void;
   disabled?: boolean;
   className?: string;
   text?: string;
+  loading?: boolean;
 }
 
-export const ButtonSave: React.FC<ButtonSaveProps> = ({ onSave, disabled, text, className }) => {
+export const ButtonSave: React.FC<ButtonSaveProps> = ({
+  onClick,
+  disabled = false,
+  text,
+  className = '',
+  loading = false,
+}) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!disabled && !loading) {
+      onClick();
+    }
+  };
+
   return (
     <Button
       variant="secondary"
       size="sm"
       className={`flex gap-1 px-3 ${className}`}
-      onClick={onSave}
-      title="Save"
-      disabled={disabled}
+      onClick={handleClick}
+      title={loading ? 'Saving...' : 'Save'}
+      disabled={disabled || loading}
     >
-      {text ?? 'Save'}
+      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {text ?? (loading ? 'Saving...' : 'Save')}
     </Button>
   );
 };

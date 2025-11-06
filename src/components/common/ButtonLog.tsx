@@ -2,21 +2,37 @@ import { Button } from '@/components/ui/button';
 import React from 'react';
 
 interface ButtonLogProps {
-  onViewLogs: () => void;
+  onClick: () => void;
   className?: string;
   text?: string;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
-export const ButtonLog: React.FC<ButtonLogProps> = ({ onViewLogs, className, text }) => {
+export const ButtonLog: React.FC<ButtonLogProps> = ({
+  onClick,
+  className = '',
+  text,
+  disabled = false,
+  loading = false,
+}) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!disabled && !loading) {
+      onClick();
+    }
+  };
+
   return (
     <Button
       variant="outline"
       size="sm"
       className={`flex gap-1 px-3 ${className}`}
-      onClick={onViewLogs}
-      title="Logs"
+      onClick={handleClick}
+      title={loading ? 'Loading logs...' : 'View Logs'}
+      disabled={disabled || loading}
     >
-      {text ?? 'Logs'}
+      {text ?? (loading ? 'Loading...' : 'Logs')}
     </Button>
   );
 };

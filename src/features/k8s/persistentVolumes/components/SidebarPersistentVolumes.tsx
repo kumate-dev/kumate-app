@@ -9,6 +9,8 @@ interface SidebarPersistentVolumesProps {
   setItem: (item: V1PersistentVolume | null) => void;
   onDelete?: (item: V1PersistentVolume) => void;
   onEdit?: (item: V1PersistentVolume) => void;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export function SidebarPersistentVolumes({
@@ -16,6 +18,8 @@ export function SidebarPersistentVolumes({
   setItem,
   onDelete,
   onEdit,
+  updating = false,
+  deleting = false,
 }: SidebarPersistentVolumesProps) {
   const renderOverview = (pv: V1PersistentVolume) => {
     const capacity = (pv.spec?.capacity as any)?.storage || '';
@@ -110,6 +114,8 @@ export function SidebarPersistentVolumes({
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

@@ -22,17 +22,17 @@ export default function StorageClasses({ context }: PaneResourceContextProps) {
     context
   );
 
-  const { handleDeleteResources } = useDeleteK8sResources<V1StorageClass>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1StorageClass>(
     deleteStorageClasses,
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1StorageClass>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1StorageClass>(
     createStorageClass,
     context
   );
 
-  const { handleUpdateResource } = useUpdateK8sResource<V1StorageClass>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1StorageClass>(
     updateStorageClass,
     context
   );
@@ -49,12 +49,28 @@ export default function StorageClasses({ context }: PaneResourceContextProps) {
   );
 
   const onCreate = useCallback(
-    (manifest: V1StorageClass) => handleCreateResource(manifest),
+    async (manifest: V1StorageClass): Promise<V1StorageClass | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create storage class:', error);
+        return undefined;
+      }
+    },
     [handleCreateResource]
   );
 
   const onUpdate = useCallback(
-    (manifest: V1StorageClass) => handleUpdateResource(manifest),
+    async (manifest: V1StorageClass): Promise<V1StorageClass | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update storage class:', error);
+        return undefined;
+      }
+    },
     [handleUpdateResource]
   );
 
@@ -63,10 +79,13 @@ export default function StorageClasses({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error}
-      onDeleteStorageClasses={onDelete}
+      onDelete={onDelete}
       onCreate={onCreate}
       onUpdate={onUpdate}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

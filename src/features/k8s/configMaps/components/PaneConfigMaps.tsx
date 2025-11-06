@@ -15,10 +15,13 @@ export interface PaneConfigMapsProps {
   items: V1ConfigMap[];
   loading: boolean;
   error: string;
-  onDeleteConfigMaps: (configMaps: V1ConfigMap[]) => Promise<void>;
+  onDelete: (configMaps: V1ConfigMap[]) => Promise<void>;
   onCreate?: (manifest: V1ConfigMap) => Promise<V1ConfigMap | undefined>;
   onUpdate?: (manifest: V1ConfigMap) => Promise<V1ConfigMap | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneConfigMaps({
@@ -28,19 +31,22 @@ export default function PaneConfigMaps({
   items,
   loading,
   error,
-  onDeleteConfigMaps,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneConfigMapsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const handleDeleteSelected = useCallback(
     async (toDelete: V1ConfigMap[]) => {
       if (!toDelete.length) return;
-      await onDeleteConfigMaps(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteConfigMaps]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -85,9 +91,11 @@ export default function PaneConfigMaps({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -110,6 +118,8 @@ export default function PaneConfigMaps({
       onUpdate={onUpdate}
       renderSidebar={renderSidebar}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

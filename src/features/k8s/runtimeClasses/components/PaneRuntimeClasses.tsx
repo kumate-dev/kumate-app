@@ -12,20 +12,26 @@ export interface PaneRuntimeClassesProps {
   items: V1RuntimeClass[];
   loading: boolean;
   error: string;
-  onDeleteRuntimeClasses: (items: V1RuntimeClass[]) => Promise<void>;
+  onDelete: (items: V1RuntimeClass[]) => Promise<void>;
   onCreate?: (manifest: V1RuntimeClass) => Promise<V1RuntimeClass | undefined>;
   onUpdate?: (manifest: V1RuntimeClass) => Promise<V1RuntimeClass | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneRuntimeClasses({
   items,
   loading,
   error,
-  onDeleteRuntimeClasses,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneRuntimeClassesProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -33,9 +39,9 @@ export default function PaneRuntimeClasses({
   const handleDeleteSelected = useCallback(
     async (toDelete: V1RuntimeClass[]) => {
       if (!toDelete.length) return;
-      await onDeleteRuntimeClasses(toDelete);
+      await onDelete(toDelete);
     },
-    [onDeleteRuntimeClasses]
+    [onDelete]
   );
 
   const columns: ColumnDef<string>[] = [
@@ -99,9 +105,11 @@ export default function PaneRuntimeClasses({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -122,6 +130,8 @@ export default function PaneRuntimeClasses({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

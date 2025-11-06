@@ -29,9 +29,16 @@ export default function DaemonSets({ context }: PaneResourceContextProps) {
     context,
     selectedNamespaces
   );
-  const { handleCreateResource } = useCreateK8sResource<V1DaemonSet>(createDaemonSet, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1DaemonSet>(updateDaemonSet, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1DaemonSet>(deleteDaemonSets, context);
+  const { handleCreateResource, creating: creatingDaemonSet } = useCreateK8sResource<V1DaemonSet>(
+    createDaemonSet,
+    context
+  );
+  const { handleUpdateResource, updating: updatingDaemonSet } = useUpdateK8sResource<V1DaemonSet>(
+    updateDaemonSet,
+    context
+  );
+  const { handleDeleteResources, deleting: deletingDaemonSets } =
+    useDeleteK8sResources<V1DaemonSet>(deleteDaemonSets, context);
 
   const handleDeleteDaemonSets = useCallback(
     async (daemonSets: V1DaemonSet[]) => {
@@ -44,6 +51,32 @@ export default function DaemonSets({ context }: PaneResourceContextProps) {
     [handleDeleteResources]
   );
 
+  const handleCreateDaemonSet = useCallback(
+    async (manifest: V1DaemonSet): Promise<V1DaemonSet | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create daemon set:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateDaemonSet = useCallback(
+    async (manifest: V1DaemonSet): Promise<V1DaemonSet | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update daemon set:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneDaemonSets
       selectedNamespaces={selectedNamespaces}
@@ -52,10 +85,13 @@ export default function DaemonSets({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteDaemonSets={handleDeleteDaemonSets}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDeleteDaemonSets}
+      onCreate={handleCreateDaemonSet}
+      onUpdate={handleUpdateDaemonSet}
       contextName={context?.name}
+      creating={creatingDaemonSet}
+      updating={updatingDaemonSet}
+      deleting={deletingDaemonSets}
     />
   );
 }

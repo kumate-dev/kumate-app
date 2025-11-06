@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { parse } from 'yaml';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-yaml';
@@ -27,8 +27,8 @@ export function YamlEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLPreElement>(null);
 
-  useEffect(() => {
-    const validateYaml = (yamlString: string) => {
+  const validateYaml = useCallback(
+    (yamlString: string) => {
       if (!yamlString.trim()) {
         setIsValid(true);
         setErrorMessage(null);
@@ -47,10 +47,13 @@ export function YamlEditor({
         setErrorMessage(errorMsg);
         onError?.(errorMsg);
       }
-    };
+    },
+    [onError]
+  );
 
+  useEffect(() => {
     validateYaml(value);
-  }, [value, onError]);
+  }, [value, validateYaml]);
 
   const lines = useMemo(() => {
     const lineCount = value.split('\n').length;
@@ -73,45 +76,64 @@ export function YamlEditor({
     }
   }, [highlightedHtml]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    onChange(newValue);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Tab' && !readOnly) {
-      e.preventDefault();
-      const textarea = e.currentTarget as HTMLTextAreaElement;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-
-      const newValue = value.substring(0, start) + '  ' + value.substring(end);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newValue = e.target.value;
       onChange(newValue);
+    },
+    [onChange]
+  );
 
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.selectionStart = start + 2;
-          textareaRef.current.selectionEnd = start + 2;
-        }
-      }, 0);
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Tab' && !readOnly) {
+        e.preventDefault();
+        const textarea = e.currentTarget as HTMLTextAreaElement;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
 
-  const handleFocus = () => setIsFocused(true);
-  const handleBlur = () => setIsFocused(false);
+        const newValue = value.substring(0, start) + '  ' + value.substring(end);
+        onChange(newValue);
 
-  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.selectionStart = start + 2;
+            textareaRef.current.selectionEnd = start + 2;
+          }
+        }, 0);
+      }
+    },
+    [value, onChange, readOnly]
+  );
+
+  const handleFocus = useCallback(() => setIsFocused(true), []);
+  const handleBlur = useCallback(() => setIsFocused(false), []);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
     if (highlightRef.current) {
       highlightRef.current.scrollTop = e.currentTarget.scrollTop;
       highlightRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
-  };
+  }, []);
+
+  const borderClass = useMemo(
+    () => (isValid ? (isFocused ? 'border-blue-500' : 'border-white/20') : 'border-red-500'),
+    [isValid, isFocused]
+  );
+
+  const textareaClass = useMemo(
+    () =>
+      `absolute inset-0 z-20 h-full w-full resize-none bg-transparent px-4 pt-4 pb-4 pl-20 font-mono text-[14px] leading-[1.5] whitespace-pre text-transparent caret-white focus:outline-none ${
+        readOnly ? 'cursor-not-allowed' : ''
+      }`,
+    [readOnly]
+  );
 
   return (
     <div className="flex h-full w-full flex-col">
       <div
         className={`relative flex-1 overflow-hidden rounded-md border bg-black ${
-          isValid ? (isFocused ? 'border-blue-500' : 'border-white/20') : 'border-red-500'
+          borderClass
         } ${readOnly ? 'opacity-70' : ''} ${heightClass ?? ''}`}
         style={!heightClass ? { height } : undefined}
       >
@@ -132,9 +154,7 @@ export function YamlEditor({
           onBlur={handleBlur}
           onScroll={handleScroll}
           readOnly={readOnly}
-          className={`absolute inset-0 z-20 h-full w-full resize-none bg-transparent px-4 pt-4 pb-4 pl-20 font-mono text-[14px] leading-[1.5] whitespace-pre text-transparent caret-white focus:outline-none ${
-            readOnly ? 'cursor-not-allowed' : ''
-          }`}
+          className={textareaClass}
           placeholder="Enter YAML content..."
           spellCheck={false}
         />

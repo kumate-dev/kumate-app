@@ -19,10 +19,13 @@ export interface PaneCronJobsProps {
   items: V1CronJob[];
   loading: boolean;
   error: string;
-  onDeleteCronJobs: (cronJobs: V1CronJob[]) => Promise<void>;
+  onDelete: (cronJobs: V1CronJob[]) => Promise<void>;
   onCreate?: (manifest: CronJob) => Promise<CronJob | undefined>;
   onUpdate?: (manifest: CronJob) => Promise<CronJob | undefined>;
   contextName?: string;
+  creating?: boolean;
+  updating?: boolean;
+  deleting?: boolean;
 }
 
 export default function PaneCronJobs({
@@ -32,10 +35,13 @@ export default function PaneCronJobs({
   items,
   loading,
   error,
-  onDeleteCronJobs,
+  onDelete,
   onCreate,
   onUpdate,
   contextName,
+  creating = false,
+  updating = false,
+  deleting = false,
 }: PaneCronJobsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -43,9 +49,9 @@ export default function PaneCronJobs({
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedItems.length === 0) return;
-    await onDeleteCronJobs(selectedItems);
+    await onDelete(selectedItems);
     setSelectedItems([]);
-  }, [selectedItems, onDeleteCronJobs]);
+  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -101,9 +107,11 @@ export default function PaneCronJobs({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        updating={updating}
+        deleting={deleting}
       />
     ),
-    []
+    [updating, deleting]
   );
 
   return (
@@ -127,6 +135,8 @@ export default function PaneCronJobs({
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
       contextName={contextName}
+      creating={creating}
+      deleting={deleting}
     />
   );
 }

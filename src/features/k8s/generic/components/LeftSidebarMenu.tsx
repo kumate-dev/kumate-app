@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { PageKey } from '@/types/pageKey';
 import { K8sContext } from '@/api/k8s/contexts';
 
@@ -21,6 +21,88 @@ export interface SidebarMenuProps {
   onSelectPage?: (page: PageKey) => void;
 }
 
+const COLLAPSIBLE_TITLES = new Set([
+  'Workloads',
+  'Config',
+  'Network',
+  'Storage',
+  'Helm',
+  'Access Control',
+]);
+
+const CATEGORY_GROUPS: PageItem[] = [
+  {
+    title: 'Workloads',
+    items: [
+      { key: 'workloads_overview', label: 'Overview' },
+      { key: 'pods', label: 'Pods' },
+      { key: 'deployments', label: 'Deployments' },
+      { key: 'replica_sets', label: 'Replica Sets' },
+      { key: 'daemon_sets', label: 'Daemon Sets' },
+      { key: 'stateful_sets', label: 'Stateful Sets' },
+      { key: 'replication_controllers', label: 'Replication Controllers' },
+      { key: 'jobs', label: 'Jobs' },
+      { key: 'cron_jobs', label: 'Cron Jobs' },
+    ],
+  },
+  {
+    title: 'Config',
+    items: [
+      { key: 'config_maps', label: 'Config Maps' },
+      { key: 'secrets', label: 'Secrets' },
+      { key: 'resource_quotas', label: 'Resource Quotas' },
+      { key: 'limit_ranges', label: 'Limit Ranges' },
+      { key: 'horizontal_pod_autoscalers', label: 'Horizontal Pod Autoscalers' },
+      { key: 'pod_disruption_budgets', label: 'Pod Disruption Budgets' },
+      { key: 'priority_classes', label: 'Priority Classes' },
+      { key: 'runtime_classes', label: 'Runtime Classes' },
+      { key: 'leases', label: 'Leases' },
+      { key: 'mutating_webhooks', label: 'Mutating Webhook' },
+      { key: 'validating_webhooks', label: 'Validating Webhook' },
+    ],
+  },
+  {
+    title: 'Network',
+    items: [
+      { key: 'services', label: 'Services' },
+      { key: 'endpoints', label: 'Endpoints' },
+      { key: 'ingresses', label: 'Ingresses' },
+      { key: 'ingress_classes', label: 'Ingress Classes' },
+      { key: 'network_policies', label: 'Network Policies' },
+      { key: 'port_forwarding', label: 'Port Forwarding' },
+    ],
+  },
+  {
+    title: 'Storage',
+    items: [
+      { key: 'persistent_volume_claims', label: 'Persistent Volume Claims' },
+      { key: 'persistent_volumes', label: 'Persistent Volumes' },
+      { key: 'storage_classes', label: 'Storage Classes' },
+    ],
+  },
+  {
+    title: 'Helm',
+    items: [
+      { key: 'helm_charts', label: 'Charts' },
+      { key: 'helm_releases', label: 'Releases' },
+    ],
+  },
+  {
+    title: 'Custom Resources',
+    items: [{ key: 'custom_resource_definitions', label: 'Definitions' }],
+  },
+  {
+    title: 'Access Control',
+    items: [
+      { key: 'service_accounts', label: 'Service Accounts' },
+      { key: 'cluster_roles', label: 'Cluster Roles' },
+      { key: 'roles', label: 'Roles' },
+      { key: 'cluster_role_bindings', label: 'Cluster Role Bindings' },
+      { key: 'role_bindings', label: 'Role Bindings' },
+    ],
+  },
+];
+
 export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
   contexts = [],
   selected,
@@ -28,136 +110,206 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
   page,
   onSelectPage,
 }) => {
-  const collapsibleTitles = new Set([
-    'Workloads',
-    'Config',
-    'Network',
-    'Storage',
-    'Helm',
-    'Access Control',
-  ]);
-
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>(() => {
-    const s: Record<string, boolean> = {};
-    collapsibleTitles.forEach((t) => (s[t] = true));
-    contexts.forEach((c) => {
-      collapsibleTitles.forEach((t) => (s[`${c.name}:${t}`] = true));
-      s[`cluster:${c.name}`] = true;
+    const initialState: Record<string, boolean> = {};
+
+    COLLAPSIBLE_TITLES.forEach((title) => {
+      initialState[title] = true;
     });
-    return s;
+
+    contexts.forEach((context) => {
+      COLLAPSIBLE_TITLES.forEach((title) => {
+        initialState[`${context.name}:${title}`] = true;
+      });
+      initialState[`cluster:${context.name}`] = true;
+    });
+
+    return initialState;
   });
 
-  const collapseKey = (title: string, parent?: string) => (parent ? `${parent}:${title}` : title);
-  const toggleGroup = (title: string, parent?: string) =>
-    setCollapsed((s) => ({ ...s, [collapseKey(title, parent)]: !s[collapseKey(title, parent)] }));
+  const collapseKey = useCallback(
+    (title: string, parent?: string) => (parent ? `${parent}:${title}` : title),
+    []
+  );
 
-  const categoryGroups: PageItem[] = [
-    {
-      title: 'Workloads',
-      items: [
-        { key: 'workloads_overview', label: 'Overview' },
-        { key: 'pods', label: 'Pods' },
-        { key: 'deployments', label: 'Deployments' },
-        { key: 'replica_sets', label: 'Replica Sets' },
-        { key: 'daemon_sets', label: 'Daemon Sets' },
-        { key: 'stateful_sets', label: 'Stateful Sets' },
-        { key: 'replication_controllers', label: 'Replication Controllers' },
-        { key: 'jobs', label: 'Jobs' },
-        { key: 'cron_jobs', label: 'Cron Jobs' },
-      ],
+  const toggleGroup = useCallback(
+    (title: string, parent?: string) => {
+      const key = collapseKey(title, parent);
+      setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
     },
-    {
-      title: 'Config',
-      items: [
-        { key: 'config_maps', label: 'Config Maps' },
-        { key: 'secrets', label: 'Secrets' },
-        { key: 'resource_quotas', label: 'Resource Quotas' },
-        { key: 'limit_ranges', label: 'Limit Ranges' },
-        { key: 'horizontal_pod_autoscalers', label: 'Horizontal Pod Autoscalers' },
-        { key: 'pod_disruption_budgets', label: 'Pod Disruption Budgets' },
-        { key: 'priority_classes', label: 'Priority Classes' },
-        { key: 'runtime_classes', label: 'Runtime Classes' },
-        { key: 'leases', label: 'Leases' },
-        { key: 'mutating_webhooks', label: 'Mutating Webhook' },
-        { key: 'validating_webhooks', label: 'Validating Webhook' },
-      ],
-    },
-    {
-      title: 'Network',
-      items: [
-        { key: 'services', label: 'Services' },
-        { key: 'endpoints', label: 'Endpoints' },
-        { key: 'ingresses', label: 'Ingresses' },
-        { key: 'ingress_classes', label: 'Ingress Classes' },
-        { key: 'network_policies', label: 'Network Policies' },
-        { key: 'port_forwarding', label: 'Port Forwarding' },
-      ],
-    },
-    {
-      title: 'Storage',
-      items: [
-        { key: 'persistent_volume_claims', label: 'Persistent Volume Claims' },
-        { key: 'persistent_volumes', label: 'Persistent Volumes' },
-        { key: 'storage_classes', label: 'Storage Classes' },
-      ],
-    },
-    {
-      title: 'Helm',
-      items: [
-        { key: 'helm_charts', label: 'Charts' },
-        { key: 'helm_releases', label: 'Releases' },
-      ],
-    },
-    {
-      title: 'Custom Resources',
-      items: [{ key: 'custom_resource_definitions', label: 'Definitions' }],
-    },
-    {
-      title: 'Access Control',
-      items: [
-        { key: 'service_accounts', label: 'Service Accounts' },
-        { key: 'cluster_roles', label: 'Cluster Roles' },
-        { key: 'roles', label: 'Roles' },
-        { key: 'cluster_role_bindings', label: 'Cluster Role Bindings' },
-        { key: 'role_bindings', label: 'Role Bindings' },
-      ],
-    },
-  ];
+    [collapseKey]
+  );
 
-  const groups: PageItem[] = selected
-    ? [
-        { title: 'Overview', items: [], navigateKey: 'overview' },
-        { title: 'Nodes', items: [], navigateKey: 'nodes' },
-        { title: 'Namespaces', items: [], navigateKey: 'namespaces' },
-        ...categoryGroups.map((cat) => ({
-          title: cat.title,
-          items: cat.items?.map((it) => ({ ...it, clusterName: selected.name })) || [],
-        })),
-        { title: 'Events', items: [], navigateKey: 'events' },
-      ]
-    : [];
+  const groups = useMemo(() => {
+    if (!selected) return [];
 
-  const hotbarClusters = contexts.map((c) => ({ name: c.name }));
+    return [
+      { title: 'Overview', items: [], navigateKey: 'overview' as PageKey },
+      { title: 'Nodes', items: [], navigateKey: 'nodes' as PageKey },
+      { title: 'Namespaces', items: [], navigateKey: 'namespaces' as PageKey },
+      ...CATEGORY_GROUPS.map((category) => ({
+        title: category.title,
+        items:
+          category.items?.map((item) => ({
+            ...item,
+            clusterName: selected.name,
+          })) || [],
+      })),
+      { title: 'Events', items: [], navigateKey: 'events' as PageKey },
+    ];
+  }, [selected]);
+
+  const hotbarClusters = useMemo(
+    () => contexts.map((context) => ({ name: context.name })),
+    [contexts]
+  );
+
+  const handleClusterSelect = useCallback(
+    (clusterName: string) => {
+      const context = contexts.find((ctx) => ctx.name === clusterName);
+      onSelectContext?.(context);
+      onSelectPage?.('overview');
+    },
+    [contexts, onSelectContext, onSelectPage]
+  );
+
+  const handlePageSelect = useCallback(
+    (pageKey: PageKey) => {
+      onSelectPage?.(pageKey);
+    },
+    [onSelectPage]
+  );
+
+  const renderGroupItem = useCallback(
+    (item: PageItem, parentTitle?: string) => {
+      if (item.type === 'group') {
+        const isCollapsed = collapsed[`${parentTitle}:${item.title}`];
+        const SubIcon = item.icon;
+
+        return (
+          <div key={`${parentTitle}-${item.title}`} className="mb-2">
+            <button
+              className="mb-2 flex w-full items-center justify-between text-left text-xs tracking-wide text-white/50 uppercase"
+              onClick={() => toggleGroup(item.title!, parentTitle)}
+            >
+              <span className="flex items-center gap-2">
+                {SubIcon && (
+                  <span className="inline-flex items-center justify-center rounded bg-white/5 p-1">
+                    <SubIcon />
+                  </span>
+                )}
+                <span>{item.title}</span>
+              </span>
+              <span
+                className={`inline-block transition-transform ${
+                  isCollapsed ? 'rotate-0' : 'rotate-90'
+                }`}
+              >
+                ›
+              </span>
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-200 ${
+                !isCollapsed ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              <ul>{item.items?.map((child) => renderGroupItem(child, item.title))}</ul>
+            </div>
+          </div>
+        );
+      }
+
+      const active = page === item.key;
+      return (
+        <li key={item.key}>
+          <button
+            className={`w-full rounded px-3 py-2 text-left transition-colors hover:bg-white/5 ${
+              active ? 'bg-white/10' : ''
+            }`}
+            onClick={() => handlePageSelect(item.key!)}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{item.label}</span>
+            </div>
+          </button>
+        </li>
+      );
+    },
+    [collapsed, page, toggleGroup, handlePageSelect]
+  );
+
+  const renderGroup = useCallback(
+    (group: PageItem, index: number) => {
+      const GroupIcon = group.icon;
+      const isCollapsible = group.title && COLLAPSIBLE_TITLES.has(group.title);
+      const isCollapsed = group.title ? collapsed[group.title] : false;
+
+      const handleGroupClick = () => {
+        if (isCollapsible && group.title) {
+          toggleGroup(group.title);
+        } else if (group.navigateKey) {
+          handlePageSelect(group.navigateKey);
+        }
+      };
+
+      return (
+        <div key={group.title || `top-${index}`} className="px-3 py-3">
+          {group.title && (
+            <button
+              className="mb-2 flex w-full items-center justify-between text-left text-xs tracking-wide text-white/50 uppercase"
+              onClick={handleGroupClick}
+            >
+              <span className="flex items-center gap-2">
+                {GroupIcon && (
+                  <span className="inline-flex items-center justify-center rounded bg-white/5 p-1">
+                    <GroupIcon />
+                  </span>
+                )}
+                <span>{group.title}</span>
+              </span>
+              {isCollapsible && (
+                <span
+                  className={`inline-block transition-transform ${
+                    isCollapsed ? 'rotate-0' : 'rotate-90'
+                  }`}
+                >
+                  ›
+                </span>
+              )}
+            </button>
+          )}
+
+          <div
+            className={`overflow-hidden transition-all duration-200 ${
+              !group.title || !isCollapsible || !isCollapsed
+                ? 'max-h-[800px] opacity-100'
+                : 'max-h-0 opacity-0'
+            }`}
+          >
+            <ul>{group.items?.map((item) => renderGroupItem(item, group.title))}</ul>
+          </div>
+        </div>
+      );
+    },
+    [collapsed, toggleGroup, handlePageSelect, renderGroupItem]
+  );
 
   return (
     <aside className="flex w-64 border-r border-white/10 bg-neutral-950 text-white">
       <div className="flex w-10 flex-col items-center gap-2 border-r border-white/10 bg-neutral-900/30 py-2">
-        {hotbarClusters.map((h) => {
-          const active = selected?.name === h.name;
-          const initial = (h.name?.[0] || '?').toUpperCase();
+        {hotbarClusters.map((cluster) => {
+          const active = selected?.name === cluster.name;
+          const initial = (cluster.name?.[0] || '?').toUpperCase();
+
           return (
             <button
-              key={h.name}
+              key={cluster.name}
               className={`flex h-8 w-8 items-center justify-center rounded hover:bg-white/10 ${
                 active ? 'bg-white/10' : ''
               }`}
-              onClick={() => {
-                const ctx = contexts.find((c) => c.name === h.name);
-                onSelectContext?.(ctx);
-                onSelectPage?.('overview');
-              }}
-              aria-label={h.name}
-              title={h.name}
+              onClick={() => handleClusterSelect(cluster.name)}
+              aria-label={cluster.name}
+              title={cluster.name}
             >
               <span className="text-xs font-semibold">{initial}</span>
             </button>
@@ -165,134 +317,7 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
         })}
       </div>
 
-      <div className="flex flex-1 flex-col overflow-auto">
-        {groups.map((g, idx) => {
-          const GroupIcon = g.icon;
-
-          return (
-            <div key={(g.title || 'top') + idx} className="px-3 py-3">
-              {g.title && (
-                <button
-                  className="mb-2 flex w-full items-center justify-between text-left text-xs tracking-wide text-white/50 uppercase"
-                  onClick={() => {
-                    if (g.title && collapsibleTitles.has(g.title)) toggleGroup(g.title);
-                    else if (g.navigateKey) onSelectPage?.(g.navigateKey);
-                  }}
-                >
-                  <span className="flex items-center gap-2">
-                    {GroupIcon && (
-                      <span className="inline-flex items-center justify-center rounded bg-white/5 p-1">
-                        <GroupIcon />
-                      </span>
-                    )}
-                    <span>{g.title}</span>
-                  </span>
-                  {collapsibleTitles.has(g.title) && (
-                    <span
-                      className={`inline-block transition-transform ${
-                        collapsed[g.title] ? 'rotate-0' : 'rotate-90'
-                      }`}
-                    >
-                      ›
-                    </span>
-                  )}
-                </button>
-              )}
-
-              <div
-                className={`overflow-hidden transition-all duration-200 ${
-                  !g.title
-                    ? 'max-h-[800px] opacity-100'
-                    : !collapsibleTitles.has(g.title) || !collapsed[g.title]
-                      ? 'max-h-[800px] opacity-100'
-                      : 'max-h-0 opacity-0'
-                }`}
-              >
-                <ul>
-                  {g.items?.map((it) => {
-                    if (it.type === 'group') {
-                      const isCollapsed = collapsed[`${g.title}:${it.title}`];
-                      const SubIcon = it.icon;
-                      return (
-                        <div key={`${g.title}-${it.title}`} className="mb-2">
-                          <button
-                            className="mb-2 flex w-full items-center justify-between text-left text-xs tracking-wide text-white/50 uppercase"
-                            onClick={() => toggleGroup(it.title!, g.title)}
-                          >
-                            <span className="flex items-center gap-2">
-                              {SubIcon && (
-                                <span className="inline-flex items-center justify-center rounded bg-white/5 p-1">
-                                  <SubIcon />
-                                </span>
-                              )}
-                              <span>{it.title}</span>
-                            </span>
-                            <span
-                              className={`inline-block transition-transform ${
-                                isCollapsed ? 'rotate-0' : 'rotate-90'
-                              }`}
-                            >
-                              ›
-                            </span>
-                          </button>
-                          <div
-                            className={`overflow-hidden transition-all duration-200 ${
-                              !isCollapsed ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
-                            }`}
-                          >
-                            <ul>
-                              {it.items?.map((child) => {
-                                const active =
-                                  selected?.name === child.clusterName && page === child.key;
-                                return (
-                                  <li key={`${child.clusterName}:${child.key}`}>
-                                    <button
-                                      className={`w-full rounded px-3 py-2 text-left transition-colors hover:bg-white/5 ${
-                                        active ? 'bg-white/10' : ''
-                                      }`}
-                                      onClick={() => {
-                                        const ctx = contexts.find(
-                                          (c) => c.name === child.clusterName
-                                        );
-                                        onSelectContext?.(ctx);
-                                        onSelectPage?.(child.key!);
-                                      }}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-sm">{child.label}</span>
-                                      </div>
-                                    </button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    const active = page === it.key;
-                    return (
-                      <li key={it.key}>
-                        <button
-                          className={`w-full rounded px-3 py-2 text-left transition-colors hover:bg-white/5 ${
-                            active ? 'bg-white/10' : ''
-                          }`}
-                          onClick={() => onSelectPage?.(it.key!)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">{it.label}</span>
-                          </div>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <div className="flex flex-1 flex-col overflow-auto">{groups.map(renderGroup)}</div>
     </aside>
   );
 };

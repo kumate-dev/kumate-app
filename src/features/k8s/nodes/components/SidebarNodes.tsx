@@ -11,6 +11,8 @@ interface SidebarNodesProps {
   setItem: (item: V1Node | null) => void;
   onDelete?: (item: V1Node) => void;
   onEdit?: (item: V1Node) => void;
+  deleting?: boolean;
+  updating?: boolean;
 }
 
 const getNodeRoles = (node: V1Node): string =>
@@ -19,7 +21,14 @@ const getNodeRoles = (node: V1Node): string =>
     .map((k) => k.replace('node-role.kubernetes.io/', ''))
     .join(', ');
 
-export function SidebarNodes({ item, setItem, onDelete, onEdit }: SidebarNodesProps) {
+export function SidebarNodes({
+  item,
+  setItem,
+  onDelete,
+  onEdit,
+  deleting = false,
+  updating = false,
+}: SidebarNodesProps) {
   const renderOverview = (node: V1Node) => {
     const roles = getNodeRoles(node) || '—';
     const version = node.status?.nodeInfo?.kubeletVersion || '—';
@@ -93,6 +102,8 @@ export function SidebarNodes({ item, setItem, onDelete, onEdit }: SidebarNodesPr
       sections={sections}
       onDelete={onDelete}
       onEdit={onEdit}
+      deleting={deleting}
+      updating={updating}
     />
   );
 }

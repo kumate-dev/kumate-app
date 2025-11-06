@@ -22,9 +22,15 @@ export default function ClusterRoles({ context }: PaneResourceContextProps) {
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1ClusterRole>(createClusterRole, context);
-  const { handleUpdateResource } = useUpdateK8sResource<V1ClusterRole>(updateClusterRole, context);
-  const { handleDeleteResources } = useDeleteK8sResources<V1ClusterRole>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1ClusterRole>(
+    createClusterRole,
+    context
+  );
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1ClusterRole>(
+    updateClusterRole,
+    context
+  );
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1ClusterRole>(
     deleteClusterRoles,
     context
   );
@@ -45,10 +51,13 @@ export default function ClusterRoles({ context }: PaneResourceContextProps) {
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteClusterRoles={handleDelete}
+      onDelete={handleDelete}
       onCreate={handleCreateResource}
       onUpdate={handleUpdateResource}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }

@@ -1,50 +1,100 @@
 import { toast } from 'sonner';
+import { useState, useCallback } from 'react';
 import type { K8sResponse } from '@/types/k8sResponse';
 
-export function useDeleteK8sResources<T>(
-  deleteFn: (params: {
-    name: string;
-    namespace: string;
-    resourceNames: string[];
-  }) => Promise<K8sResponse[]>,
+interface DeleteResourcesParams {
+  name: string;
+  namespace: string;
+  resourceNames: string[];
+}
+
+interface ResourceMetadata {
+  metadata?: {
+    namespace?: string;
+    name?: string;
+  };
+}
+
+export function useDeleteK8sResources<T extends ResourceMetadata>(
+  deleteFn: (params: DeleteResourcesParams) => Promise<K8sResponse[]>,
   context?: { name: string } | null
 ) {
-  const handleDeleteResources = async (resources: T[]) => {
-    if (!context?.name) {
-      toast.error('Missing context name for deletion.');
-      return;
-    }
+  const [deleting, setDeleting] = useState(false);
 
-    const namespaceMap: Record<string, string[]> = {};
-
-    resources.forEach((r) => {
-      const meta: any = (r as any).metadata ?? {};
-      const ns = meta.namespace || '';
-      const name = meta.name;
-
-      if (!name) return;
-
-      if (!namespaceMap[ns]) namespaceMap[ns] = [];
-      namespaceMap[ns].push(name);
-    });
-
-    for (const ns in namespaceMap) {
-      try {
-        const results = await deleteFn({
-          name: context.name,
-          namespace: ns,
-          resourceNames: [...namespaceMap[ns]],
-        });
-
-        results.forEach((res) => {
-          if (res.Err) toast.error(res.Err);
-        });
-      } catch (err) {
-        toast.error(`${err}`);
-        toast.error(`Unexpected error while deleting resources in namespace: ${ns}`);
+  const handleDeleteResources = useCallback(
+    async (resources: T[]): Promise<void> => {
+      if (!context?.name) {
+        toast.error('Missing context name for deletion.');
+        return;
       }
-    }
-  };
 
-  return { handleDeleteResources };
+      if (!resources?.length) {
+        toast.info('No resources selected for deletion.');
+        return;
+      }
+
+      setDeleting(true);
+
+      const namespaceMap = new Map<string, string[]>();
+
+      for (const resource of resources) {
+        const namespace = resource.metadata?.namespace || '';
+        const name = resource.metadata?.name;
+
+        if (!name) {
+          console.warn('Resource missing name, skipping:', resource);
+          continue;
+        }
+
+        if (!namespaceMap.has(namespace)) {
+          namespaceMap.set(namespace, []);
+        }
+        namespaceMap.get(namespace)!.push(name);
+      }
+
+      try {
+        const deletionPromises = Array.from(namespaceMap.entries()).map(
+          async ([namespace, resourceNames]) => {
+            try {
+              const results = await deleteFn({
+                name: context.name,
+                namespace,
+                resourceNames,
+              });
+
+              results.forEach((result) => {
+                if (result.Err) {
+                  toast.error(`Deletion error: ${result.Err}`);
+                }
+              });
+
+              if (results.every((result) => !result.Err)) {
+                const namespaceLabel = namespace || 'default';
+                toast.success(
+                  `Successfully deleted ${resourceNames.length} resources in ${namespaceLabel} namespace`
+                );
+              }
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              const namespaceLabel = namespace || 'default';
+
+              toast.error(
+                `Failed to delete resources in ${namespaceLabel} namespace: ${errorMessage}`
+              );
+            }
+          }
+        );
+
+        await Promise.allSettled(deletionPromises);
+      } finally {
+        setDeleting(false);
+      }
+    },
+    [context?.name, deleteFn]
+  );
+
+  return {
+    handleDeleteResources,
+    deleting,
+  };
 }

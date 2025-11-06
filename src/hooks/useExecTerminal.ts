@@ -41,86 +41,98 @@ export function useExecTerminal({
   autoConnect = true,
   onStream,
 }: UseExecTerminalProps): UseExecTerminalReturn {
-  const [output, setOutput] = useState<string>('');
+  const [output, setOutput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   const unlistenRef = useRef<UnlistenFn | null>(null);
   const sessionIdRef = useRef<string | null>(null);
-  const eventNameRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
   const autoStartedRef = useRef(false);
-
   const onStreamRef = useRef(onStream);
+
   useEffect(() => {
     onStreamRef.current = onStream;
   }, [onStream]);
 
+  const handleExecEvent = useCallback(
+    (evt: ExecEvent) => {
+      onStreamRef.current?.(evt);
+
+      if (!isMountedRef.current) return;
+
+      switch (evt.type) {
+        case 'EXEC_STDOUT':
+        case 'EXEC_STDERR':
+          if (!tty && evt.data) {
+            setOutput((prev) => prev + evt.data + '\n');
+          }
+          break;
+        case 'EXEC_ERROR':
+          setError(evt.error || 'Exec error');
+          setIsConnected(false);
+          break;
+        case 'EXEC_COMPLETED':
+          setIsConnected(false);
+          break;
+      }
+    },
+    [tty]
+  );
+
   const startSession = useCallback(async () => {
     if (!contextName || isConnected) return;
+
     setLoading(true);
     setError(null);
 
     try {
-      const { eventName, sessionId, unlisten } = await startExecPodSession({
+      const { sessionId, unlisten } = await startExecPodSession({
         context: contextName,
         namespace,
         podName,
         containerName,
         command,
         tty,
-        onEvent: (evt: ExecEvent) => {
-          try {
-            onStreamRef.current?.(evt);
-          } catch {}
-
-          if (!isMountedRef.current) return;
-
-          if (!tty && evt.type === 'EXEC_STDOUT' && evt.data) {
-            setOutput((prev) => prev + evt.data + '\n');
-          } else if (!tty && evt.type === 'EXEC_STDERR' && evt.data) {
-            setOutput((prev) => prev + evt.data + '\n');
-          } else if (evt.type === 'EXEC_ERROR') {
-            setError(evt.error || 'Exec error');
-            setIsConnected(false);
-          } else if (evt.type === 'EXEC_COMPLETED') {
-            setIsConnected(false);
-          }
-        },
+        onEvent: handleExecEvent,
       });
 
       unlistenRef.current = unlisten;
       sessionIdRef.current = sessionId;
-      eventNameRef.current = eventName;
       setIsConnected(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start exec session');
       setIsConnected(false);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  }, [contextName, namespace, podName, containerName, command, tty, isConnected]);
+  }, [contextName, namespace, podName, containerName, command, tty, isConnected, handleExecEvent]);
 
   const stopSession = useCallback(async () => {
+    const cleanup = () => {
+      unlistenRef.current = null;
+      sessionIdRef.current = null;
+      setIsConnected(false);
+      setLoading(false);
+    };
+
     try {
-      if (unlistenRef.current) {
-        unlistenRef.current();
-        unlistenRef.current = null;
-      }
+      unlistenRef.current?.();
+
       if (sessionIdRef.current) {
         await stopExecPodSession({ sessionId: sessionIdRef.current });
       }
     } finally {
-      eventNameRef.current = null;
-      sessionIdRef.current = null;
-      setIsConnected(false);
-      setLoading(false);
+      cleanup();
     }
   }, []);
 
-  const sendInputHandler = useCallback(async (text: string, appendNewline: boolean = true) => {
+  const sendInputHandler = useCallback(async (text: string, appendNewline = true) => {
     if (!sessionIdRef.current) return;
+
     try {
       await sendExecInput({
         sessionId: sessionIdRef.current,

@@ -22,15 +22,15 @@ export default function ClusterRoleBindings({ context }: PaneResourceContextProp
     context
   );
 
-  const { handleCreateResource } = useCreateK8sResource<V1ClusterRoleBinding>(
+  const { handleCreateResource, creating } = useCreateK8sResource<V1ClusterRoleBinding>(
     createClusterRoleBinding,
     context
   );
-  const { handleUpdateResource } = useUpdateK8sResource<V1ClusterRoleBinding>(
+  const { handleUpdateResource, updating } = useUpdateK8sResource<V1ClusterRoleBinding>(
     updateClusterRoleBinding,
     context
   );
-  const { handleDeleteResources } = useDeleteK8sResources<V1ClusterRoleBinding>(
+  const { handleDeleteResources, deleting } = useDeleteK8sResources<V1ClusterRoleBinding>(
     deleteClusterRoleBindings,
     context
   );
@@ -46,15 +46,44 @@ export default function ClusterRoleBindings({ context }: PaneResourceContextProp
     [handleDeleteResources]
   );
 
+  const handleCreateClusterRoleBinding = useCallback(
+    async (manifest: V1ClusterRoleBinding): Promise<V1ClusterRoleBinding | undefined> => {
+      try {
+        const result = await handleCreateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to create cluster role binding:', error);
+        return undefined;
+      }
+    },
+    [handleCreateResource]
+  );
+
+  const handleUpdateClusterRoleBinding = useCallback(
+    async (manifest: V1ClusterRoleBinding): Promise<V1ClusterRoleBinding | undefined> => {
+      try {
+        const result = await handleUpdateResource(manifest);
+        return result || undefined;
+      } catch (error) {
+        console.error('Failed to update cluster role binding:', error);
+        return undefined;
+      }
+    },
+    [handleUpdateResource]
+  );
+
   return (
     <PaneClusterRoleBindings
       items={items}
       loading={loading}
       error={error ?? ''}
-      onDeleteClusterRoleBindings={handleDelete}
-      onCreate={handleCreateResource}
-      onUpdate={handleUpdateResource}
+      onDelete={handleDelete}
+      onCreate={handleCreateClusterRoleBinding}
+      onUpdate={handleUpdateClusterRoleBinding}
       contextName={context?.name}
+      creating={creating}
+      updating={updating}
+      deleting={deleting}
     />
   );
 }
