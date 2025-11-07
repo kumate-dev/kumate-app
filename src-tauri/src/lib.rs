@@ -182,6 +182,7 @@ pub fn run() {
             jobs::delete_jobs,
             cron_jobs::create_cron_job,
             cron_jobs::update_cron_job,
+            cron_jobs::suspend_cron_job,
             cron_jobs::list_cron_jobs,
             cron_jobs::watch_cron_jobs,
             cron_jobs::delete_cron_jobs,

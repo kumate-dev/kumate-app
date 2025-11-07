@@ -59,3 +59,17 @@ pub async fn delete_cron_jobs(
 ) -> Result<Vec<Result<String, String>>, String> {
     Ok(K8sResources::<CronJob>::delete(name, namespace, resource_names).await?)
 }
+
+#[tauri::command]
+pub async fn suspend_cron_job(
+    name: String,
+    namespace: Option<String>,
+    resource_name: String,
+    suspend: bool,
+) -> Result<Value, String> {
+    let patch: Value = serde_json::json!({
+        "spec": { "suspend": suspend }
+    });
+
+    K8sResources::<CronJob>::patch(name, namespace, resource_name, patch, "merge".into()).await
+}

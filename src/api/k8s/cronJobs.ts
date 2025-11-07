@@ -80,3 +80,22 @@ export async function deleteCronJobs({
     resourceNames,
   });
 }
+
+export async function suspendCronJob({
+  name,
+  namespace,
+  resourceName,
+  suspend,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+  suspend: boolean;
+}): Promise<V1CronJob> {
+  return await invoke<V1CronJob>('suspend_cron_job', {
+    name,
+    namespace,
+    resourceName,
+    suspend,
+  });
+}
