@@ -65,9 +65,9 @@ export function RightSidebarGeneric<T>({
     }
   }, [item, onEdit, closeSidebar]);
 
-  const handleDeleteConfirm = useCallback(() => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (item && onDelete) {
-      onDelete(item);
+      await onDelete(item);
       setOpenDeleteModal(false);
       closeSidebar();
     }
@@ -105,8 +105,6 @@ export function RightSidebarGeneric<T>({
   const showDeleteModal = useCallback(() => {
     setOpenDeleteModal(true);
   }, []);
-
-  console.log('RightSidebarGeneric - onEdit:', !!onEdit, 'onDelete:', !!onDelete);
 
   const showEditButton = !!onEdit;
   const showDeleteButton = !!onDelete;

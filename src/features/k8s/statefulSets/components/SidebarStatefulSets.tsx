@@ -8,7 +8,7 @@ import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneri
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getStatefulSetStatus } from '../utils/statefulSetStatus';
 import { Button } from '@/components/ui/button';
-import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
+import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 import { toast } from 'sonner';
 import { ButtonRestart } from '@/components/common/ButtonRestart';
 import { ButtonScale } from '@/components/common/ButtonScale';

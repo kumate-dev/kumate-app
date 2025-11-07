@@ -2,7 +2,6 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ButtonCancel } from './ButtonCancel';
@@ -12,7 +11,7 @@ interface ModalDeleteProps<T = unknown> {
   open: boolean;
   setOpen: (open: boolean) => void;
   items?: T[];
-  onConfirm: () => void;
+  onConfirm: () => Promise<void> | void;
   title?: string;
   message?: string;
   loading?: boolean;
@@ -29,35 +28,40 @@ export function ModalDelete<T>({
 }: ModalDeleteProps<T>) {
   const count = items.length;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!loading) {
-      onConfirm();
+      await onConfirm();
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = (v: boolean) => {
     if (!loading) {
-      setOpen(open);
+      setOpen(v);
     }
   };
+
+  const finalMessage =
+    message ??
+    (count === 0
+      ? 'Are you sure you want to delete this item?'
+      : `Are you sure you want to delete ${count} selected item${count > 1 ? 's' : ''}?`);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
+        <DialogHeader
+          title={title}
+          description={finalMessage}
+        />
 
-        <div className="mt-2 space-y-2 text-sm text-white/80">
-          <p>
-            {message ??
-              `Are you sure you want to delete ${count} selected item${count > 1 ? 's' : ''}?`}
+        {loading && (
+          <p className="text-sm text-yellow-400" aria-live="polite">
+            Deletion in progress, please wait...
           </p>
-          {loading && <p className="text-yellow-400">Deletion in progress, please wait...</p>}
-        </div>
+        )}
 
         <DialogFooter>
-          <ButtonCancel onClick={() => setOpen(false)} disabled={loading || count === 0} />
+          <ButtonCancel onClick={() => setOpen(false)} disabled={loading} />
           <ButtonDelete
             onClick={handleConfirm}
             disabled={loading || count === 0}

@@ -62,13 +62,6 @@ export function PaneIngresses({
     return copy;
   }, [items, sortOrder]);
 
-  const handleDeleteSelected = useCallback(
-    async (items: V1Ingress[]) => {
-      await onDelete(items);
-    },
-    [onDelete]
-  );
-
   const renderRow = (ing: V1Ingress) => {
     const hosts = (ing.spec?.rules || [])
       .map((r) => r.host || '')
@@ -119,7 +112,7 @@ export function PaneIngresses({
       columns={columns}
       renderRow={renderRow}
       emptyText="No ingresses found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templateIngress}
       onCreate={onCreate}

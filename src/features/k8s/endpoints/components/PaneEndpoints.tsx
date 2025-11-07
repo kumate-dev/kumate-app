@@ -60,13 +60,6 @@ export function PaneEndpoints({
     return copy;
   }, [items, sortOrder]);
 
-  const handleDeleteSelected = useCallback(
-    async (eps: V1Endpoints[]) => {
-      await onDelete(eps);
-    },
-    [onDelete]
-  );
-
   const renderRow = (ep: V1Endpoints) => (
     <>
       <Td className="break-all text-white">{ep.metadata?.name ?? '-'}</Td>
@@ -109,7 +102,7 @@ export function PaneEndpoints({
       columns={columns}
       renderRow={renderRow}
       emptyText="No endpoints found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templateEndpoint}
       onCreate={onCreate}

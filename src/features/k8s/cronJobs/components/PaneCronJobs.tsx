@@ -45,13 +45,6 @@ export default function PaneCronJobs({
 }: PaneCronJobsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1CronJob[]>([]);
-
-  const handleDeleteSelected = useCallback(async () => {
-    if (selectedItems.length === 0) return;
-    await onDelete(selectedItems);
-    setSelectedItems([]);
-  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -126,7 +119,7 @@ export default function PaneCronJobs({
       columns={columns}
       renderRow={renderRow}
       emptyText="No cron jobs found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templateCronJob}
       onCreate={onCreate}

@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ButtonCancel } from '@/components/common/ButtonCancel';
@@ -18,6 +17,8 @@ export interface ModalRestartProps {
   resourceLabel?: string;
   resourceName?: string;
   message?: string;
+  hideTitle?: boolean;
+  hideDescription?: boolean;
 }
 
 export const ModalRestart: React.FC<ModalRestartProps> = ({
@@ -31,24 +32,51 @@ export const ModalRestart: React.FC<ModalRestartProps> = ({
   message,
 }) => {
   const defaultMessage = resourceLabel
-    ? `Are you sure you want to restart ${resourceLabel} "${resourceName ?? ''}"?`
+    ? `Are you sure you want to restart ${resourceLabel}${resourceName ? ` "${resourceName}"` : ''}?`
     : 'Are you sure you want to restart?';
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
+  const finalMessage = message ?? defaultMessage;
 
-        <div className="mt-2 space-y-2 text-sm text-white/80">
-          <p>{message ?? defaultMessage}</p>
-          {patching && <p className="text-yellow-400">Processing, please wait...</p>}
-        </div>
+  const handleOpenChange = (v: boolean) => {
+    if (!patching) {
+      onOpenChange(v);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!patching) {
+      onConfirm();
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent>
+        <DialogHeader
+          title={title}
+          description={finalMessage}
+        />
+
+        {patching && (
+          <p 
+            className="text-sm text-yellow-400 mt-2"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            Processing, please wait...
+          </p>
+        )}
 
         <DialogFooter>
-          <ButtonCancel onClick={() => onOpenChange(false)} disabled={patching} />
-          <ButtonRestart onClick={onConfirm} disabled={patching} loading={patching} />
+          <ButtonCancel 
+            onClick={() => onOpenChange(false)}
+            disabled={patching}
+          />
+          <ButtonRestart 
+            onClick={handleConfirm}
+            disabled={patching} 
+            loading={patching} 
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

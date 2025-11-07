@@ -53,13 +53,6 @@ export function PaneIngressClasses({
     return copy;
   }, [items, sortOrder]);
 
-  const handleDeleteSelected = useCallback(
-    async (items: V1IngressClass[]) => {
-      await onDelete(items);
-    },
-    [onDelete]
-  );
-
   const renderRow = (ingc: V1IngressClass) => {
     const controller = ingc.spec?.controller ?? '-';
     return (
@@ -101,7 +94,7 @@ export function PaneIngressClasses({
       columns={columns}
       renderRow={renderRow}
       emptyText="No ingress classes found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templateIngressClass}
       onCreate={onCreate}

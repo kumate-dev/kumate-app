@@ -56,13 +56,6 @@ export default function PaneClusterRoleBindings({
     return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder, valueGetters]);
 
-  const handleDeleteSelected = useCallback(
-    async (selected: V1ClusterRoleBinding[]) => {
-      await onDelete(selected);
-    },
-    [onDelete]
-  );
-
   const renderRow = (rb: V1ClusterRoleBinding) => (
     <>
       <Td className="max-w-truncate align-middle">
@@ -106,7 +99,7 @@ export default function PaneClusterRoleBindings({
       columns={columns}
       renderRow={renderRow}
       emptyText="No cluster role bindings found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       onCreate={onCreate}
       onUpdate={onUpdate}
       yamlTemplate={() => templateClusterRoleBinding()}

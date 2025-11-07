@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -22,6 +21,8 @@ export interface ModalPortForwarderProps {
   resourceName: string;
   defaultRemotePort?: number;
   defaultLocalPort?: number;
+  hideTitle?: boolean;
+  hideDescription?: boolean;
 }
 
 function randomEphemeralPort() {
@@ -85,9 +86,10 @@ export const ModalPortForwarder: React.FC<ModalPortForwarderProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{`Port Forwarding for ${resourceName}`}</DialogTitle>
-        </DialogHeader>
+        <DialogHeader
+          title={`Port Forwarding for ${resourceName}`}
+          description="Configure local port forwarding and optionally open in your browser."
+        />
 
         <div className="mt-2 space-y-4 text-sm">
           <div>
@@ -100,6 +102,7 @@ export const ModalPortForwarder: React.FC<ModalPortForwarderProps> = ({
               className="w-48"
             />
           </div>
+
           {typeof defaultRemotePort === 'number' ? (
             <div className="flex items-center justify-between rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white/80">
               <div>

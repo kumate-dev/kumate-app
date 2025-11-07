@@ -6,7 +6,7 @@ import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
+import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 
 interface SidebarServicesProps {
   item: V1Service | null;

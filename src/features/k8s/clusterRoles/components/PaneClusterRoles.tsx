@@ -54,13 +54,6 @@ export default function PaneClusterRoles({
     return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder, valueGetters]);
 
-  const handleDeleteSelected = useCallback(
-    async (selected: V1ClusterRole[]) => {
-      await onDelete(selected);
-    },
-    [onDelete]
-  );
-
   const renderRow = (role: V1ClusterRole) => (
     <>
       <Td className="max-w-truncate align-middle">
@@ -103,7 +96,7 @@ export default function PaneClusterRoles({
       columns={columns}
       renderRow={renderRow}
       emptyText="No cluster roles found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       onCreate={onCreate}
       onUpdate={onUpdate}
       yamlTemplate={() => templateClusterRole()}

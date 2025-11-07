@@ -8,7 +8,7 @@ import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneri
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getReplicaSetStatus } from '../utils/replicaSetStatus';
 import { Button } from '@/components/ui/button';
-import { ModalPortForwarder } from '@/features/k8s/portForwarding/components/ModalPortForwarder';
+import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 
 interface SidebarReplicaSetsProps {
   item: V1ReplicaSet | null;

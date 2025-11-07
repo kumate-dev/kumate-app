@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
+import { Toast } from '@/components/ui/toast';
 
 try {
   const stored = localStorage.getItem('theme');
@@ -23,6 +24,7 @@ ReactDOM.createRoot(rootElement as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
+      <Toast />
     </BrowserRouter>
   </React.StrictMode>
 );

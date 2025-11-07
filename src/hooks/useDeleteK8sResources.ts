@@ -61,7 +61,6 @@ export function useDeleteK8sResources<T extends ResourceMetadata>(
                 namespace,
                 resourceNames,
               });
-
               results.forEach((result) => {
                 if (result.Err) {
                   toast.error(`Deletion error: ${result.Err}`);

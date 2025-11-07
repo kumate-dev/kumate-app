@@ -362,6 +362,7 @@ export function PaneGeneric<T>({
         setOpen={setOpenDeleteModal}
         items={selectedItems}
         onConfirm={handleDeleteSelected}
+        loading={deleting}
       />
 
       <BottomYamlEditor {...yamlEditorProps} />
