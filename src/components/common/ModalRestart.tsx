@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogFooter } from '@/components/ui/dialog';
 import { ButtonCancel } from '@/components/common/ButtonCancel';
 import { ButtonRestart } from '@/components/common/ButtonRestart';
 
@@ -52,31 +47,17 @@ export const ModalRestart: React.FC<ModalRestartProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <DialogHeader
-          title={title}
-          description={finalMessage}
-        />
+        <DialogHeader title={title} description={finalMessage} />
 
         {patching && (
-          <p 
-            className="text-sm text-yellow-400 mt-2"
-            aria-live="polite"
-            aria-atomic="true"
-          >
+          <p className="mt-2 text-sm text-yellow-400" aria-live="polite" aria-atomic="true">
             Processing, please wait...
           </p>
         )}
 
         <DialogFooter>
-          <ButtonCancel 
-            onClick={() => onOpenChange(false)}
-            disabled={patching}
-          />
-          <ButtonRestart 
-            onClick={handleConfirm}
-            disabled={patching} 
-            loading={patching} 
-          />
+          <ButtonCancel onClick={() => onOpenChange(false)} disabled={patching} />
+          <ButtonRestart onClick={handleConfirm} disabled={patching} loading={patching} />
         </DialogFooter>
       </DialogContent>
     </Dialog>

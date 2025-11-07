@@ -45,13 +45,6 @@ export default function PaneReplicaSets({
 }: PaneReplicaSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1ReplicaSet[]>([]);
-
-  const handleDeleteSelected = useCallback(async () => {
-    if (!selectedItems.length) return;
-    await onDelete(selectedItems);
-    setSelectedItems([]);
-  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -123,7 +116,7 @@ export default function PaneReplicaSets({
       columns={columns}
       renderRow={renderRow}
       emptyText="No replica sets found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templateReplicaSet}
       onCreate={onCreate}

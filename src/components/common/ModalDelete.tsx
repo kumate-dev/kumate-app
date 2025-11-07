@@ -1,9 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogFooter } from '@/components/ui/dialog';
 import { ButtonCancel } from './ButtonCancel';
 import { ButtonDelete } from './ButtonDelete';
 
@@ -49,10 +44,7 @@ export function ModalDelete<T>({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <DialogHeader
-          title={title}
-          description={finalMessage}
-        />
+        <DialogHeader title={title} description={finalMessage} />
 
         {loading && (
           <p className="text-sm text-yellow-400" aria-live="polite">

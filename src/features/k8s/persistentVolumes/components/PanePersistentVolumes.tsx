@@ -62,13 +62,6 @@ export default function PanePersistentVolumes({
     return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder]);
 
-  const handleDeleteSelected = useCallback(
-    async (items: V1PersistentVolume[]) => {
-      await onDelete(items);
-    },
-    [onDelete]
-  );
-
   const renderRow = (pv: V1PersistentVolume) => (
     <>
       <Td className="break-all text-white">{pv.metadata?.name ?? '-'}</Td>
@@ -110,7 +103,7 @@ export default function PanePersistentVolumes({
       showNamespace={false}
       columns={columns}
       renderRow={renderRow}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templatePersistentVolume}
       onCreate={onCreate}

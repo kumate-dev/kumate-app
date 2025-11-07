@@ -43,13 +43,6 @@ export default function PanePodDisruptionBudgets({
 }: PanePodDisruptionBudgetsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1PodDisruptionBudget[]) => {
-      if (!toDelete.length) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'metadata' },
@@ -121,7 +114,7 @@ export default function PanePodDisruptionBudgets({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderRow={renderRow}
       yamlTemplate={templatePodDisruptionBudget}
       onCreate={onCreate}

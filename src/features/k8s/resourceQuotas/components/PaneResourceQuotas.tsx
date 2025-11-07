@@ -42,13 +42,6 @@ export default function PaneResourceQuotas({
 }: PaneResourceQuotasProps) {
   const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1ResourceQuota[]) => {
-      if (!toDelete.length) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'metadata' },
@@ -117,7 +110,7 @@ export default function PaneResourceQuotas({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderRow={renderRow}
       renderSidebar={renderSidebar}
       yamlTemplate={templateResourceQuota}

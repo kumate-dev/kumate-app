@@ -36,14 +36,6 @@ export default function PaneRuntimeClasses({
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1RuntimeClass[]) => {
-      if (!toDelete.length) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
-
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Handler', key: 'handler', sortable: true },
@@ -120,7 +112,7 @@ export default function PaneRuntimeClasses({
       showNamespace={false}
       columns={columns}
       renderRow={renderRow}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={() => templateRuntimeClass()}
       onCreate={onCreate}

@@ -28,7 +28,7 @@ export const ButtonSuspend: React.FC<ButtonSuspendProps> = ({
     }
   };
 
-  const label = isSuspended ? textResume ?? 'Resume' : textSuspend ?? 'Suspend';
+  const label = isSuspended ? (textResume ?? 'Resume') : (textSuspend ?? 'Suspend');
   const title = loading ? (isSuspended ? 'Resuming...' : 'Suspending...') : label;
 
   return (

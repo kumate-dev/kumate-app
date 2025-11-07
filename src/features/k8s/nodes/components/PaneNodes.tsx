@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import { V1Node } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -91,14 +91,6 @@ export default function PaneNodes({
     />
   );
 
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1Node[]) => {
-      if (!toDelete.length || !onDeleteNodes) return;
-      await onDeleteNodes(toDelete);
-    },
-    [onDeleteNodes]
-  );
-
   return (
     <PaneGeneric
       items={sortedItems}
@@ -111,7 +103,7 @@ export default function PaneNodes({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onDelete={handleDeleteSelected}
+      onDelete={onDeleteNodes}
       renderRow={renderRow}
       renderSidebar={renderSidebar}
       deleting={deleting}

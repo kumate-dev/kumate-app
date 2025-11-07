@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { V1ServiceAccount, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -62,13 +62,6 @@ export default function PaneServiceAccounts({
     return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder, valueGetters]);
 
-  const handleDeleteSelected = useCallback(
-    async (selected: V1ServiceAccount[]) => {
-      await onDelete(selected);
-    },
-    [onDelete]
-  );
-
   const renderRow = (sa: V1ServiceAccount) => (
     <>
       <Td className="max-w-truncate align-middle">
@@ -113,7 +106,7 @@ export default function PaneServiceAccounts({
       columns={columns}
       renderRow={renderRow}
       emptyText="No service accounts found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       yamlTemplate={templateServiceAccount}
       onCreate={onCreate}
       onUpdate={onUpdate}

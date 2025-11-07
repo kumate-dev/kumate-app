@@ -88,7 +88,7 @@ export function SidebarCronJobs({
     },
     [contextName]
   );
-  
+
   const renderProperties = useCallback(
     (cj: V1CronJob) => (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -171,7 +171,16 @@ export function SidebarCronJobs({
             },
           ]
         : [],
-    [item, renderProperties, deleting, updating, patching, contextName, handleTrigger, handleToggleSuspend]
+    [
+      item,
+      renderProperties,
+      deleting,
+      updating,
+      patching,
+      contextName,
+      handleTrigger,
+      handleToggleSuspend,
+    ]
   );
 
   return (

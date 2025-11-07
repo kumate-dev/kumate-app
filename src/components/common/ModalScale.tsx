@@ -1,11 +1,6 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogFooter } from '@/components/ui/dialog';
 import { ButtonCancel } from '@/components/common/ButtonCancel';
 import { ButtonScale } from '@/components/common/ButtonScale';
 
@@ -98,12 +93,9 @@ export const ModalScale: React.FC<ModalScaleProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <DialogHeader
-          title={title}
-          description={finalMessage}
-        />
+        <DialogHeader title={title} description={finalMessage} />
 
-        <div className="space-y-3 mt-2 text-sm text-white/80">
+        <div className="mt-2 space-y-3 text-sm text-white/80">
           <div className="space-y-2">
             <Input
               type="text"
@@ -130,7 +122,7 @@ export const ModalScale: React.FC<ModalScaleProps> = ({
           </div>
 
           {patching && (
-            <p className="text-yellow-400 text-sm" aria-live="polite" aria-atomic="true">
+            <p className="text-sm text-yellow-400" aria-live="polite" aria-atomic="true">
               Applying changes, please wait...
             </p>
           )}

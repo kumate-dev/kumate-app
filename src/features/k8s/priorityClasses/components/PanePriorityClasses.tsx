@@ -36,14 +36,6 @@ export default function PanePriorityClasses({
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1PriorityClass[]) => {
-      if (!toDelete.length) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
-
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Value', key: 'value', sortable: true },
@@ -103,7 +95,7 @@ export default function PanePriorityClasses({
       showNamespace={false}
       columns={columns}
       renderRow={renderRow}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={() => templatePriorityClass()}
       onCreate={onCreate}

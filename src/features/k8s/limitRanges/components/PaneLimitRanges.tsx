@@ -35,13 +35,6 @@ export default function PaneLimitRanges({
 }: PaneLimitRangesProps) {
   const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1LimitRange[]) => {
-      if (!toDelete.length) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
 
   const renderLimitMap = (map?: Record<string, string>): { display: string; title: string } => {
     if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
@@ -111,7 +104,7 @@ export default function PaneLimitRanges({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderRow={renderRow}
       renderSidebar={renderSidebar}
       yamlTemplate={templateLimitRange}

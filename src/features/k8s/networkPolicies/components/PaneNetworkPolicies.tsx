@@ -37,14 +37,6 @@ export default function PaneNetworkPolicies({
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1NetworkPolicy[]) => {
-      if (!toDelete.length) return;
-      await onDeleteNetworkPolicies(toDelete);
-    },
-    [onDeleteNetworkPolicies]
-  );
-
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Namespace', key: 'namespace', sortable: true },
@@ -137,7 +129,7 @@ export default function PaneNetworkPolicies({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onDelete={handleDeleteSelected}
+      onDelete={onDeleteNetworkPolicies}
       renderRow={renderRow}
       yamlTemplate={templateNetworkPolicy}
       onCreate={onCreate}

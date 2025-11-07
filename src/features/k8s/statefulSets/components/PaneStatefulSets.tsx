@@ -45,13 +45,6 @@ export default function PaneStatefulSets({
 }: PaneStatefulSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedItems, setSelectedItems] = useState<V1StatefulSet[]>([]);
-
-  const handleDeleteSelected = useCallback(async () => {
-    if (!selectedItems.length) return;
-    await onDelete(selectedItems);
-    setSelectedItems([]);
-  }, [selectedItems, onDelete]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -122,7 +115,7 @@ export default function PaneStatefulSets({
       columns={columns}
       renderRow={renderRow}
       emptyText="No stateful sets found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templateStatefulSet}
       onCreate={onCreate}

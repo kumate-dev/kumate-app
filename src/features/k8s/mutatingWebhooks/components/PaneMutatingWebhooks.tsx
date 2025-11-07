@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import type { V1MutatingWebhookConfiguration } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -39,14 +39,6 @@ export default function PaneMutatingWebhooks({
 }: PaneMutatingWebhooksProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1MutatingWebhookConfiguration[]) => {
-      if (!toDelete.length) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -96,7 +88,7 @@ export default function PaneMutatingWebhooks({
       columns={columns}
       renderRow={renderRow}
       emptyText="No mutating webhooks found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={() => templateMutatingWebhook}
       onCreate={onCreate}

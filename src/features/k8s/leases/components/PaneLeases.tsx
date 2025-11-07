@@ -37,14 +37,6 @@ export default function PaneLeases({
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1Lease[]) => {
-      if (!toDelete.length) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
-
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Namespace', key: 'namespace', sortable: true },
@@ -113,7 +105,7 @@ export default function PaneLeases({
       columns={columns}
       renderRow={renderRow}
       emptyText="No leases found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templateLease}
       onCreate={onCreate}

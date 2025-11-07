@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { V1Role, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -62,13 +62,6 @@ export default function PaneRoles({
     return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder, valueGetters]);
 
-  const handleDeleteSelected = useCallback(
-    async (selected: V1Role[]) => {
-      await onDelete(selected);
-    },
-    [onDelete]
-  );
-
   const renderRow = (role: V1Role) => (
     <>
       <Td className="max-w-truncate align-middle">
@@ -113,7 +106,7 @@ export default function PaneRoles({
       columns={columns}
       renderRow={renderRow}
       emptyText="No roles found"
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       yamlTemplate={templateRole}
       onCreate={onCreate}
       onUpdate={onUpdate}

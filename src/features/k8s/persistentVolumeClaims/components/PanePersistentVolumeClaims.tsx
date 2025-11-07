@@ -68,14 +68,6 @@ export default function PanePersistentVolumeClaims({
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1PersistentVolumeClaim[]) => {
-      if (!toDelete.length) return;
-      await onDeletePersistentVolumeClaims(toDelete);
-    },
-    [onDeletePersistentVolumeClaims]
-  );
-
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Namespace', key: 'namespace', sortable: true },
@@ -158,7 +150,7 @@ export default function PanePersistentVolumeClaims({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onDelete={handleDeleteSelected}
+      onDelete={onDeletePersistentVolumeClaims}
       renderRow={renderRow}
       yamlTemplate={templatePersistentVolumeClaim}
       onCreate={onCreate}

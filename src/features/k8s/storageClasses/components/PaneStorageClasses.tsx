@@ -60,13 +60,6 @@ export default function PaneStorageClasses({
     return sortItems(items, sortBy, sortOrder, valueGetters);
   }, [items, sortBy, sortOrder]);
 
-  const handleDeleteSelected = useCallback(
-    async (items: V1StorageClass[]) => {
-      await onDelete(items);
-    },
-    [onDelete]
-  );
-
   const renderRow = (sc: V1StorageClass) => (
     <>
       <Td className="break-all text-white">{sc.metadata?.name ?? '-'}</Td>
@@ -107,7 +100,7 @@ export default function PaneStorageClasses({
       showNamespace={false}
       columns={columns}
       renderRow={renderRow}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={renderSidebar}
       yamlTemplate={templateStorageClass}
       onCreate={onCreate}

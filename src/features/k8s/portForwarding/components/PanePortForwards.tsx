@@ -104,13 +104,6 @@ export function PanePortForwards({
     );
   }, []);
 
-  const handleDeleteSelected = useCallback(
-    async (toDelete: PortForwardItemDto[]) => {
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
-
   return (
     <PaneGeneric<PortForwardItemDto>
       items={filteredSortedItems}
@@ -121,7 +114,7 @@ export function PanePortForwards({
       onSelectNamespace={onSelectNamespace}
       columns={columns}
       renderRow={renderRow}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderSidebar={(item, actions) => (
         <SidebarPortForwards
           item={item}

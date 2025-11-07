@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import { V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -37,13 +37,6 @@ export default function PaneNamespaces({
 }: PaneNamespacesProps) {
   const [sortBy, setSortBy] = useState<keyof V1Namespace>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1Namespace[]) => {
-      if (!toDelete.length || !onDelete) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -101,7 +94,7 @@ export default function PaneNamespaces({
       sortOrder={sortOrder}
       setSortBy={(v) => setSortBy(v as keyof V1Namespace)}
       setSortOrder={setSortOrder}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       colSpan={columns.length}
       renderRow={renderRow}
       renderSidebar={renderSidebar}

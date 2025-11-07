@@ -43,13 +43,6 @@ export default function PaneSecrets({
 }: PaneSecretsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const handleDeleteSelected = useCallback(
-    async (toDelete: V1Secret[]) => {
-      if (!toDelete.length) return;
-      await onDelete(toDelete);
-    },
-    [onDelete]
-  );
 
   const getDataKeys = (secret: V1Secret): string => {
     return secret.data ? Object.keys(secret.data).join(', ') : '-';
@@ -123,7 +116,7 @@ export default function PaneSecrets({
       sortOrder={sortOrder}
       setSortBy={setSortBy}
       setSortOrder={setSortOrder}
-      onDelete={handleDeleteSelected}
+      onDelete={onDelete}
       renderRow={renderRow}
       yamlTemplate={templateSecret}
       onCreate={onCreate}

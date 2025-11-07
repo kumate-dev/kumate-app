@@ -15,12 +15,12 @@ interface DialogContentProps
   hideDescription?: boolean;
 }
 
-export function DialogContent({ 
-  className = '', 
-  children, 
+export function DialogContent({
+  className = '',
+  children,
   hideTitle = false,
   hideDescription = false,
-  ...props 
+  ...props
 }: DialogContentProps) {
   return (
     <DialogPrimitive.Portal>
@@ -30,17 +30,15 @@ export function DialogContent({
         {...props}
       >
         {hideTitle && (
-          <DialogPrimitive.Title className="sr-only">
-            Dialog title
-          </DialogPrimitive.Title>
+          <DialogPrimitive.Title className="sr-only">Dialog title</DialogPrimitive.Title>
         )}
-        
+
         {hideDescription && (
           <DialogPrimitive.Description className="sr-only">
             Dialog content
           </DialogPrimitive.Description>
         )}
-        
+
         {children}
         <DialogPrimitive.Close asChild>
           <Button variant="ghost" size="sm" className="absolute top-3 right-3 p-2">
