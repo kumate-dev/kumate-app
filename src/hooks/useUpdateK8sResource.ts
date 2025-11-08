@@ -43,7 +43,6 @@ export function useUpdateK8sResource<T extends ResourceManifest>(
         namespace,
         manifest,
       });
-      toast.success(`${resourceName} ${name} updated successfully`);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

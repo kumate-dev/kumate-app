@@ -66,7 +66,6 @@ export default function HelmReleases({ context }: PaneResourceContextProps) {
 
       try {
         await uninstallHelmReleases({ name: context.name, namespace, releaseNames: names });
-        toast.success(`Uninstalled ${names.length} release(s)`);
       } catch (err) {
         toast.error(`Uninstall failed: ${err}`);
       }

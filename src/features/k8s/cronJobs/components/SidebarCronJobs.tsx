@@ -57,7 +57,6 @@ export function SidebarCronJobs({
       };
       try {
         await createJob({ name: contextName, namespace, manifest });
-        toast.success('CronJob triggered: Job created');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         toast.error(`Trigger failed: ${msg}`);
@@ -78,7 +77,6 @@ export function SidebarCronJobs({
           resourceName: cj.metadata.name,
           suspend: next,
         });
-        toast.success(next ? 'CronJob suspended' : 'CronJob resumed');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         toast.error(`Suspend/resume failed: ${msg}`);

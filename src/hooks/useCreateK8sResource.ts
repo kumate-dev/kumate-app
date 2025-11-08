@@ -42,7 +42,6 @@ export function useCreateK8sResource<
         namespace,
         manifest,
       });
-      toast.success(`${resourceName} ${name} created successfully`);
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -130,7 +130,12 @@ export const ModalScale: React.FC<ModalScaleProps> = ({
 
         <DialogFooter>
           <ButtonCancel onClick={() => onOpenChange(false)} disabled={patching} />
-          <ButtonScale onClick={handleConfirm} disabled={disabled} loading={patching} />
+          <ButtonScale
+            onClick={handleConfirm}
+            disabled={disabled}
+            loading={patching}
+            showIcon={false}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

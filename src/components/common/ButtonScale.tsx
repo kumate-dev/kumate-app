@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Expand } from 'lucide-react';
 import React from 'react';
 
 interface ButtonScaleProps {
@@ -8,6 +8,7 @@ interface ButtonScaleProps {
   className?: string;
   text?: string;
   loading?: boolean;
+  showIcon?: boolean;
 }
 
 export const ButtonScale: React.FC<ButtonScaleProps> = ({
@@ -16,6 +17,7 @@ export const ButtonScale: React.FC<ButtonScaleProps> = ({
   text,
   className = '',
   loading = false,
+  showIcon = true,
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,7 +35,11 @@ export const ButtonScale: React.FC<ButtonScaleProps> = ({
       title={loading ? 'Scaling...' : 'Scale'}
       disabled={disabled || loading}
     >
-      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        showIcon && <Expand className="h-4 w-4" />
+      )}
       {text ?? (loading ? 'Scaling...' : 'Scale')}
     </Button>
   );

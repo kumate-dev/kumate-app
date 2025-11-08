@@ -51,7 +51,6 @@ export function SidebarReplicationControllers({
           namespace: rc.metadata?.namespace,
           resourceName: rc.metadata?.name || '',
         });
-        toast.success('ReplicationController restarted');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         toast.error(`Restart failed: ${msg}`);
@@ -74,7 +73,6 @@ export function SidebarReplicationControllers({
           resourceName: rc.metadata?.name || '',
           replicas: Math.max(0, Number(scale) || 0),
         });
-        toast.success('ReplicationController scaled');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         toast.error(`Scale failed: ${msg}`);

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RotateCcw } from 'lucide-react';
 import React from 'react';
 
 interface ButtonRestartProps {
@@ -33,7 +33,7 @@ export const ButtonRestart: React.FC<ButtonRestartProps> = ({
       title={loading ? 'Restarting...' : 'Restart'}
       disabled={disabled || loading}
     >
-      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
       {text ?? (loading ? 'Restarting...' : 'Restart')}
     </Button>
   );

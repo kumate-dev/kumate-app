@@ -48,7 +48,6 @@ export function SidebarDaemonSets({
           namespace: ds.metadata?.namespace,
           resourceName: ds.metadata.name || '',
         });
-        toast.success('DaemonSet restarted');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         toast.error(`Restart failed: ${msg}`);

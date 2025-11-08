@@ -61,7 +61,6 @@ export function SidebarStatefulSets({
           namespace: ss.metadata?.namespace,
           resourceName: ss.metadata?.name || '',
         });
-        toast.success('StatefulSet restarted');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         toast.error(`Restart failed: ${msg}`);
@@ -84,7 +83,6 @@ export function SidebarStatefulSets({
           resourceName: ss.metadata?.name || '',
           replicas: Math.max(0, Number(scale) || 0),
         });
-        toast.success('StatefulSet scaled');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         toast.error(`Scale failed: ${msg}`);

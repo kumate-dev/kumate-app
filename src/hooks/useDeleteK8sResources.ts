@@ -66,13 +66,6 @@ export function useDeleteK8sResources<T extends ResourceMetadata>(
                   toast.error(`Deletion error: ${result.Err}`);
                 }
               });
-
-              if (results.every((result) => !result.Err)) {
-                const namespaceLabel = namespace || 'default';
-                toast.success(
-                  `Successfully deleted ${resourceNames.length} resources in ${namespaceLabel} namespace`
-                );
-              }
             } catch (error) {
               const errorMessage = error instanceof Error ? error.message : String(error);
               const namespaceLabel = namespace || 'default';
