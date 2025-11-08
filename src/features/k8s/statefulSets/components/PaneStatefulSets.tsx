@@ -7,10 +7,10 @@ import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getStatefulSetStatus } from '../utils/statefulSetStatus';
-import { sortItems } from '@/utils/sort';
 import { SidebarStatefulSets } from './SidebarStatefulSets';
 import { templateStatefulSet } from '../../templates/statefulSet';
 import { V1StatefulSet as StatefulSet } from '@kubernetes/client-node';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneStatefulSetsProps {
   selectedNamespaces: string[];
@@ -45,6 +45,24 @@ export default function PaneStatefulSets({
 }: PaneStatefulSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1StatefulSet) => item.metadata?.name || '',
+      namespace: (item: V1StatefulSet) => item.metadata?.namespace || '',
+      status: (item: V1StatefulSet) => getStatefulSetStatus(item).status,
+      age: (item: V1StatefulSet) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1StatefulSet>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -53,15 +71,7 @@ export default function PaneStatefulSets({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
-      name: (item: V1StatefulSet) => item.metadata?.name || '',
-      namespace: (item: V1StatefulSet) => item.metadata?.namespace || '',
-      status: (item: V1StatefulSet) => getStatefulSetStatus(item),
-      age: (item: V1StatefulSet) => new Date(item.metadata?.creationTimestamp || '').getTime(),
-    };
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  // sortedItems provided by hook
 
   const renderRow = (ss: V1StatefulSet) => {
     return (
@@ -120,6 +130,7 @@ export default function PaneStatefulSets({
       yamlTemplate={templateStatefulSet}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       contextName={contextName}
       sortBy={sortBy}
       sortOrder={sortOrder}

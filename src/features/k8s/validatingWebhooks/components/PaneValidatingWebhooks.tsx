@@ -4,7 +4,7 @@ import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef } from '@/components/common/TableHeader';
-import { sortItems } from '@/utils/sort';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 import SidebarValidatingWebhooks from './SidebarValidatingWebhooks';
 import { templateValidatingWebhook } from '../../templates/validatingWebhook';
 
@@ -39,6 +39,25 @@ export default function PaneValidatingWebhooks({
 }: PaneValidatingWebhooksProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1ValidatingWebhookConfiguration) => item.metadata?.name || '',
+      count: (item: V1ValidatingWebhookConfiguration) => item.webhooks?.length ?? 0,
+      age: (item: V1ValidatingWebhookConfiguration) =>
+        new Date(item.metadata?.creationTimestamp || '').getTime(),
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1ValidatingWebhookConfiguration>(
+    {
+      items,
+      sortBy,
+      sortOrder,
+      valueGetters,
+      isNamespaced: false,
+    }
+  );
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -46,15 +65,7 @@ export default function PaneValidatingWebhooks({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
-      name: (item: V1ValidatingWebhookConfiguration) => item.metadata?.name || '',
-      count: (item: V1ValidatingWebhookConfiguration) => item.webhooks?.length ?? 0,
-      age: (item: V1ValidatingWebhookConfiguration) =>
-        new Date(item.metadata?.creationTimestamp || '').getTime(),
-    };
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  // sortedItems provided by hook
 
   const renderRow = (vw: V1ValidatingWebhookConfiguration) => (
     <>
@@ -93,6 +104,7 @@ export default function PaneValidatingWebhooks({
       yamlTemplate={() => templateValidatingWebhook}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       contextName={contextName}
       sortBy={sortBy}
       sortOrder={sortOrder}

@@ -14,7 +14,7 @@ import { templatePod } from '../../templates/pod';
 import { DotContainers } from './DotContainers';
 import { getContainerStatuses } from '../utils/containerStatus';
 import { WarningPod } from './WarningPod';
-import { sortItems } from '@/utils/sort';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PanePodsProps {
   selectedNamespaces: string[];
@@ -49,6 +49,31 @@ export default function PanePods({
 }: PanePodsProps) {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (pod: V1Pod) => pod.metadata?.name || '',
+      namespace: (pod: V1Pod) => pod.metadata?.namespace || '',
+      containers: (pod: V1Pod) => pod.spec?.containers?.length || 0,
+      restart: (pod: V1Pod) => podRestartCount(pod),
+      qos: (pod: V1Pod) => pod.status?.qosClass || '',
+      age: (pod: V1Pod) => new Date(pod.metadata?.creationTimestamp || '').getTime(),
+      status: (pod: V1Pod) => getPodStatus(pod).status,
+      warning: (pod: V1Pod) => {
+        const containerStatuses = getContainerStatuses(pod);
+        return containerStatuses.some((status) => !status.ready) ? 1 : 0;
+      },
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1Pod>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
 
   const columns = useMemo(
     (): ColumnDef<string>[] => [
@@ -63,27 +88,7 @@ export default function PanePods({
     []
   );
 
-  const valueGetters = useMemo(
-    () => ({
-      name: (pod: V1Pod) => pod.metadata?.name || '',
-      namespace: (pod: V1Pod) => pod.metadata?.namespace || '',
-      containers: (pod: V1Pod) => pod.spec?.containers?.length || 0,
-      restart: (pod: V1Pod) => podRestartCount(pod),
-      qos: (pod: V1Pod) => pod.status?.qosClass || '',
-      age: (pod: V1Pod) => new Date(pod.metadata?.creationTimestamp || '').getTime(),
-      status: (pod: V1Pod) => getPodStatus(pod),
-      warning: (pod: V1Pod) => {
-        const containerStatuses = getContainerStatuses(pod);
-        return containerStatuses.some((status) => !status.ready) ? 1 : 0;
-      },
-    }),
-    []
-  );
-
-  const sortedItems = useMemo(
-    () => sortItems(items, sortBy, sortOrder, valueGetters),
-    [items, sortBy, sortOrder, valueGetters]
-  );
+  // sortedItems provided by hook
 
   const renderRow = useCallback((pod: V1Pod) => {
     const containerStatuses = getContainerStatuses(pod);
@@ -160,6 +165,7 @@ export default function PanePods({
       onDelete={onDelete}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       yamlTemplate={templatePod}
       renderSidebar={renderSidebar}
       contextName={contextName}

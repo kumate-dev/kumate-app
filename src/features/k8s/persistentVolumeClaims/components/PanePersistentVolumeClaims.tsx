@@ -5,12 +5,12 @@ import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef } from '../../../../components/common/TableHeader';
-import { sortItems } from '@/utils/sort';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { templatePersistentVolumeClaim } from '../../templates/persistentVolumeClaim';
 import { BadgeVariant } from '@/types/variant';
 import { K8sStatus } from '@/types/k8sStatus';
 import { SidebarPersistentVolumeClaims } from './SidebarPersistentVolumeClaims';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PanePersistentVolumeClaimsProps {
   selectedNamespaces: string[];
@@ -67,6 +67,28 @@ export default function PanePersistentVolumeClaims({
 }: PanePersistentVolumeClaimsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1PersistentVolumeClaim) => item.metadata?.name || '',
+      namespace: (item: V1PersistentVolumeClaim) => item.metadata?.namespace || '',
+      status: (item: V1PersistentVolumeClaim) => item.status?.phase || '',
+      storageClass: (item: V1PersistentVolumeClaim) => item.spec?.storageClassName || '',
+      capacity: (item: V1PersistentVolumeClaim) => (item.status?.capacity as any)?.storage || '',
+      accessModes: (item: V1PersistentVolumeClaim) => (item.spec?.accessModes || []).join(', '),
+      age: (item: V1PersistentVolumeClaim) =>
+        new Date(item.metadata?.creationTimestamp || '').getTime(),
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1PersistentVolumeClaim>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -78,19 +100,7 @@ export default function PanePersistentVolumeClaims({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
-      name: (item: V1PersistentVolumeClaim) => item.metadata?.name || '',
-      namespace: (item: V1PersistentVolumeClaim) => item.metadata?.namespace || '',
-      status: (item: V1PersistentVolumeClaim) => item.status?.phase || '',
-      storageClass: (item: V1PersistentVolumeClaim) => item.spec?.storageClassName || '',
-      capacity: (item: V1PersistentVolumeClaim) => (item.status?.capacity as any)?.storage || '',
-      accessModes: (item: V1PersistentVolumeClaim) => (item.spec?.accessModes || []).join(', '),
-      age: (item: V1PersistentVolumeClaim) =>
-        new Date(item.metadata?.creationTimestamp || '').getTime(),
-    };
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  // sortedItems provided by hook
 
   const renderRow = (pvc: V1PersistentVolumeClaim) => (
     <>
@@ -155,6 +165,7 @@ export default function PanePersistentVolumeClaims({
       yamlTemplate={templatePersistentVolumeClaim}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       renderSidebar={renderSidebar}
       contextName={contextName}
       creating={creating}

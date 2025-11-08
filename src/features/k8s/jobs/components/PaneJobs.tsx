@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { V1Job, V1Namespace } from '@kubernetes/client-node';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef } from '../../../../components/common/TableHeader';
@@ -11,6 +11,7 @@ import { sortItems } from '@/utils/sort';
 import { SidebarJobs } from './SidebarJobs';
 import { templateJob } from '../../templates/job';
 import { V1Job as Job } from '@kubernetes/client-node';
+import { ALL_NAMESPACES } from '@/constants/k8s';
 
 export interface PaneJobsProps {
   selectedNamespaces: string[];
@@ -45,6 +46,8 @@ export default function PaneJobs({
 }: PaneJobsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [displayItems, setDisplayItems] = useState<V1Job[]>(items);
+  useEffect(() => setDisplayItems(items), [items]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -60,8 +63,8 @@ export default function PaneJobs({
       age: (item: V1Job) => new Date(item.metadata?.creationTimestamp || '').getTime(),
       status: (item: V1Job) => getJobStatus(item),
     };
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+    return sortItems(displayItems, sortBy, sortOrder, valueGetters);
+  }, [displayItems, sortBy, sortOrder]);
 
   const renderRow = (job: V1Job) => (
     <>
@@ -117,6 +120,20 @@ export default function PaneJobs({
       yamlTemplate={templateJob}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={(created) => {
+        const createdNs = created.metadata?.namespace || '';
+        const createdName = created.metadata?.name || '';
+        const nsFilterAllows =
+          !selectedNamespaces?.length ||
+          selectedNamespaces.includes(ALL_NAMESPACES) ||
+          selectedNamespaces.includes(createdNs);
+        if (!nsFilterAllows) return;
+        const keyOf = (j: V1Job) => `${j.metadata?.namespace || ''}/${j.metadata?.name || ''}`;
+        setDisplayItems((prev) => {
+          const exists = prev.some((j) => keyOf(j) === `${createdNs}/${createdName}`);
+          return exists ? prev : [created, ...prev];
+        });
+      }}
       sortBy={sortBy}
       sortOrder={sortOrder}
       setSortBy={setSortBy}

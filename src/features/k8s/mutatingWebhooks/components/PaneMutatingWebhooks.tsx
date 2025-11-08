@@ -4,7 +4,7 @@ import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef } from '@/components/common/TableHeader';
-import { sortItems } from '@/utils/sort';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 import SidebarMutatingWebhooks from './SidebarMutatingWebhooks';
 import { templateMutatingWebhook } from '../../templates/mutatingWebhook';
 
@@ -39,22 +39,29 @@ export default function PaneMutatingWebhooks({
 }: PaneMutatingWebhooksProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1MutatingWebhookConfiguration) => item.metadata?.name || '',
+      count: (item: V1MutatingWebhookConfiguration) => item.webhooks?.length ?? 0,
+      age: (item: V1MutatingWebhookConfiguration) =>
+        new Date(item.metadata?.creationTimestamp || '').getTime(),
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1MutatingWebhookConfiguration>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    isNamespaced: false,
+  });
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Webhooks', key: 'count', sortable: true },
     { label: 'Age', key: 'age', sortable: true },
   ];
-
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
-      name: (item: V1MutatingWebhookConfiguration) => item.metadata?.name || '',
-      count: (item: V1MutatingWebhookConfiguration) => item.webhooks?.length ?? 0,
-      age: (item: V1MutatingWebhookConfiguration) =>
-        new Date(item.metadata?.creationTimestamp || '').getTime(),
-    };
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
 
   const renderRow = (mw: V1MutatingWebhookConfiguration) => (
     <>
@@ -93,6 +100,7 @@ export default function PaneMutatingWebhooks({
       yamlTemplate={() => templateMutatingWebhook}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       contextName={contextName}
       sortBy={sortBy}
       sortOrder={sortOrder}

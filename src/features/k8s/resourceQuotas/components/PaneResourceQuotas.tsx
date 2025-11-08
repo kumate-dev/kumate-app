@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { V1ResourceQuota, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
@@ -8,6 +8,7 @@ import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import AgeCell from '@/components/common/AgeCell';
 import { renderKeyValue } from '../utils/renderKeyValue';
 import { templateResourceQuota } from '../../templates/resourceQuota';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneResourceQuotasProps {
   selectedNamespaces: string[];
@@ -40,16 +41,39 @@ export default function PaneResourceQuotas({
   updating,
   deleting,
 }: PaneResourceQuotasProps) {
-  const [sortBy, setSortBy] = useState<string>('metadata');
+  const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1ResourceQuota) => item.metadata?.name || '',
+      namespace: (item: V1ResourceQuota) => item.metadata?.namespace || '',
+      hard: (item: V1ResourceQuota) =>
+        renderKeyValue(item.status?.hard as Record<string, string>).title,
+      used: (item: V1ResourceQuota) =>
+        renderKeyValue(item.status?.used as Record<string, string>).title,
+      age: (item: V1ResourceQuota) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1ResourceQuota>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
 
   const columns: ColumnDef<string>[] = [
-    { label: 'Name', key: 'metadata' },
-    { label: 'Namespace', key: 'metadata' },
-    { label: 'Hard', key: 'status' },
-    { label: 'Used', key: 'status' },
-    { label: 'Age', key: 'metadata' },
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Namespace', key: 'namespace', sortable: true },
+    { label: 'Hard', key: 'hard', sortable: true },
+    { label: 'Used', key: 'used', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
   ];
+
+  // sortedItems provided by hook
 
   const renderRow = (rq: V1ResourceQuota) => {
     const hardResources = renderKeyValue(rq.status?.hard as Record<string, string>);
@@ -99,7 +123,7 @@ export default function PaneResourceQuotas({
 
   return (
     <PaneGeneric
-      items={items}
+      items={sortedItems}
       loading={loading}
       error={error}
       namespaceList={namespaceList}
@@ -116,6 +140,7 @@ export default function PaneResourceQuotas({
       yamlTemplate={templateResourceQuota}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       contextName={contextName}
       creating={creating}
       deleting={deleting}

@@ -57,7 +57,12 @@ export const ModalRestart: React.FC<ModalRestartProps> = ({
 
         <DialogFooter>
           <ButtonCancel onClick={() => onOpenChange(false)} disabled={patching} />
-          <ButtonRestart onClick={handleConfirm} disabled={patching} loading={patching} showIcon={false} />
+          <ButtonRestart
+            onClick={handleConfirm}
+            disabled={patching}
+            loading={patching}
+            showIcon={false}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

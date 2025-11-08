@@ -1,6 +1,9 @@
 import { V1PodDisruptionBudget } from '@kubernetes/client-node';
 
-export function templatePodDisruptionBudget(name?: string, namespace?: string): V1PodDisruptionBudget {
+export function templatePodDisruptionBudget(
+  name?: string,
+  namespace?: string
+): V1PodDisruptionBudget {
   return {
     apiVersion: 'policy/v1',
     kind: 'PodDisruptionBudget',

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { V1ConfigMap, V1Namespace } from '@kubernetes/client-node';
 import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
@@ -7,6 +7,7 @@ import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { templateConfigMap } from '../../templates/configMap';
 import { SidebarConfigMaps } from './SidebarConfigMaps';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneConfigMapsProps {
   selectedNamespaces: string[];
@@ -39,15 +40,35 @@ export default function PaneConfigMaps({
   updating = false,
   deleting = false,
 }: PaneConfigMapsProps) {
-  const [sortBy, setSortBy] = useState<string>('metadata');
+  const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1ConfigMap) => item.metadata?.name || '',
+      namespace: (item: V1ConfigMap) => item.metadata?.namespace || '',
+      keys: (item: V1ConfigMap) => Object.keys(item.data || {}).join(', '),
+      age: (item: V1ConfigMap) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1ConfigMap>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
 
   const columns: ColumnDef<string>[] = [
-    { label: 'Name', key: 'metadata' },
-    { label: 'Namespace', key: 'metadata' },
-    { label: 'Keys', key: 'data' },
-    { label: 'Age', key: 'metadata' },
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Namespace', key: 'namespace', sortable: true },
+    { label: 'Keys', key: 'keys', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
   ];
+
+  // sortedItems provided by hook
 
   const renderRow = (cm: V1ConfigMap) => (
     <>
@@ -94,7 +115,7 @@ export default function PaneConfigMaps({
 
   return (
     <PaneGeneric
-      items={items}
+      items={sortedItems}
       loading={loading}
       error={error}
       namespaceList={namespaceList}
@@ -110,6 +131,7 @@ export default function PaneConfigMaps({
       yamlTemplate={templateConfigMap}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       renderSidebar={renderSidebar}
       contextName={contextName}
       creating={creating}

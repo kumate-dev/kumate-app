@@ -6,8 +6,8 @@ import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { SidebarServiceAccounts } from './SidebarServiceAccounts';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
-import { sortItems } from '@/utils/sort';
 import { templateServiceAccount } from '../../templates/serviceAccount';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneServiceAccountsProps {
   items: V1ServiceAccount[];
@@ -42,14 +42,6 @@ export default function PaneServiceAccounts({
 }: PaneServiceAccountsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata.name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-
-  const columns: ColumnDef<string>[] = [
-    { key: 'metadata.name', label: 'Name' },
-    { key: 'metadata.namespace', label: 'Namespace' },
-    { key: 'secrets', label: 'Secrets' },
-    { key: 'metadata.creationTimestamp', label: 'Age' },
-  ];
-
   const valueGetters = useMemo(
     () =>
       ({
@@ -58,9 +50,23 @@ export default function PaneServiceAccounts({
     []
   );
 
-  const sortedItems = useMemo(() => {
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder, valueGetters]);
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1ServiceAccount>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
+
+  const columns: ColumnDef<string>[] = [
+    { key: 'metadata.name', label: 'Name' },
+    { key: 'metadata.namespace', label: 'Namespace' },
+    { key: 'secrets', label: 'Secrets' },
+    { key: 'metadata.creationTimestamp', label: 'Age' },
+  ];
+
+  // sortedItems provided by hook
 
   const renderRow = (sa: V1ServiceAccount) => (
     <>
@@ -110,6 +116,7 @@ export default function PaneServiceAccounts({
       yamlTemplate={templateServiceAccount}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}

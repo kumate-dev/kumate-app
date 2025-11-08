@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { V1DaemonSet, V1Namespace } from '@kubernetes/client-node';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { ColumnDef } from '../../../../components/common/TableHeader';
@@ -11,6 +11,7 @@ import { sortItems } from '@/utils/sort';
 import { SidebarDaemonSets } from './SidebarDaemonSets';
 import { templateDaemonSet } from '../../templates/daemonSet';
 import { V1DaemonSet as DaemonSet } from '@kubernetes/client-node';
+import { ALL_NAMESPACES } from '@/constants/k8s';
 
 export interface PaneDaemonSetsProps {
   selectedNamespaces: string[];
@@ -45,6 +46,8 @@ export default function PaneDaemonSets({
 }: PaneDaemonSetsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [displayItems, setDisplayItems] = useState<V1DaemonSet[]>(items);
+  useEffect(() => setDisplayItems(items), [items]);
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -60,8 +63,8 @@ export default function PaneDaemonSets({
       status: (item: V1DaemonSet) => getDaemonSetStatus(item),
       age: (item: V1DaemonSet) => new Date(item.metadata?.creationTimestamp || '').getTime(),
     };
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+    return sortItems(displayItems, sortBy, sortOrder, valueGetters);
+  }, [displayItems, sortBy, sortOrder]);
 
   const renderRow = (ds: V1DaemonSet) => (
     <>
@@ -122,6 +125,21 @@ export default function PaneDaemonSets({
       yamlTemplate={templateDaemonSet}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={(created) => {
+        const createdNs = created.metadata?.namespace || '';
+        const createdName = created.metadata?.name || '';
+        const nsFilterAllows =
+          !selectedNamespaces?.length ||
+          selectedNamespaces.includes(ALL_NAMESPACES) ||
+          selectedNamespaces.includes(createdNs);
+        if (!nsFilterAllows) return;
+        const keyOf = (ds: V1DaemonSet) =>
+          `${ds.metadata?.namespace || ''}/${ds.metadata?.name || ''}`;
+        setDisplayItems((prev) => {
+          const exists = prev.some((d) => keyOf(d) === `${createdNs}/${createdName}`);
+          return exists ? prev : [created, ...prev];
+        });
+      }}
       contextName={contextName}
       creating={creating}
       deleting={deleting}

@@ -61,7 +61,14 @@ export default function Namespaces({ context }: PaneResourceContextProps) {
       const nextSelected = (selectedNamespaces || []).filter((n) => !deletedNames.has(n));
       setSelectedNamespaces(nextSelected.length ? nextSelected : [ALL_NAMESPACES]);
     },
-    [handleDeleteResources, items, setNamespaces, context?.name, selectedNamespaces, setSelectedNamespaces]
+    [
+      handleDeleteResources,
+      items,
+      setNamespaces,
+      context?.name,
+      selectedNamespaces,
+      setSelectedNamespaces,
+    ]
   );
 
   const handleCreateNamespace = useCallback(

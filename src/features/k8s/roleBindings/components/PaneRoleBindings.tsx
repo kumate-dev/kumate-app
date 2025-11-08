@@ -6,8 +6,8 @@ import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { SidebarRoleBindings } from './SidebarRoleBindings';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
-import { sortItems } from '@/utils/sort';
 import { templateRoleBinding } from '../../templates/roleBinding';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneRoleBindingsProps {
   items: V1RoleBinding[];
@@ -42,15 +42,6 @@ export default function PaneRoleBindings({
 }: PaneRoleBindingsProps) {
   const [sortBy, setSortBy] = useState<string>('metadata.name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-
-  const columns: ColumnDef<string>[] = [
-    { key: 'metadata.name', label: 'Name' },
-    { key: 'metadata.namespace', label: 'Namespace' },
-    { key: 'subjects', label: 'Subjects' },
-    { key: 'roleRef', label: 'Role Ref' },
-    { key: 'metadata.creationTimestamp', label: 'Age' },
-  ];
-
   const valueGetters = useMemo(
     () =>
       ({
@@ -60,9 +51,24 @@ export default function PaneRoleBindings({
     []
   );
 
-  const sortedItems = useMemo(() => {
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder, valueGetters]);
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1RoleBinding>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
+
+  const columns: ColumnDef<string>[] = [
+    { key: 'metadata.name', label: 'Name' },
+    { key: 'metadata.namespace', label: 'Namespace' },
+    { key: 'subjects', label: 'Subjects' },
+    { key: 'roleRef', label: 'Role Ref' },
+    { key: 'metadata.creationTimestamp', label: 'Age' },
+  ];
+
+  // sortedItems provided by hook
 
   const renderRow = (rb: V1RoleBinding) => (
     <>
@@ -113,6 +119,7 @@ export default function PaneRoleBindings({
       yamlTemplate={templateRoleBinding}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       renderSidebar={renderSidebar}
       sortBy={sortBy}
       sortOrder={sortOrder}

@@ -7,9 +7,9 @@ import AgeCell from '@/components/common/AgeCell';
 import { getDeploymentStatus } from '../utils/deploymentStatus';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { templateDeployment } from '../../templates/deployment';
-import { useCallback, useMemo, useState } from 'react';
-import { sortItems } from '@/utils/sort';
+import { useCallback, useState } from 'react';
 import { SidebarDeployments } from './SidebarDeployments';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneDeploymentsProps {
   selectedNamespaces: string[];
@@ -44,6 +44,22 @@ export default function PaneDeployments({
 }: PaneDeploymentsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  // value getters for sorting
+  const valueGetters = {
+    name: (item: V1Deployment) => item.metadata?.name || '',
+    namespace: (item: V1Deployment) => item.metadata?.namespace || '',
+    status: (item: V1Deployment) => getDeploymentStatus(item).status,
+    age: (item: V1Deployment) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+  };
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1Deployment>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -52,16 +68,7 @@ export default function PaneDeployments({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
-      name: (item: V1Deployment) => item.metadata?.name || '',
-      namespace: (item: V1Deployment) => item.metadata?.namespace || '',
-      status: (item: V1Deployment) => getDeploymentStatus(item),
-      age: (item: V1Deployment) => new Date(item.metadata?.creationTimestamp || '').getTime(),
-    };
-
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  // sortedItems is provided by hook
 
   const renderRow = (dep: V1Deployment) => (
     <>
@@ -116,6 +123,7 @@ export default function PaneDeployments({
       onDelete={onDelete}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       yamlTemplate={templateDeployment}
       renderSidebar={renderSidebar}
       contextName={contextName}

@@ -6,8 +6,8 @@ import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { SidebarNetworkPolicies } from './SidebarNetworkPolicies';
 import { ColumnDef } from '../../../../components/common/TableHeader';
-import { sortItems } from '@/utils/sort';
 import { templateNetworkPolicy } from '../../templates/networkPolicy';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneNetworkPoliciesProps {
   selectedNamespaces: string[];
@@ -36,19 +36,8 @@ export default function PaneNetworkPolicies({
 }: PaneNetworkPoliciesProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-
-  const columns: ColumnDef<string>[] = [
-    { label: 'Name', key: 'name', sortable: true },
-    { label: 'Namespace', key: 'namespace', sortable: true },
-    { label: 'Policy Types', key: 'policyTypes', sortable: true },
-    { label: 'Pod Selector', key: 'podSelector', sortable: true },
-    { label: 'Ingress Rules', key: 'ingress', sortable: true },
-    { label: 'Egress Rules', key: 'egress', sortable: true },
-    { label: 'Age', key: 'age', sortable: true },
-  ];
-
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
+  const valueGetters = useMemo(
+    () => ({
       name: (item: V1NetworkPolicy) => item.metadata?.name || '',
       namespace: (item: V1NetworkPolicy) => item.metadata?.namespace || '',
       policyTypes: (item: V1NetworkPolicy) => (item.spec?.policyTypes || []).join(', '),
@@ -60,9 +49,30 @@ export default function PaneNetworkPolicies({
       ingress: (item: V1NetworkPolicy) => (item.spec?.ingress || []).length,
       egress: (item: V1NetworkPolicy) => (item.spec?.egress || []).length,
       age: (item: V1NetworkPolicy) => new Date(item.metadata?.creationTimestamp || '').getTime(),
-    };
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1NetworkPolicy>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
+
+  const columns: ColumnDef<string>[] = [
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Namespace', key: 'namespace', sortable: true },
+    { label: 'Policy Types', key: 'policyTypes', sortable: true },
+    { label: 'Pod Selector', key: 'podSelector', sortable: true },
+    { label: 'Ingress Rules', key: 'ingress', sortable: true },
+    { label: 'Egress Rules', key: 'egress', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
+  ];
+
+  // sortedItems provided by hook
 
   const renderRow = (np: V1NetworkPolicy) => (
     <>
@@ -134,6 +144,7 @@ export default function PaneNetworkPolicies({
       yamlTemplate={templateNetworkPolicy}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       renderSidebar={renderSidebar}
       contextName={contextName}
     />

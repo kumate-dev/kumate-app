@@ -8,7 +8,7 @@ import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getNamespaceStatus } from '../utils/namespaceStatus';
 import { SidebarNamespaces } from './SidebarNamespaces';
 import { templateNamespace } from '../../templates/namespace';
-import { sortItems } from '@/utils/sort';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneNamespacesProps {
   items: V1Namespace[];
@@ -37,6 +37,22 @@ export default function PaneNamespaces({
 }: PaneNamespacesProps) {
   const [sortBy, setSortBy] = useState<keyof V1Namespace>('metadata');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1Namespace) => item.metadata?.name || '',
+      age: (item: V1Namespace) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+      status: (item: V1Namespace) => getNamespaceStatus(item).status,
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1Namespace>({
+    items,
+    sortBy: sortBy as string,
+    sortOrder,
+    valueGetters,
+    isNamespaced: false, // Namespace is cluster-scoped
+  });
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -44,14 +60,7 @@ export default function PaneNamespaces({
     { label: 'Status', key: 'status', sortable: true },
   ];
 
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
-      name: (item: V1Namespace) => item.metadata?.name || '',
-      age: (item: V1Namespace) => new Date(item.metadata?.creationTimestamp || '').getTime(),
-      status: (item: V1Namespace) => getNamespaceStatus(item),
-    };
-    return sortItems(items, sortBy as string, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  // sortedItems provided by hook
 
   const renderRow = (ns: V1Namespace) => (
     <>
@@ -102,6 +111,7 @@ export default function PaneNamespaces({
       contextName={contextName}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       creating={creating}
       deleting={deleting}
     />

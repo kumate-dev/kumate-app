@@ -39,12 +39,9 @@ export function SidebarConfigMaps({
     }
   }, [item]);
 
-  const handleDataChange = useCallback(
-    (key: string, value: string) => {
-      setEditedData((prev) => ({ ...prev, [key]: value }));
-    },
-    []
-  );
+  const handleDataChange = useCallback((key: string, value: string) => {
+    setEditedData((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
   const handleKeyRename = useCallback((oldKey: string, newKey: string) => {
     setEditedData((prev) => {
@@ -75,7 +72,10 @@ export function SidebarConfigMaps({
     setEditedData((prev) => ({ ...prev, [candidate]: '' }));
   }, [editedData]);
 
-  const canSave = useMemo(() => !!item && !!contextName && !updating && !deleting && !saving, [item, contextName, updating, deleting, saving]);
+  const canSave = useMemo(
+    () => !!item && !!contextName && !updating && !deleting && !saving,
+    [item, contextName, updating, deleting, saving]
+  );
 
   const handleSave = useCallback(async () => {
     if (!item || !contextName) return;

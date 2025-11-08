@@ -34,6 +34,7 @@ export interface PaneResourceProps<T> {
   onDelete?: (items: T[]) => Promise<void>;
   onCreate?: (manifest: T) => Promise<T | undefined>;
   onUpdate?: (manifest: T) => Promise<T | undefined>;
+  onAfterCreate?: (created: T) => void;
   yamlTemplate?: (defaultNamespace?: string) => T;
   showNamespace?: boolean;
   colSpan?: number;
@@ -68,6 +69,7 @@ export function PaneGeneric<T>({
   onCreate,
   onUpdate,
   yamlTemplate,
+  onAfterCreate,
   showNamespace = true,
   colSpan,
   renderSidebar,
@@ -215,7 +217,10 @@ export function PaneGeneric<T>({
 
       try {
         if (editorMode === 'create') {
-          await onCreate?.(manifest);
+          const created = await onCreate?.(manifest);
+          if (created) {
+            onAfterCreate?.(created);
+          }
         } else {
           await onUpdate?.(manifest);
         }
@@ -224,7 +229,7 @@ export function PaneGeneric<T>({
         throw err;
       }
     },
-    [contextName, editorMode, onCreate, onUpdate]
+    [contextName, editorMode, onCreate, onUpdate, onAfterCreate]
   );
 
   const handleRowClick = useCallback((item: T) => {

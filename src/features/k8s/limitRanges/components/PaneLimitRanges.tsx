@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { V1LimitRange, V1Namespace } from '@kubernetes/client-node';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { SidebarLimitRanges } from './SidebarLimitRanges';
@@ -7,6 +7,7 @@ import { Td } from '@/components/ui/table';
 import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { templateLimitRange } from '../../templates/limitRange';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneLimitRangesProps {
   selectedNamespaces: string[];
@@ -33,8 +34,31 @@ export default function PaneLimitRanges({
   onUpdate,
   contextName,
 }: PaneLimitRangesProps) {
-  const [sortBy, setSortBy] = useState<string>('metadata');
+  const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1LimitRange) => item.metadata?.name || '',
+      namespace: (item: V1LimitRange) => item.metadata?.namespace || '',
+      type: (item: V1LimitRange) => item.spec?.limits?.map((l) => l.type).join(', ') || '-',
+      min: (item: V1LimitRange) => renderLimitMap(item.spec?.limits?.[0]?.min).title,
+      max: (item: V1LimitRange) => renderLimitMap(item.spec?.limits?.[0]?.max).title,
+      default: (item: V1LimitRange) => renderLimitMap(item.spec?.limits?.[0]?._default).title,
+      defaultRequest: (item: V1LimitRange) =>
+        renderLimitMap(item.spec?.limits?.[0]?.defaultRequest).title,
+      age: (item: V1LimitRange) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1LimitRange>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
 
   const renderLimitMap = (map?: Record<string, string>): { display: string; title: string } => {
     if (!map || Object.keys(map).length === 0) return { display: '-', title: '-' };
@@ -45,15 +69,17 @@ export default function PaneLimitRanges({
   };
 
   const columns: ColumnDef<string>[] = [
-    { label: 'Name', key: 'metadata' },
-    { label: 'Namespace', key: 'metadata' },
-    { label: 'Type', key: 'spec' },
-    { label: 'Min', key: 'spec' },
-    { label: 'Max', key: 'spec' },
-    { label: 'Default', key: 'spec' },
-    { label: 'Default Request', key: 'spec' },
-    { label: 'Age', key: 'metadata' },
+    { label: 'Name', key: 'name', sortable: true },
+    { label: 'Namespace', key: 'namespace', sortable: true },
+    { label: 'Type', key: 'type', sortable: true },
+    { label: 'Min', key: 'min', sortable: true },
+    { label: 'Max', key: 'max', sortable: true },
+    { label: 'Default', key: 'default', sortable: true },
+    { label: 'Default Request', key: 'defaultRequest', sortable: true },
+    { label: 'Age', key: 'age', sortable: true },
   ];
+
+  // sortedItems provided by hook
 
   const renderRow = (lr: V1LimitRange) => (
     <>
@@ -93,7 +119,7 @@ export default function PaneLimitRanges({
 
   return (
     <PaneGeneric
-      items={items}
+      items={sortedItems}
       loading={loading}
       error={error}
       namespaceList={namespaceList}
@@ -110,6 +136,7 @@ export default function PaneLimitRanges({
       yamlTemplate={templateLimitRange}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       contextName={contextName}
     />
   );

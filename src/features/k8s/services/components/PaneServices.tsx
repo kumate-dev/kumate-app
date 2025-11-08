@@ -6,8 +6,8 @@ import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { PaneGeneric } from '../../generic/components/PaneGeneric';
 import { SidebarServices } from './SidebarServices';
 import { ColumnDef } from '../../../../components/common/TableHeader';
-import { sortItems } from '@/utils/sort';
 import { templateService } from '../../templates/service';
+import { useOptimisticSortedItems } from '@/hooks/useOptimisticSortedItems';
 
 export interface PaneServicesProps {
   selectedNamespaces: string[];
@@ -42,6 +42,26 @@ export default function PaneServices({
 }: PaneServicesProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const valueGetters = useMemo(
+    () => ({
+      name: (item: V1Service) => item.metadata?.name || '',
+      namespace: (item: V1Service) => item.metadata?.namespace || '',
+      type: (item: V1Service) => item.spec?.type || '',
+      clusterIP: (item: V1Service) => item.spec?.clusterIP || item.spec?.clusterIPs?.[0] || '',
+      ports: (item: V1Service) => (item.spec?.ports || []).map((p) => p.port).join(', '),
+      age: (item: V1Service) => new Date(item.metadata?.creationTimestamp || '').getTime(),
+    }),
+    []
+  );
+
+  const { sortedItems, onAfterCreate } = useOptimisticSortedItems<V1Service>({
+    items,
+    sortBy,
+    sortOrder,
+    valueGetters,
+    selectedNamespaces,
+    isNamespaced: true,
+  });
 
   const columns: ColumnDef<string>[] = [
     { label: 'Name', key: 'name', sortable: true },
@@ -52,17 +72,7 @@ export default function PaneServices({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  const sortedItems = useMemo(() => {
-    const valueGetters = {
-      name: (item: V1Service) => item.metadata?.name || '',
-      namespace: (item: V1Service) => item.metadata?.namespace || '',
-      type: (item: V1Service) => item.spec?.type || '',
-      clusterIP: (item: V1Service) => item.spec?.clusterIP || item.spec?.clusterIPs?.[0] || '',
-      ports: (item: V1Service) => (item.spec?.ports || []).map((p) => p.port).join(', '),
-      age: (item: V1Service) => new Date(item.metadata?.creationTimestamp || '').getTime(),
-    };
-    return sortItems(items, sortBy, sortOrder, valueGetters);
-  }, [items, sortBy, sortOrder]);
+  // sortedItems provided by hook
 
   const renderRow = (svc: V1Service) => (
     <>
@@ -128,6 +138,7 @@ export default function PaneServices({
       yamlTemplate={templateService}
       onCreate={onCreate}
       onUpdate={onUpdate}
+      onAfterCreate={onAfterCreate}
       renderSidebar={renderSidebar}
       contextName={contextName}
       creating={creating}
