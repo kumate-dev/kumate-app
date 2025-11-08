@@ -186,6 +186,8 @@ pub fn run() {
             cron_jobs::list_cron_jobs,
             cron_jobs::watch_cron_jobs,
             cron_jobs::delete_cron_jobs,
+            config_maps::create_config_map,
+            config_maps::update_config_map,
             config_maps::list_config_maps,
             config_maps::watch_config_maps,
             config_maps::delete_config_maps,
@@ -234,7 +236,6 @@ pub fn run() {
             persistent_volume_claims::list_persistent_volume_claims,
             persistent_volume_claims::watch_persistent_volume_claims,
             persistent_volume_claims::delete_persistent_volume_claims,
-            // Endpoints
             endpoints::create_endpoints,
             endpoints::update_endpoints,
             endpoints::list_endpoints,
@@ -255,20 +256,16 @@ pub fn run() {
             network_policies::list_network_policies,
             network_policies::watch_network_policies,
             network_policies::delete_network_policies,
-            // Helm
             helm::helm_list_charts,
             helm::helm_list_releases,
             helm::helm_uninstall_releases,
             helm::watch_helm_releases,
-            // Custom Resources (Dynamic)
             custom_resources::create_custom_resource,
             custom_resources::update_custom_resource,
             custom_resources::list_custom_resources,
             custom_resources::watch_custom_resources,
             custom_resources::delete_custom_resources,
-            // Custom Resource Definitions
             crd_definitions::list_custom_resource_definitions,
-            // Port Forwarder
             port_forward::start_port_forward,
             port_forward::stop_port_forward,
             port_forward::list_port_forwards,

@@ -1,12 +1,12 @@
 import { V1LimitRange } from '@kubernetes/client-node';
 
-export function templateLimitRange(defaultNamespace?: string): V1LimitRange {
+export function templateLimitRange(name?: string, namespace?: string): V1LimitRange {
   return {
     apiVersion: 'v1',
     kind: 'LimitRange',
     metadata: {
-      name: 'example-limitrange',
-      namespace: defaultNamespace,
+      name: name || 'example-limitrange',
+      namespace: namespace || 'default',
     },
     spec: {
       limits: [

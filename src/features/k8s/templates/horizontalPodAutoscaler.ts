@@ -1,14 +1,15 @@
 import { V1HorizontalPodAutoscaler } from '@kubernetes/client-node';
 
 export function templateHorizontalPodAutoscaler(
-  defaultNamespace?: string
+  name?: string,
+  namespace?: string
 ): V1HorizontalPodAutoscaler {
   return {
     apiVersion: 'autoscaling/v2',
     kind: 'HorizontalPodAutoscaler',
     metadata: {
-      name: 'example-hpa',
-      namespace: defaultNamespace,
+      name: name || 'example-hpa',
+      namespace: namespace || 'default',
     },
     spec: {
       scaleTargetRef: {

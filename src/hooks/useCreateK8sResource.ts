@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { useState, useCallback, useRef } from 'react';
+import { getErrorMessage } from '@/utils/error';
 
 interface CreateResourceParams<T> {
   name: string;
@@ -13,7 +14,7 @@ interface UseCreateK8sResourceReturn<T> {
 }
 
 export function useCreateK8sResource<
-  T extends { kind?: string; metadata?: { namespace?: string } },
+  T extends { kind?: string; metadata?: { namespace?: string; name?: string } },
 >(
   createFn: (params: CreateResourceParams<T>) => Promise<T>,
   context?: { name: string } | null
@@ -42,9 +43,10 @@ export function useCreateK8sResource<
         namespace,
         manifest,
       });
+      toast.success(`Successfully created ${resourceName}: ${result.metadata?.name}`);
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = getErrorMessage(error);
       toast.error(`Failed to create ${resourceName}: ${errorMessage}`);
       throw error;
     } finally {

@@ -8,6 +8,7 @@ interface ButtonRestartProps {
   className?: string;
   text?: string;
   loading?: boolean;
+  showIcon?: boolean;
 }
 
 export const ButtonRestart: React.FC<ButtonRestartProps> = ({
@@ -16,6 +17,7 @@ export const ButtonRestart: React.FC<ButtonRestartProps> = ({
   text,
   className = '',
   loading = false,
+  showIcon = true,
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,7 +35,11 @@ export const ButtonRestart: React.FC<ButtonRestartProps> = ({
       title={loading ? 'Restarting...' : 'Restart'}
       disabled={disabled || loading}
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        showIcon && <RotateCcw className="h-4 w-4" />
+      )}
       {text ?? (loading ? 'Restarting...' : 'Restart')}
     </Button>
   );

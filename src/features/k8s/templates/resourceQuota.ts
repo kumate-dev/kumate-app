@@ -1,12 +1,12 @@
 import { V1ResourceQuota } from '@kubernetes/client-node';
 
-export function templateResourceQuota(defaultNamespace?: string): V1ResourceQuota {
+export function templateResourceQuota(name?: string, namespace?: string): V1ResourceQuota {
   return {
     apiVersion: 'v1',
     kind: 'ResourceQuota',
     metadata: {
-      name: 'example-resourcequota',
-      namespace: defaultNamespace,
+      name: name || 'example-resourcequota',
+      namespace: namespace || 'default',
     },
     spec: {
       hard: {

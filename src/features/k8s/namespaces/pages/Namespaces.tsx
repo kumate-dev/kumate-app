@@ -14,6 +14,8 @@ import { useDeleteK8sResources } from '@/hooks/useDeleteK8sResources';
 import { toast } from 'sonner';
 import { useCreateK8sResource } from '@/hooks/useCreateK8sResource';
 import { useUpdateK8sResource } from '@/hooks/useUpdateK8sResource';
+import { useNamespaceStore } from '@/store/namespaceStore';
+import { ALL_NAMESPACES } from '@/constants/k8s';
 
 export default function Namespaces({ context }: PaneResourceContextProps) {
   const { items, loading, error } = useListK8sResources<V1Namespace>(
@@ -35,6 +37,10 @@ export default function Namespaces({ context }: PaneResourceContextProps) {
     context
   );
 
+  const setNamespaces = useNamespaceStore((s) => s.setNamespaces);
+  const selectedNamespaces = useNamespaceStore((s) => s.selectedNamespaces);
+  const setSelectedNamespaces = useNamespaceStore((s) => s.setSelectedNamespaces);
+
   const handleDeleteNamespaces = useCallback(
     async (namespaces: V1Namespace[]) => {
       if (namespaces.length === 0) {
@@ -42,8 +48,35 @@ export default function Namespaces({ context }: PaneResourceContextProps) {
         return;
       }
       await handleDeleteResources(namespaces);
+
+      const deletedNames = new Set(
+        namespaces.map((ns) => ns.metadata?.name || '').filter((n) => !!n)
+      );
+      const remaining = (items || [])
+        .filter((ns) => !deletedNames.has(ns.metadata?.name || ''))
+        .map((ns) => ({ ...ns, _name: ns.metadata?.name || '' }))
+        .sort((a, b) => a._name.localeCompare(b._name));
+      setNamespaces(context?.name || null, remaining);
+
+      const nextSelected = (selectedNamespaces || []).filter((n) => !deletedNames.has(n));
+      setSelectedNamespaces(nextSelected.length ? nextSelected : [ALL_NAMESPACES]);
     },
-    [handleDeleteResources]
+    [handleDeleteResources, items, setNamespaces, context?.name, selectedNamespaces, setSelectedNamespaces]
+  );
+
+  const handleCreateNamespace = useCallback(
+    async (manifest: V1Namespace): Promise<V1Namespace | undefined> => {
+      const result = await handleCreateResource(manifest);
+      if (result) {
+        // Update NamespaceStore: add the newly created namespace to the cached list
+        const merged = [...(items || []), result]
+          .map((ns) => ({ ...ns, _name: ns.metadata?.name || '' }))
+          .sort((a, b) => a._name.localeCompare(b._name));
+        setNamespaces(context?.name || null, merged);
+      }
+      return result || undefined;
+    },
+    [handleCreateResource, items, setNamespaces, context?.name]
   );
 
   return (
@@ -54,7 +87,7 @@ export default function Namespaces({ context }: PaneResourceContextProps) {
       onDelete={handleDeleteNamespaces}
       contextName={context?.name}
       deleting={deleting}
-      onCreate={handleCreateResource}
+      onCreate={handleCreateNamespace}
       onUpdate={handleUpdateResource}
       creating={creating}
       updating={updating}

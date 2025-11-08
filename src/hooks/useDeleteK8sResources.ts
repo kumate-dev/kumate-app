@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { useState, useCallback } from 'react';
 import type { K8sResponse } from '@/types/k8sResponse';
+import { getErrorMessage } from '@/utils/error';
 
 interface DeleteResourcesParams {
   name: string;
@@ -67,7 +68,7 @@ export function useDeleteK8sResources<T extends ResourceMetadata>(
                 }
               });
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
+              const errorMessage = getErrorMessage(error);
               const namespaceLabel = namespace || 'default';
 
               toast.error(

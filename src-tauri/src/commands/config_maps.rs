@@ -8,6 +8,24 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_config_map(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<ConfigMap>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_config_map(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<ConfigMap>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_config_maps(
     name: String,
     namespaces: Option<Vec<String>>,

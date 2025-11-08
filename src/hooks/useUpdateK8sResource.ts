@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { useState, useCallback, useRef } from 'react';
+import { getErrorMessage } from '@/utils/error';
 
 interface UpdateResourceParams<T> {
   name: string;
@@ -43,9 +44,10 @@ export function useUpdateK8sResource<T extends ResourceManifest>(
         namespace,
         manifest,
       });
+      toast.success(`Successfully updated ${resourceName}: ${manifest.metadata?.name}`);
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = getErrorMessage(error);
       toast.error(`Failed to update ${resourceName}: ${errorMessage}`);
       throw error;
     } finally {
