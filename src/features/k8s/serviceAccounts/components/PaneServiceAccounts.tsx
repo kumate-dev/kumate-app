@@ -66,8 +66,6 @@ export default function PaneServiceAccounts({
     { key: 'metadata.creationTimestamp', label: 'Age' },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (sa: V1ServiceAccount) => (
     <>
       <Td className="max-w-truncate align-middle">

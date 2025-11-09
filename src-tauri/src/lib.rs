@@ -191,6 +191,8 @@ pub fn run() {
             config_maps::list_config_maps,
             config_maps::watch_config_maps,
             config_maps::delete_config_maps,
+            secrets::create_secret,
+            secrets::update_secret,
             secrets::list_secrets,
             secrets::watch_secrets,
             secrets::delete_secrets,

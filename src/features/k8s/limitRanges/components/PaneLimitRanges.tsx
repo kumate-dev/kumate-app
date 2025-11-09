@@ -79,8 +79,6 @@ export default function PaneLimitRanges({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (lr: V1LimitRange) => (
     <>
       <Td className="max-w-truncate align-middle" title={lr.metadata?.name ?? ''}>

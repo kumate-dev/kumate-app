@@ -68,8 +68,6 @@ export default function PaneRoleBindings({
     { key: 'metadata.creationTimestamp', label: 'Age' },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (rb: V1RoleBinding) => (
     <>
       <Td className="max-w-truncate align-middle">

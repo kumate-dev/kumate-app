@@ -8,6 +8,24 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_secret(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<Secret>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_secret(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<Secret>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_secrets(
     name: String,
     namespaces: Option<Vec<String>>,

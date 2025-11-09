@@ -281,7 +281,6 @@ const ContainerSection = ({
   const hasEntries = entries.length > 0;
 
   useEffect(() => {
-    // Always collapse when opening sidebar or data changes
     setIsOpen(false);
   }, [containerName, namespace, entries]);
 
@@ -364,7 +363,6 @@ const InlineEnvSection = ({
   const hasEntries = entries.length > 0;
 
   useEffect(() => {
-    // Always collapse when opening sidebar or data changes
     setIsOpen(false);
   }, [containerName, namespace, entries]);
 

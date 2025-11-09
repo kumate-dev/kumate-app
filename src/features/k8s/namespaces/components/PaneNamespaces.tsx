@@ -51,7 +51,7 @@ export default function PaneNamespaces({
     sortBy: sortBy as string,
     sortOrder,
     valueGetters,
-    isNamespaced: false, // Namespace is cluster-scoped
+    isNamespaced: false,
   });
 
   const columns: ColumnDef<string>[] = [
@@ -59,8 +59,6 @@ export default function PaneNamespaces({
     { label: 'Age', key: 'age', sortable: true },
     { label: 'Status', key: 'status', sortable: true },
   ];
-
-  // sortedItems provided by hook
 
   const renderRow = (ns: V1Namespace) => (
     <>

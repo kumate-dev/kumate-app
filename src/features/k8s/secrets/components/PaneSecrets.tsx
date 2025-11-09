@@ -72,11 +72,8 @@ export default function PaneSecrets({
     { label: 'Name', key: 'name', sortable: true },
     { label: 'Namespace', key: 'namespace', sortable: true },
     { label: 'Type', key: 'type', sortable: true },
-    { label: 'Data Keys', key: 'dataKeys', sortable: true },
     { label: 'Age', key: 'age', sortable: true },
   ];
-
-  // sortedItems provided by hook
 
   const renderRow = (secret: V1Secret) => {
     const dataKeys = getDataKeys(secret);
@@ -118,11 +115,13 @@ export default function PaneSecrets({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        onUpdate={onUpdate}
+        contextName={contextName}
         updating={updating}
         deleting={deleting}
       />
     ),
-    [updating, deleting]
+    [updating, deleting, contextName]
   );
 
   return (

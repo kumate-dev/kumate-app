@@ -47,9 +47,7 @@ export default function HelmCharts({ context }: PaneResourceContextProps) {
     []
   );
 
-  const onDelete = useCallback(async (_items: Chart[]) => {
-    // Charts are read-only in this pane; no delete operation.
-  }, []);
+  const onDelete = useCallback(async (_items: Chart[]) => {}, []);
 
   return (
     <PaneGeneric<Chart>

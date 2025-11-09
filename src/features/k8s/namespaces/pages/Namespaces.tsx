@@ -75,7 +75,6 @@ export default function Namespaces({ context }: PaneResourceContextProps) {
     async (manifest: V1Namespace): Promise<V1Namespace | undefined> => {
       const result = await handleCreateResource(manifest);
       if (result) {
-        // Update NamespaceStore: add the newly created namespace to the cached list
         const merged = [...(items || []), result]
           .map((ns) => ({ ...ns, _name: ns.metadata?.name || '' }))
           .sort((a, b) => a._name.localeCompare(b._name));

@@ -100,8 +100,6 @@ export default function PanePersistentVolumeClaims({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (pvc: V1PersistentVolumeClaim) => (
     <>
       <Td className="max-w-truncate align-middle">

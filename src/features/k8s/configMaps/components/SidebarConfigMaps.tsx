@@ -4,16 +4,22 @@ import AgeCell from '@/components/common/AgeCell';
 import { BadgeNamespaces } from '../../generic/components/BadgeNamespaces';
 import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { ButtonEdit } from '@/components/common/ButtonEdit';
+import { ButtonTrash } from '@/components/common/ButtonTrash';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { updateConfigMap } from '@/api/k8s/configMaps';
+import { useKeyValueEditor } from '@/hooks/useKeyValueEditor';
+import { KeyValueEditor } from '@/components/common/KeyValueEditor';
+import { useSaveShortcut } from '@/hooks/useSaveShortcut';
+import { useAutoSaveOnOutsideClick } from '@/hooks/useAutoSaveOnOutsideClick';
 
 interface SidebarConfigMapsProps {
   item: V1ConfigMap | null;
   setItem: (item: V1ConfigMap | null) => void;
   onDelete?: (item: V1ConfigMap) => void;
   onEdit?: (item: V1ConfigMap) => void;
+  onUpdate?: (manifest: V1ConfigMap) => Promise<V1ConfigMap | undefined>;
   contextName?: string;
   updating?: boolean;
   deleting?: boolean;
@@ -24,52 +30,33 @@ export function SidebarConfigMaps({
   setItem,
   onDelete,
   onEdit,
+  onUpdate,
   contextName,
   updating = false,
   deleting = false,
 }: SidebarConfigMapsProps) {
-  const [editedData, setEditedData] = useState<Record<string, string>>({});
+  const kv = useKeyValueEditor();
   const [saving, setSaving] = useState(false);
+  const loadedSnapshotRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
-    if (item?.data) {
-      setEditedData({ ...item.data });
-    } else {
-      setEditedData({});
-    }
+    const initial = item?.data ? { ...item.data } : {};
+    kv.load(initial);
+    loadedSnapshotRef.current = initial;
   }, [item]);
 
-  const handleDataChange = useCallback((key: string, value: string) => {
-    setEditedData((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const editedData = kv.editedData;
 
-  const handleKeyRename = useCallback((oldKey: string, newKey: string) => {
-    setEditedData((prev) => {
-      const next = { ...prev };
-      const val = next[oldKey];
-      delete next[oldKey];
-      next[newKey] = val ?? '';
-      return next;
-    });
-  }, []);
-
-  const handleRemoveKey = useCallback((key: string) => {
-    setEditedData((prev) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  }, []);
-
-  const handleAddKey = useCallback(() => {
-    const base = 'NEW_KEY';
-    let idx = 1;
-    let candidate = base;
-    const existing = new Set(Object.keys(editedData));
-    while (existing.has(candidate)) {
-      candidate = `${base}_${idx++}`;
+  const isDirty = useMemo(() => {
+    const a = editedData;
+    const b = loadedSnapshotRef.current;
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
+    if (aKeys.length !== bKeys.length) return true;
+    for (const k of aKeys) {
+      if (a[k] !== b[k]) return true;
     }
-    setEditedData((prev) => ({ ...prev, [candidate]: '' }));
+    return false;
   }, [editedData]);
 
   const canSave = useMemo(
@@ -83,14 +70,15 @@ export function SidebarConfigMaps({
       setSaving(true);
       const manifest: V1ConfigMap = {
         ...item,
-        data: { ...editedData },
+        data: { ...kv.editedData },
       };
-      const result = await updateConfigMap({
-        name: contextName,
-        namespace: item.metadata?.namespace || '',
-        manifest,
-      });
-      toast.success('ConfigMap updated');
+      const result =
+        (onUpdate && (await onUpdate(manifest))) ||
+        (await updateConfigMap({
+          name: contextName,
+          namespace: item.metadata?.namespace || '',
+          manifest,
+        }));
       setItem(result ?? manifest);
     } catch (error) {
       console.error('Failed to update ConfigMap:', error);
@@ -98,7 +86,12 @@ export function SidebarConfigMaps({
     } finally {
       setSaving(false);
     }
-  }, [item, contextName, editedData, setItem]);
+  }, [item, contextName, kv.editedData, setItem, onUpdate]);
+
+  useSaveShortcut(canSave && !saving, handleSave);
+
+  const editorRef = useRef<HTMLDivElement>(null);
+  useAutoSaveOnOutsideClick(canSave && isDirty, editorRef, handleSave);
 
   const renderProperties = (cm: V1ConfigMap) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
@@ -135,51 +128,8 @@ export function SidebarConfigMaps({
   );
 
   const renderEditableData = () => (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5 p-2">
-      <div className="mb-2 flex items-center justify-between">
-        <h4 className="text-sm font-medium text-white/80">Data entries</h4>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleAddKey} disabled={!item}>
-            Add key
-          </Button>
-          <Button onClick={handleSave} disabled={!canSave}>
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
-      <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
-        {Object.keys(editedData).length === 0 && (
-          <div className="text-sm text-white/60">No data entries. Add one to begin.</div>
-        )}
-        {Object.entries(editedData).map(([key, value]) => (
-          <div key={key} className="rounded border border-white/10 bg-neutral-900/60 p-2">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-xs text-white/60">Key</span>
-              <input
-                className="flex-1 rounded border border-white/10 bg-neutral-800/80 px-2 py-1 text-sm text-white outline-none focus:border-white/20"
-                value={key}
-                onChange={(e) => handleKeyRename(key, e.target.value)}
-              />
-              <Button
-                variant="ghost"
-                className="text-red-300 hover:text-red-400"
-                onClick={() => handleRemoveKey(key)}
-                disabled={saving}
-              >
-                Remove
-              </Button>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-xs text-white/60">Value</span>
-              <textarea
-                className="min-h-[80px] flex-1 rounded border border-white/10 bg-neutral-800/80 px-2 py-1 text-sm text-white outline-none focus:border-white/20"
-                value={value}
-                onChange={(e) => handleDataChange(key, e.target.value)}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+    <div ref={editorRef}>
+      <KeyValueEditor title="Data entries" hook={kv} saving={saving} />
     </div>
   );
 
@@ -189,6 +139,28 @@ export function SidebarConfigMaps({
           key: 'properties',
           title: 'Properties',
           content: (i: V1ConfigMap) => renderProperties(i),
+          headerRight: (
+            _i: V1ConfigMap,
+            actions: {
+              showDeleteModal: () => void;
+              handleEdit: () => void;
+              isEditDisabled: boolean;
+              isDeleteDisabled: boolean;
+            }
+          ) => (
+            <div className="flex items-center gap-2">
+              <ButtonEdit
+                onClick={actions.handleEdit}
+                disabled={actions.isEditDisabled}
+                loading={updating || saving}
+              />
+              <ButtonTrash
+                onClick={actions.showDeleteModal}
+                disabled={actions.isDeleteDisabled}
+                loading={deleting}
+              />
+            </div>
+          ),
         },
         {
           key: 'data',
@@ -207,6 +179,8 @@ export function SidebarConfigMaps({
       onEdit={onEdit}
       updating={updating || saving}
       deleting={deleting}
+      showDefaultActions={false}
+      requireDeleteConfirmation={true}
     />
   );
 }

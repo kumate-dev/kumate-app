@@ -95,7 +95,6 @@ export default function PaneReplicaSets({
         item={item}
         setItem={actions.setItem}
         onDelete={actions.onDelete}
-        // ReplicaSets do not support edit via YAML yet
         onEdit={undefined}
         contextName={contextName}
         updating={updating}

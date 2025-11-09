@@ -136,7 +136,7 @@ pub async fn start_exec_pod(
     namespace: String,
     pod_name: String,
     container_name: Option<String>,
-    command: Option<Vec<String>>, // default to ["sh"] if not provided
+    command: Option<Vec<String>>,
     tty: Option<bool>,
     state: tauri::State<'_, crate::utils::exec::ExecManager>,
 ) -> Result<ExecStartResult, String> {
@@ -183,7 +183,6 @@ pub async fn start_exec_pod(
     let event_name_emit: String = event_name.clone();
 
     let handle = tokio::spawn(async move {
-        // Writer task
         if let Some(mut stdin) = stdin_opt {
             tokio::spawn(async move {
                 while let Some(data) = stdin_rx.recv().await {
@@ -193,14 +192,12 @@ pub async fn start_exec_pod(
             });
         }
 
-        // Reader stdout
         if let Some(mut stdout) = stdout_opt {
             if tty_flag {
-                // In TTY mode, stream raw bytes (including control sequences) immediately
                 let mut buf = [0u8; 1024];
                 loop {
                     match stdout.read(&mut buf).await {
-                        Ok(0) => break, // EOF
+                        Ok(0) => break,
                         Ok(n) => {
                             let data_chunk = String::from_utf8_lossy(&buf[..n]).to_string();
                             let event_data: Value = serde_json::json!({
@@ -217,7 +214,6 @@ pub async fn start_exec_pod(
                     }
                 }
             } else {
-                // Non-TTY: read line by line
                 let mut lines = BufReader::new(stdout).lines();
                 while let Ok(Some(line)) = lines.next_line().await {
                     let event_data: Value = serde_json::json!({
@@ -233,7 +229,6 @@ pub async fn start_exec_pod(
             }
         }
 
-        // Reader stderr (if not tty)
         if !tty_flag {
             if let Some(stderr) = stderr_opt {
                 let mut lines = BufReader::new(stderr).lines();

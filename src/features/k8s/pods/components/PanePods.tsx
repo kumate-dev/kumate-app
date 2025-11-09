@@ -88,8 +88,6 @@ export default function PanePods({
     []
   );
 
-  // sortedItems provided by hook
-
   const renderRow = useCallback((pod: V1Pod) => {
     const containerStatuses = getContainerStatuses(pod);
     const hasWarning = containerStatuses.some(

@@ -72,8 +72,6 @@ export default function PaneNetworkPolicies({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (np: V1NetworkPolicy) => (
     <>
       <Td className="max-w-truncate align-middle">

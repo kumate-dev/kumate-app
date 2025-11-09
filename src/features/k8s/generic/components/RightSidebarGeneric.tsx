@@ -28,6 +28,8 @@ export interface SidebarResourcesProps<T> {
   onEdit?: (item: T) => void;
   updating?: boolean;
   deleting?: boolean;
+  showDefaultActions?: boolean;
+  requireDeleteConfirmation?: boolean;
 }
 
 export function RightSidebarGeneric<T>({
@@ -39,6 +41,8 @@ export function RightSidebarGeneric<T>({
   onEdit,
   updating = false,
   deleting = false,
+  showDefaultActions = true,
+  requireDeleteConfirmation = true,
 }: SidebarResourcesProps<T>) {
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
@@ -121,7 +125,11 @@ export function RightSidebarGeneric<T>({
         <ButtonEdit onClick={handleEdit} disabled={isEditDisabled} loading={updating} />
       )}
       {showDeleteButton && (
-        <ButtonTrash onClick={showDeleteModal} disabled={isDeleteDisabled} loading={deleting} />
+        <ButtonTrash
+          onClick={requireDeleteConfirmation ? showDeleteModal : handleDeleteConfirm}
+          disabled={isDeleteDisabled}
+          loading={deleting}
+        />
       )}
     </>
   );
@@ -173,7 +181,7 @@ export function RightSidebarGeneric<T>({
                         isEditDisabled,
                         isDeleteDisabled,
                       })}
-                    {defaultActions}
+                    {showDefaultActions && defaultActions}
                   </div>
                 )}
               </div>
@@ -182,7 +190,7 @@ export function RightSidebarGeneric<T>({
           ))}
         </div>
 
-        {showDeleteButton && item && (
+        {requireDeleteConfirmation && showDeleteButton && item && (
           <ModalDelete
             open={openDeleteModal}
             setOpen={setOpenDeleteModal}

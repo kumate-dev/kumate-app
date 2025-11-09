@@ -66,8 +66,6 @@ export default function PaneRoles({
     { key: 'metadata.creationTimestamp', label: 'Age' },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (role: V1Role) => (
     <>
       <Td className="max-w-truncate align-middle">

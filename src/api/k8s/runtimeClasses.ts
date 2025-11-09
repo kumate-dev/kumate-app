@@ -38,7 +38,7 @@ export async function createRuntimeClass({
   manifest,
 }: {
   name: string;
-  namespace?: string; // ignored for cluster-scoped
+  namespace?: string;
   manifest: V1RuntimeClass;
 }): Promise<V1RuntimeClass> {
   return await invoke<V1RuntimeClass>('create_runtime_class', { name, manifest });
@@ -49,7 +49,7 @@ export async function updateRuntimeClass({
   manifest,
 }: {
   name: string;
-  namespace?: string; // ignored for cluster-scoped
+  namespace?: string;
   manifest: V1RuntimeClass;
 }): Promise<V1RuntimeClass> {
   return await invoke<V1RuntimeClass>('update_runtime_class', { name, manifest });

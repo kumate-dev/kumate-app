@@ -73,8 +73,6 @@ export default function PaneResourceQuotas({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (rq: V1ResourceQuota) => {
     const hardResources = renderKeyValue(rq.status?.hard as Record<string, string>);
     const usedResources = renderKeyValue(rq.status?.used as Record<string, string>);

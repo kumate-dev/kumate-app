@@ -38,7 +38,7 @@ export async function createPriorityClass({
   manifest,
 }: {
   name: string;
-  namespace?: string; // ignored for cluster-scoped
+  namespace?: string;
   manifest: V1PriorityClass;
 }): Promise<V1PriorityClass> {
   return await invoke<V1PriorityClass>('create_priority_class', { name, manifest });
@@ -49,7 +49,7 @@ export async function updatePriorityClass({
   manifest,
 }: {
   name: string;
-  namespace?: string; // ignored for cluster-scoped
+  namespace?: string;
   manifest: V1PriorityClass;
 }): Promise<V1PriorityClass> {
   return await invoke<V1PriorityClass>('update_priority_class', { name, manifest });

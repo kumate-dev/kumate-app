@@ -14,8 +14,6 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 
-// Helm CLI is intentionally not used.
-
 #[tauri::command]
 pub async fn helm_list_releases(
     name: String,
@@ -47,7 +45,6 @@ pub async fn helm_list_releases(
         let secrets_api = K8sClient::api::<Secret>(client.clone(), ns.clone()).await;
         let cms_api = K8sClient::api::<ConfigMap>(client.clone(), ns.clone()).await;
 
-        // Helm v3 stores releases in Secrets by default
         let secrets =
             secrets_api.list(&lp).await.map_err(|e| format!("Failed to list secrets: {}", e))?;
         for s in secrets.items.into_iter() {
@@ -59,7 +56,6 @@ pub async fn helm_list_releases(
                 continue;
             }
 
-            // Try to get release properties from labels; otherwise parse from name
             let release_name = labels.get("name").cloned().unwrap_or_else(|| {
                 name_field
                     .trim()
@@ -92,7 +88,6 @@ pub async fn helm_list_releases(
             items.push(obj);
         }
 
-        // Helm v2 or alternate storage may use ConfigMaps
         let cms =
             cms_api.list(&lp).await.map_err(|e| format!("Failed to list configmaps: {}", e))?;
         for c in cms.items.into_iter() {
@@ -135,9 +130,6 @@ pub async fn helm_uninstall_releases(
 
 #[tauri::command]
 pub async fn helm_list_charts(_name: String) -> Result<Vec<Value>, String> {
-    // Fetch index.yaml from known repositories and aggregate entries.
-    // This avoids requiring the Helm CLI, but depends on public repo endpoints.
-
     #[derive(Debug, Deserialize, Serialize)]
     struct ChartVersion {
         #[serde(rename = "version")]
@@ -165,7 +157,6 @@ pub async fn helm_list_charts(_name: String) -> Result<Vec<Value>, String> {
         let resp =
             client.get(&url).send().await.map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
         if !resp.status().is_success() {
-            // Skip this repo but continue others
             continue;
         }
         let bytes = resp.bytes().await.map_err(|e| format!("Failed to read {}: {}", url, e))?;
@@ -311,7 +302,6 @@ async fn watch_helm_impl(
     };
 
     for ns in target_namespaces {
-        // Secrets (Helm v3 default)
         {
             let api: Api<Secret> = K8sClient::api::<Secret>(client.clone(), ns.clone()).await;
             let mut stream = watch_stream_secrets(&api).await?;
@@ -357,7 +347,6 @@ async fn watch_helm_impl(
             });
         }
 
-        // ConfigMaps (Helm v2 or alternate storage)
         {
             let api: Api<ConfigMap> = K8sClient::api::<ConfigMap>(client.clone(), ns.clone()).await;
             let mut stream = watch_stream_config_maps(&api).await?;

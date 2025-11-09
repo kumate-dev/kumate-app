@@ -38,6 +38,7 @@ export interface PaneResourceProps<T> {
   yamlTemplate?: (defaultNamespace?: string) => T;
   showNamespace?: boolean;
   colSpan?: number;
+  confirmDelete?: boolean;
   renderSidebar?: (
     item: T,
     actions: {
@@ -72,6 +73,7 @@ export function PaneGeneric<T>({
   onAfterCreate,
   showNamespace = true,
   colSpan,
+  confirmDelete = true,
   renderSidebar,
   contextName,
   creating = false,
@@ -88,7 +90,6 @@ export function PaneGeneric<T>({
   const [showSkeleton, setShowSkeleton] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Keep sidebar item in sync with live updates from watch (MODIFIED/DELETED)
   useEffect(() => {
     if (!selectedItem) return;
 
@@ -97,12 +98,10 @@ export function PaneGeneric<T>({
 
     const next = items.find((i) => getKey(i as any) === selectedKey) || null;
 
-    // If item still exists but reference changed (updated), refresh sidebar item
     if (next && next !== selectedItem) {
       setSelectedItem(next);
     }
 
-    // If item no longer exists (deleted), close sidebar
     if (!next) {
       setSelectedItem(null);
     }
@@ -155,11 +154,6 @@ export function PaneGeneric<T>({
     [items]
   );
 
-  const handleDeleteClick = useCallback(() => {
-    if (selectedItems.length === 0) return;
-    setOpenDeleteModal(true);
-  }, [selectedItems.length]);
-
   const handleDeleteSelected = useCallback(async () => {
     if (selectedItems.length === 0) return;
 
@@ -176,6 +170,15 @@ export function PaneGeneric<T>({
     },
     [onDelete]
   );
+
+  const handleDeleteClick = useCallback(() => {
+    if (selectedItems.length === 0) return;
+    if (confirmDelete) {
+      setOpenDeleteModal(true);
+    } else {
+      void handleDeleteSelected();
+    }
+  }, [selectedItems.length, confirmDelete, handleDeleteSelected]);
 
   const getDefaultNamespace = useCallback((): string | undefined => {
     if (!selectedNamespaces?.length) return undefined;
@@ -362,13 +365,15 @@ export function PaneGeneric<T>({
         </div>
       </div>
 
-      <ModalDelete
-        open={openDeleteModal}
-        setOpen={setOpenDeleteModal}
-        items={selectedItems}
-        onConfirm={handleDeleteSelected}
-        loading={deleting}
-      />
+      {confirmDelete && (
+        <ModalDelete
+          open={openDeleteModal}
+          setOpen={setOpenDeleteModal}
+          items={selectedItems}
+          onConfirm={handleDeleteSelected}
+          loading={deleting}
+        />
+      )}
 
       <BottomYamlEditor {...yamlEditorProps} />
 

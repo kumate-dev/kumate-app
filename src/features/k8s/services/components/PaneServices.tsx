@@ -72,8 +72,6 @@ export default function PaneServices({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (svc: V1Service) => (
     <>
       <Td className="max-w-truncate align-middle">

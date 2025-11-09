@@ -71,8 +71,6 @@ export default function PaneStatefulSets({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (ss: V1StatefulSet) => {
     return (
       <>

@@ -28,7 +28,6 @@ export function useOptimisticSortedItems<
 
   const [displayItems, setDisplayItems] = useState<T[]>(items);
 
-  // Keep local display items in sync with source items
   useEffect(() => {
     setDisplayItems(items);
   }, [items]);

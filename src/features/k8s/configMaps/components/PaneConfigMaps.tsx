@@ -68,8 +68,6 @@ export default function PaneConfigMaps({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (cm: V1ConfigMap) => (
     <>
       <Td className="max-w-truncate align-middle">
@@ -105,6 +103,7 @@ export default function PaneConfigMaps({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        onUpdate={onUpdate}
         contextName={contextName}
         updating={updating}
         deleting={deleting}
@@ -136,6 +135,7 @@ export default function PaneConfigMaps({
       contextName={contextName}
       creating={creating}
       deleting={deleting}
+      confirmDelete={false}
     />
   );
 }

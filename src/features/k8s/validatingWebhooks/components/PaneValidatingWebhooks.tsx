@@ -65,8 +65,6 @@ export default function PaneValidatingWebhooks({
     { label: 'Age', key: 'age', sortable: true },
   ];
 
-  // sortedItems provided by hook
-
   const renderRow = (vw: V1ValidatingWebhookConfiguration) => (
     <>
       <Td className="max-w-truncate align-middle">

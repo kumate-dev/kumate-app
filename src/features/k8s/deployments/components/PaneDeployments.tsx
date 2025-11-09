@@ -44,7 +44,6 @@ export default function PaneDeployments({
 }: PaneDeploymentsProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  // value getters for sorting
   const valueGetters = {
     name: (item: V1Deployment) => item.metadata?.name || '',
     namespace: (item: V1Deployment) => item.metadata?.namespace || '',
@@ -67,8 +66,6 @@ export default function PaneDeployments({
     { label: 'Ready', key: 'status', sortable: true },
     { label: 'Age', key: 'age', sortable: true },
   ];
-
-  // sortedItems is provided by hook
 
   const renderRow = (dep: V1Deployment) => (
     <>
