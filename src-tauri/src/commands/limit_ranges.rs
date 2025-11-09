@@ -8,6 +8,24 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_limit_range(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<LimitRange>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_limit_range(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<LimitRange>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_limit_ranges(
     name: String,
     namespaces: Option<Vec<String>>,

@@ -8,6 +8,24 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_resource_quota(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<ResourceQuota>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_resource_quota(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<ResourceQuota>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_resource_quotas(
     name: String,
     namespaces: Option<Vec<String>>,

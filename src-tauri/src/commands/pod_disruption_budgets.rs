@@ -8,6 +8,24 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_pod_disruption_budget(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<PodDisruptionBudget>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_pod_disruption_budget(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<PodDisruptionBudget>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_pod_disruption_budgets(
     name: String,
     namespaces: Option<Vec<String>>,

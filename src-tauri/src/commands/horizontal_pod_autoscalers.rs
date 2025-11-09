@@ -8,6 +8,24 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 #[tauri::command]
+pub async fn create_horizontal_pod_autoscaler(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<HorizontalPodAutoscaler>::create(name, namespace, manifest).await
+}
+
+#[tauri::command]
+pub async fn update_horizontal_pod_autoscaler(
+    name: String,
+    namespace: Option<String>,
+    manifest: Value,
+) -> Result<Value, String> {
+    K8sResources::<HorizontalPodAutoscaler>::update(name, namespace, manifest).await
+}
+
+#[tauri::command]
 pub async fn list_horizontal_pod_autoscalers(
     name: String,
     namespaces: Option<Vec<String>>,
