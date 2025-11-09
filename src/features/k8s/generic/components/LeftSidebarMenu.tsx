@@ -104,10 +104,7 @@ const CATEGORY_GROUPS: PageItem[] = [
   },
   {
     title: 'Helm',
-    items: [
-      { key: 'helm_charts', label: 'Charts' },
-      { key: 'helm_releases', label: 'Releases' },
-    ],
+    items: [{ key: 'helm_releases', label: 'Releases' }],
     collapsible: true,
   },
   {

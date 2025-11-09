@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { ALL_NAMESPACES } from '@/constants/k8s';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { useSelectedNamespaces } from '@/hooks/useSelectedNamespaces';
 import { useListK8sResources } from '@/hooks/useListK8sResources';
@@ -61,7 +62,7 @@ export default function HelmReleases({ context }: PaneResourceContextProps) {
     async (sel: Release[]) => {
       if (!context?.name) return;
       const ns = selectedNamespaces && selectedNamespaces[0];
-      const namespace = !ns || ns === 'ALL_NAMESPACES' ? undefined : ns;
+      const namespace = !ns || ns === ALL_NAMESPACES ? undefined : ns;
       const names = sel.map((i) => i.metadata?.name || i.name).filter(Boolean) as string[];
 
       try {

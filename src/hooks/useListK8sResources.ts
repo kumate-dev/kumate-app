@@ -61,7 +61,14 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
         switch (type) {
           case 'ADDED':
           case 'MODIFIED':
-            itemMap.set(key, object);
+            {
+              const existing = itemMap.get(key);
+              // Merge shallowly to preserve fields that may be omitted in watch payloads
+              const merged = existing
+                ? ({ ...(existing as any), ...(object as any) } as T)
+                : object;
+              itemMap.set(key, merged);
+            }
             break;
           case 'DELETED':
             itemMap.delete(key);

@@ -33,7 +33,6 @@ export type PageKey =
   | 'storage_classes'
   | 'namespaces'
   | 'events'
-  | 'helm_charts'
   | 'helm_releases'
   | 'service_accounts'
   | 'cluster_roles'
