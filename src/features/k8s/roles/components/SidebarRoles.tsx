@@ -77,12 +77,16 @@ export function SidebarRoles({
       item={item}
       setItem={setItem}
       sections={sections}
-      eventsProps={item ? {
-        contextName,
-        resourceKind: 'Role',
-        resourceName: item?.metadata?.name,
-        namespace: item?.metadata?.namespace,
-      } : undefined}
+      eventsProps={
+        item
+          ? {
+              contextName,
+              resourceKind: 'Role',
+              resourceName: item?.metadata?.name,
+              namespace: item?.metadata?.namespace,
+            }
+          : undefined
+      }
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

@@ -5,7 +5,7 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::ObjectMeta, Metadata, Resource as K8sResource,
 };
 use kube::{
-    api::{Api, DeleteParams, ListParams, ObjectList, PostParams, WatchEvent, WatchParams},
+    api::{Api, DeleteParams, ObjectList, PostParams, WatchEvent, WatchParams},
     Resource,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -59,25 +59,6 @@ where
         let client: kube::Client = K8sClient::for_context(&context_name).await?;
         let api: Api<T> = Api::all(client);
         let list: ObjectList<T> = api.list(&Default::default()).await.map_err(|e| e.to_string())?;
-
-        Ok(list
-            .items
-            .into_iter()
-            .map(|r| serde_json::to_value(&r).unwrap_or(Value::Null))
-            .collect())
-    }
-
-    pub async fn list_with_fields(
-        context_name: String,
-        field_selector: Option<String>,
-    ) -> Result<Vec<Value>, String> {
-        let client: kube::Client = K8sClient::for_context(&context_name).await?;
-        let api: Api<T> = Api::all(client);
-        let lp: ListParams = ListParams {
-            field_selector,
-            ..Default::default()
-        };
-        let list: ObjectList<T> = api.list(&lp).await.map_err(|e| e.to_string())?;
 
         Ok(list
             .items

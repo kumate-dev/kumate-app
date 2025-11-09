@@ -41,7 +41,6 @@ const CATEGORY_GROUPS: PageItem[] = [
   {
     title: 'Workloads',
     items: [
-      { key: 'workloads_overview', label: 'Overview' },
       { key: 'pods', label: 'Pods' },
       { key: 'deployments', label: 'Deployments' },
       { key: 'replica_sets', label: 'Replica Sets' },
@@ -257,6 +256,8 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
       const GroupIcon = group.icon;
       const isCollapsible = group.collapsible ?? false;
       const isCollapsed = group.title ? collapsed[group.title] : false;
+      const isNavigable = !!group.navigateKey && !isCollapsible;
+      const isActive = isNavigable && page === group.navigateKey;
 
       const handleGroupClick = () => {
         if (isCollapsible && group.title) {
@@ -270,7 +271,9 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
         <div key={group.title || `top-${index}`} className="px-3 py-3">
           {group.title && (
             <button
-              className="mb-2 flex w-full items-center justify-between text-left text-xs tracking-wide text-white/50 uppercase"
+              className={`mb-2 flex w-full items-center justify-between text-left text-xs tracking-wide uppercase transition-colors ${
+                isActive ? 'text-white' : 'text-white/50 hover:text-white'
+              }`}
               onClick={handleGroupClick}
             >
               <span className="flex items-center gap-2">
@@ -305,7 +308,7 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
         </div>
       );
     },
-    [collapsed, toggleGroup, handlePageSelect, renderGroupItem]
+    [collapsed, toggleGroup, handlePageSelect, renderGroupItem, page]
   );
 
   return (

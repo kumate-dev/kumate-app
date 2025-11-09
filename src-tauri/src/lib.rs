@@ -60,22 +60,35 @@ use crate::utils::watcher::WatchManager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+    // Register the single-instance plugin FIRST to avoid multi-process DB lock conflicts.
+    let mut builder = tauri::Builder::default();
+    builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        // When a second instance is launched, focus the existing main window.
+        let _ = app.get_webview_window("main").map(|w| w.set_focus());
+    }));
 
-    tauri::Builder::default()
-        .setup(|app| {
-            let app_handle: &tauri::AppHandle = app.handle();
+    builder = builder.setup(|app| {
+        let app_handle: &tauri::AppHandle = app.handle();
 
-            let data_dir: PathBuf = data_dir()
+        // Allow overriding the data directory via environment variable to support
+        // running multiple instances with isolated databases in development.
+        let data_dir: PathBuf = if let Ok(dir) = std::env::var("KUMATE_DATA_DIR") {
+            PathBuf::from(dir)
+        } else {
+            data_dir()
                 .unwrap_or_else(|| home_dir().unwrap_or_else(|| PathBuf::from(".")))
-                .join("Kumate");
+                .join("Kumate")
+        };
 
-            tauri::async_runtime::block_on(async move {
-                let st: state::AppState = state::AppState::init(data_dir).await.expect("init db");
-                app_handle.manage(st);
-            });
+        tauri::async_runtime::block_on(async move {
+            let st: state::AppState = state::AppState::init(data_dir).await.expect("init db");
+            app_handle.manage(st);
+        });
 
-            Ok(())
-        })
+        Ok(())
+    });
+
+    builder = builder
         .manage(WatchManager::default())
         .manage(crate::utils::exec::ExecManager::default())
         .manage(crate::utils::port_forward::PortForwardManager::default())
@@ -287,7 +300,7 @@ pub fn run() {
             port_forward::list_port_forwards,
             port_forward::resume_port_forward,
             port_forward::delete_port_forward,
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        ]);
+
+    builder.run(tauri::generate_context!()).expect("error while running tauri application");
 }

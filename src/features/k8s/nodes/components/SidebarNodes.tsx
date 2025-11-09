@@ -102,11 +102,15 @@ export function SidebarNodes({
       item={item}
       setItem={setItem}
       sections={sections}
-      eventsProps={item ? {
-        contextName,
-        resourceKind: 'Node',
-        resourceName: item?.metadata?.name,
-      } : undefined}
+      eventsProps={
+        item
+          ? {
+              contextName,
+              resourceKind: 'Node',
+              resourceName: item?.metadata?.name,
+            }
+          : undefined
+      }
       onDelete={onDelete}
       onEdit={onEdit}
       deleting={deleting}

@@ -5,7 +5,10 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::ObjectMeta, Metadata, Resource as K8sResource,
 };
 use kube::{
-    api::{Api, DeleteParams, ListParams, ObjectList, Patch, PatchParams, PostParams, WatchEvent, WatchParams},
+    api::{
+        Api, DeleteParams, ListParams, ObjectList, Patch, PatchParams, PostParams, WatchEvent,
+        WatchParams,
+    },
     core::NamespaceResourceScope,
     Resource,
 };

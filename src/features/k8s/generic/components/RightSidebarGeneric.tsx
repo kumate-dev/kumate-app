@@ -202,22 +202,26 @@ export function RightSidebarGeneric<T>({
             </div>
           ))}
 
-          {item && eventsProps && eventsProps.contextName && eventsProps.resourceKind && eventsProps.resourceName && (
-            <div>
-              <div className="sticky top-0 z-10 mb-2 flex items-center justify-between border-b border-white/10 bg-neutral-900/95 px-4 py-2 backdrop-blur">
-                <h3 className="font-medium text-white/80">{eventsProps.title || 'Events'}</h3>
-                {/* Intentionally no default actions in Events section to avoid duplication */}
+          {item &&
+            eventsProps &&
+            eventsProps.contextName &&
+            eventsProps.resourceKind &&
+            eventsProps.resourceName && (
+              <div>
+                <div className="sticky top-0 z-10 mb-2 flex items-center justify-between border-b border-white/10 bg-neutral-900/95 px-4 py-2 backdrop-blur">
+                  <h3 className="font-medium text-white/80">{eventsProps.title || 'Events'}</h3>
+                  {/* Intentionally no default actions in Events section to avoid duplication */}
+                </div>
+                <div className="space-y-2">
+                  <SidebarEventsSection
+                    contextName={eventsProps.contextName}
+                    namespace={eventsProps.namespace}
+                    resourceKind={eventsProps.resourceKind}
+                    resourceName={eventsProps.resourceName}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <SidebarEventsSection
-                  contextName={eventsProps.contextName}
-                  namespace={eventsProps.namespace}
-                  resourceKind={eventsProps.resourceKind}
-                  resourceName={eventsProps.resourceName}
-                />
-              </div>
-            </div>
-          )}
+            )}
         </div>
 
         {requireDeleteConfirmation && showDeleteButton && item && (

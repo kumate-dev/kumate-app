@@ -548,7 +548,7 @@ impl HelmManager {
         }
         // Determine the highest score tier
         let max_score = candidates.iter().map(|c| c.score).max().unwrap_or(1);
-        let mut best: Vec<Candidate> =
+        let best: Vec<Candidate> =
             candidates.into_iter().filter(|c| c.score == max_score).collect();
         if let Some(want_ver) = version {
             if let Some(found) = best.iter().find(|c| &c.version == want_ver) {

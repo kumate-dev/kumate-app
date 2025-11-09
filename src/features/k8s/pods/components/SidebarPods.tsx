@@ -43,7 +43,6 @@ export function SidebarPods({
   const [pfDialogOpen, setPfDialogOpen] = useState(false);
   const [selectedRemotePort, setSelectedRemotePort] = useState<number | undefined>(undefined);
 
-
   const handleViewLogs = useCallback((containerName?: string) => {
     setSelectedContainer(containerName || '');
     setLogViewerOpen(true);
@@ -307,7 +306,6 @@ export function SidebarPods({
     handleOpenPortForward,
   ]);
 
-
   const sections = useMemo(
     () =>
       item
@@ -320,7 +318,7 @@ export function SidebarPods({
             },
           ]
         : [],
-    [item, renderProperties, contextName]
+    [item, renderProperties]
   );
 
   const logViewerTitle = useMemo(
@@ -349,12 +347,16 @@ export function SidebarPods({
         item={item}
         setItem={setItem}
         sections={sections}
-        eventsProps={item ? {
-          contextName,
-          namespace: item?.metadata?.namespace,
-          resourceKind: 'Pod',
-          resourceName: item?.metadata?.name,
-        } : undefined}
+        eventsProps={
+          item
+            ? {
+                contextName,
+                namespace: item?.metadata?.namespace,
+                resourceKind: 'Pod',
+                resourceName: item?.metadata?.name,
+              }
+            : undefined
+        }
         onDelete={onDelete}
         onEdit={onEdit}
         updating={updating}
