@@ -10,9 +10,10 @@ export interface SidebarLeasesProps {
   setItem: (item: V1Lease | null) => void;
   onDelete?: (item: V1Lease) => void;
   onEdit?: (item: V1Lease) => void;
+  contextName?: string;
 }
 
-export function SidebarLeases({ item, setItem, onDelete, onEdit }: SidebarLeasesProps) {
+export function SidebarLeases({ item, setItem, onDelete, onEdit, contextName }: SidebarLeasesProps) {
   const renderProperties = (lease: V1Lease) => (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
       <Table className="table-fixed">
@@ -88,6 +89,12 @@ export function SidebarLeases({ item, setItem, onDelete, onEdit }: SidebarLeases
       onDelete={onDelete}
       onEdit={onEdit}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'Lease',
+        resourceName: item?.metadata?.name,
+      } : undefined}
     />
   );
 }

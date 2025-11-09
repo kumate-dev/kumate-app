@@ -14,6 +14,7 @@ interface SidebarPodDisruptionBudgetsProps {
   onEdit?: (item: V1PodDisruptionBudget) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 function renderProperties(pdb: V1PodDisruptionBudget) {
@@ -104,6 +105,7 @@ export function SidebarPodDisruptionBudgets({
   onEdit,
   updating = false,
   deleting = false,
+  contextName,
 }: SidebarPodDisruptionBudgetsProps) {
   const sections = item
     ? [
@@ -120,6 +122,12 @@ export function SidebarPodDisruptionBudgets({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'PodDisruptionBudget',
+        resourceName: item?.metadata?.name,
+        namespace: item?.metadata?.namespace,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

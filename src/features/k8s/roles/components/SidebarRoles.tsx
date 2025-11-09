@@ -10,6 +10,7 @@ interface SidebarRolesProps {
   setItem: (item: V1Role | null) => void;
   onDelete?: (item: V1Role) => void;
   onEdit?: (item: V1Role) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -19,6 +20,7 @@ export function SidebarRoles({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarRolesProps) {
@@ -75,6 +77,12 @@ export function SidebarRoles({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'Role',
+        resourceName: item?.metadata?.name,
+        namespace: item?.metadata?.namespace,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

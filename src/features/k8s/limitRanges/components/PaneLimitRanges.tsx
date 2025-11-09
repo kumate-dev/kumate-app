@@ -110,9 +110,10 @@ export default function PaneLimitRanges({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        contextName={contextName}
       />
     ),
-    []
+    [contextName]
   );
 
   return (

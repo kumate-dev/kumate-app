@@ -5,6 +5,8 @@ use serde_json::Value;
 use tauri::AppHandle;
 
 use crate::utils::watcher::WatchManager;
+use crate::manager::k8s::resources::K8sResources;
+use k8s_openapi::api::core::v1::Event;
 
 pub async fn watch<F, Fut>(
     app_handle: AppHandle,

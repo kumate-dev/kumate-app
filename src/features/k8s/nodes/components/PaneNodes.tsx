@@ -15,6 +15,7 @@ export interface PaneNodesProps {
   error: string;
   onDeleteNodes?: (nodes: V1Node[]) => Promise<void>;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export default function PaneNodes({
@@ -23,6 +24,7 @@ export default function PaneNodes({
   error,
   onDeleteNodes,
   deleting = false,
+  contextName,
 }: PaneNodesProps) {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -87,6 +89,7 @@ export default function PaneNodes({
       setItem={actions.setItem}
       onDelete={actions.onDelete}
       onEdit={actions.onEdit}
+      contextName={contextName}
       deleting={deleting}
     />
   );
@@ -106,6 +109,7 @@ export default function PaneNodes({
       onDelete={onDeleteNodes}
       renderRow={renderRow}
       renderSidebar={renderSidebar}
+      contextName={contextName}
       deleting={deleting}
     />
   );

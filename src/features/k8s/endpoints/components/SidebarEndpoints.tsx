@@ -10,6 +10,7 @@ export interface SidebarEndpointsProps {
   setItem: (item: V1Endpoints | null) => void;
   onDelete?: (item: V1Endpoints) => void;
   onEdit?: (item: V1Endpoints) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -19,6 +20,7 @@ export function SidebarEndpoints({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarEndpointsProps) {
@@ -66,6 +68,12 @@ export function SidebarEndpoints({
       onDelete={onDelete}
       onEdit={onEdit}
       sections={[{ key: 'properties', title: 'Properties', content: renderProperties }]}
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'Endpoints',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       updating={updating}
       deleting={deleting}
     />

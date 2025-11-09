@@ -13,6 +13,7 @@ interface SidebarJobsProps {
   setItem: (item: V1Job | null) => void;
   onDelete?: (item: V1Job) => void;
   onEdit?: (item: V1Job) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -22,6 +23,7 @@ export function SidebarJobs({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarJobsProps) {
@@ -96,6 +98,12 @@ export function SidebarJobs({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'Job',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

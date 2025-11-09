@@ -10,6 +10,7 @@ interface SidebarRoleBindingsProps {
   setItem: (item: V1RoleBinding | null) => void;
   onDelete?: (item: V1RoleBinding) => void;
   onEdit?: (item: V1RoleBinding) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -19,6 +20,7 @@ export function SidebarRoleBindings({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarRoleBindingsProps) {
@@ -81,6 +83,12 @@ export function SidebarRoleBindings({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'RoleBinding',
+        resourceName: item?.metadata?.name,
+        namespace: item?.metadata?.namespace,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

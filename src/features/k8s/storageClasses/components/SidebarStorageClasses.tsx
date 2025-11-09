@@ -9,6 +9,7 @@ interface SidebarStorageClassesProps {
   setItem: (item: V1StorageClass | null) => void;
   onDelete?: (item: V1StorageClass) => void;
   onEdit?: (item: V1StorageClass) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -18,6 +19,7 @@ export function SidebarStorageClasses({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarStorageClassesProps) {
@@ -83,6 +85,11 @@ export function SidebarStorageClasses({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'StorageClass',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

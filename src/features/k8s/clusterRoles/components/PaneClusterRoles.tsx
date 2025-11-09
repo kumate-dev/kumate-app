@@ -80,11 +80,12 @@ export default function PaneClusterRoles({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        contextName={contextName}
         updating={updating ?? false}
         deleting={deleting ?? false}
       />
     ),
-    [updating, deleting]
+    [updating, deleting, contextName]
   );
 
   return (

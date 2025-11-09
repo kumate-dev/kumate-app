@@ -12,6 +12,7 @@ export interface SidebarNetworkPoliciesProps {
   onEdit?: (item: V1NetworkPolicy) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export function SidebarNetworkPolicies({
@@ -19,6 +20,7 @@ export function SidebarNetworkPolicies({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarNetworkPoliciesProps) {
@@ -95,6 +97,12 @@ export function SidebarNetworkPolicies({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'NetworkPolicy',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

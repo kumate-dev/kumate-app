@@ -9,6 +9,7 @@ interface SidebarClusterRolesProps {
   setItem: (item: V1ClusterRole | null) => void;
   onDelete?: (item: V1ClusterRole) => void;
   onEdit?: (item: V1ClusterRole) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -18,6 +19,7 @@ export function SidebarClusterRoles({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating,
   deleting,
 }: SidebarClusterRolesProps) {
@@ -67,6 +69,11 @@ export function SidebarClusterRoles({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'ClusterRole',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating ?? false}

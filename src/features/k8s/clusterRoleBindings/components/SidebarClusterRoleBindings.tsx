@@ -9,6 +9,7 @@ interface SidebarClusterRoleBindingsProps {
   setItem: (item: V1ClusterRoleBinding | null) => void;
   onDelete?: (item: V1ClusterRoleBinding) => void;
   onEdit?: (item: V1ClusterRoleBinding) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -18,6 +19,7 @@ export function SidebarClusterRoleBindings({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating,
   deleting,
 }: SidebarClusterRoleBindingsProps) {
@@ -73,6 +75,11 @@ export function SidebarClusterRoleBindings({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'ClusterRoleBinding',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

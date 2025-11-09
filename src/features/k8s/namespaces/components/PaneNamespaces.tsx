@@ -85,6 +85,7 @@ export default function PaneNamespaces({
       setItem={actions.setItem}
       onDelete={actions.onDelete}
       onEdit={actions.onEdit}
+      contextName={contextName}
       updating={updating}
       deleting={deleting}
     />

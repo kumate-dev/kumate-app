@@ -12,6 +12,7 @@ interface SidebarPVCProps {
   setItem: (item: V1PersistentVolumeClaim | null) => void;
   onDelete?: (item: V1PersistentVolumeClaim) => void;
   onEdit?: (item: V1PersistentVolumeClaim) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -43,6 +44,7 @@ export function SidebarPersistentVolumeClaims({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarPVCProps) {
@@ -140,6 +142,12 @@ export function SidebarPersistentVolumeClaims({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'PersistentVolumeClaim',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

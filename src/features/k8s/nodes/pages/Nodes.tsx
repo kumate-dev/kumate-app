@@ -28,6 +28,7 @@ export default function Nodes({ context }: PaneResourceContextProps) {
       loading={loading}
       error={error ?? ''}
       onDeleteNodes={handleDeleteNodes}
+      contextName={context?.name}
       deleting={deleting}
     />
   );

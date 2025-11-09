@@ -89,9 +89,10 @@ export default function PaneLeases({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        contextName={contextName}
       />
     ),
-    []
+    [contextName]
   );
 
   return (

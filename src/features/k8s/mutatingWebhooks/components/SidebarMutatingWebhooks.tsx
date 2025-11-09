@@ -11,6 +11,7 @@ interface Props {
   onEdit?: (item: V1MutatingWebhookConfiguration) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export default function SidebarMutatingWebhooks({
@@ -18,6 +19,7 @@ export default function SidebarMutatingWebhooks({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: Props) {
@@ -66,6 +68,11 @@ export default function SidebarMutatingWebhooks({
       onDelete={onDelete}
       onEdit={onEdit}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'MutatingWebhookConfiguration',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       updating={updating}
       deleting={deleting}
     />

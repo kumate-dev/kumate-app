@@ -5,6 +5,7 @@ import { ModalDelete } from '@/components/common/ModalDelete';
 import { ButtonEdit } from '@/components/common/ButtonEdit';
 import { ButtonTrash } from '@/components/common/ButtonTrash';
 import { startResizing } from '@/utils/resizing';
+import { SidebarEventsSection } from '@/features/k8s/generic/components/SidebarEventsSection';
 
 export interface SidebarResourcesProps<T> {
   item: T | null;
@@ -24,6 +25,13 @@ export interface SidebarResourcesProps<T> {
       }
     ) => ReactNode;
   }[];
+  eventsProps?: {
+    title?: string;
+    contextName?: string;
+    namespace?: string;
+    resourceKind?: string; // e.g., Pod, Deployment
+    resourceName?: string;
+  };
   onDelete?: (item: T) => void;
   onEdit?: (item: T) => void;
   updating?: boolean;
@@ -38,6 +46,7 @@ export function RightSidebarGeneric<T>({
   setItem,
   width = 550,
   sections = [],
+  eventsProps,
   onDelete,
   onEdit,
   updating = false,
@@ -192,6 +201,23 @@ export function RightSidebarGeneric<T>({
               {item && <div className="space-y-2">{section.content(item)}</div>}
             </div>
           ))}
+
+          {item && eventsProps && eventsProps.contextName && eventsProps.resourceKind && eventsProps.resourceName && (
+            <div>
+              <div className="sticky top-0 z-10 mb-2 flex items-center justify-between border-b border-white/10 bg-neutral-900/95 px-4 py-2 backdrop-blur">
+                <h3 className="font-medium text-white/80">{eventsProps.title || 'Events'}</h3>
+                {/* Intentionally no default actions in Events section to avoid duplication */}
+              </div>
+              <div className="space-y-2">
+                <SidebarEventsSection
+                  contextName={eventsProps.contextName}
+                  namespace={eventsProps.namespace}
+                  resourceKind={eventsProps.resourceKind}
+                  resourceName={eventsProps.resourceName}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {requireDeleteConfirmation && showDeleteButton && item && (

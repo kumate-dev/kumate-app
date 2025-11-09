@@ -94,11 +94,12 @@ export function PaneIngresses({
         setItem={actions.setItem}
         onDelete={actions.onDelete}
         onEdit={actions.onEdit}
+        contextName={contextName}
         updating={updating}
         deleting={deleting}
       />
     ),
-    [updating, deleting]
+    [updating, deleting, contextName]
   );
 
   return (

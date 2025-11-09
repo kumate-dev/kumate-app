@@ -38,3 +38,4 @@ pub mod services;
 pub mod stateful_sets;
 pub mod storage_classes;
 pub mod validating_webhooks;
+pub mod events;

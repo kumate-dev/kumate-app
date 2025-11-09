@@ -11,6 +11,7 @@ interface SidebarNodesProps {
   setItem: (item: V1Node | null) => void;
   onDelete?: (item: V1Node) => void;
   onEdit?: (item: V1Node) => void;
+  contextName?: string;
   deleting?: boolean;
   updating?: boolean;
 }
@@ -26,6 +27,7 @@ export function SidebarNodes({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   deleting = false,
   updating = false,
 }: SidebarNodesProps) {
@@ -100,6 +102,11 @@ export function SidebarNodes({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'Node',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       deleting={deleting}

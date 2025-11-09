@@ -13,6 +13,7 @@ interface SidebarNamespacesProps {
   onEdit?: (item: V1Namespace) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export function SidebarNamespaces({
@@ -20,6 +21,7 @@ export function SidebarNamespaces({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarNamespacesProps) {
@@ -72,6 +74,11 @@ export function SidebarNamespaces({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'Namespace',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

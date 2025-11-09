@@ -11,6 +11,7 @@ interface Props {
   onEdit?: (item: V1ValidatingWebhookConfiguration) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export default function SidebarValidatingWebhooks({
@@ -18,6 +19,7 @@ export default function SidebarValidatingWebhooks({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: Props) {
@@ -66,6 +68,11 @@ export default function SidebarValidatingWebhooks({
       onDelete={onDelete}
       onEdit={onEdit}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'ValidatingWebhookConfiguration',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       updating={updating}
       deleting={deleting}
     />

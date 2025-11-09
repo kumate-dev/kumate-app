@@ -11,6 +11,7 @@ export interface SidebarPriorityClassesProps {
   onEdit?: (item: V1PriorityClass) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 function renderProperties(pc: V1PriorityClass) {
@@ -52,6 +53,7 @@ export function SidebarPriorityClasses({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarPriorityClassesProps) {
@@ -70,6 +72,11 @@ export function SidebarPriorityClasses({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'PriorityClass',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

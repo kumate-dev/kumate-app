@@ -9,6 +9,7 @@ export interface SidebarRuntimeClassesProps {
   setItem: (item: V1RuntimeClass | null) => void;
   onDelete?: (item: V1RuntimeClass) => void;
   onEdit?: (item: V1RuntimeClass) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -48,6 +49,7 @@ export function SidebarRuntimeClasses({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarRuntimeClassesProps) {
@@ -66,6 +68,11 @@ export function SidebarRuntimeClasses({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'RuntimeClass',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

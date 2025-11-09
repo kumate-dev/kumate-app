@@ -12,6 +12,7 @@ interface SidebarServiceAccountsProps {
   onEdit?: (item: V1ServiceAccount) => void;
   updating?: boolean;
   deleting?: boolean;
+  contextName?: string;
 }
 
 export function SidebarServiceAccounts({
@@ -19,6 +20,7 @@ export function SidebarServiceAccounts({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarServiceAccountsProps) {
@@ -76,6 +78,12 @@ export function SidebarServiceAccounts({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'ServiceAccount',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

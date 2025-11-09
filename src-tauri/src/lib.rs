@@ -25,6 +25,7 @@ use crate::commands::custom_resources;
 use crate::commands::daemon_sets;
 use crate::commands::deployments;
 use crate::commands::endpoints;
+use crate::commands::events;
 use crate::commands::helm;
 use crate::commands::horizontal_pod_autoscalers;
 use crate::commands::ingress_classes;
@@ -85,6 +86,7 @@ pub fn run() {
             contexts::import_kube_contexts,
             contexts::list_contexts,
             common::unwatch,
+            events::list_events,
             nodes::list_nodes,
             nodes::watch_nodes,
             nodes::delete_nodes,

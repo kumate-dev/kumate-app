@@ -10,6 +10,7 @@ interface SidebarLimitRangesProps {
   setItem: (item: V1LimitRange | null) => void;
   onDelete?: (item: V1LimitRange) => void;
   onEdit?: (item: V1LimitRange) => void;
+  contextName?: string;
 }
 
 function renderLimitItem(item?: V1LimitRangeItem) {
@@ -74,7 +75,7 @@ function renderProperties(lr: V1LimitRange) {
   );
 }
 
-export function SidebarLimitRanges({ item, setItem, onDelete, onEdit }: SidebarLimitRangesProps) {
+export function SidebarLimitRanges({ item, setItem, onDelete, onEdit, contextName }: SidebarLimitRangesProps) {
   const sections = item
     ? [
         {
@@ -90,6 +91,12 @@ export function SidebarLimitRanges({ item, setItem, onDelete, onEdit }: SidebarL
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'LimitRange',
+        resourceName: item?.metadata?.name,
+        namespace: item?.metadata?.namespace,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
     />

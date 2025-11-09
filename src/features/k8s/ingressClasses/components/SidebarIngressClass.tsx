@@ -9,6 +9,7 @@ export interface SidebarIngressClassProps {
   setItem: (item: V1IngressClass | null) => void;
   onDelete?: (item: V1IngressClass) => void;
   onEdit?: (item: V1IngressClass) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -18,6 +19,7 @@ export function SidebarIngressClass({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarIngressClassProps) {
@@ -72,6 +74,11 @@ export function SidebarIngressClass({
       onDelete={onDelete as any}
       onEdit={onEdit as any}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'IngressClass',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       updating={updating}
       deleting={deleting}
     />

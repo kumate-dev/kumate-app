@@ -9,6 +9,7 @@ interface SidebarPersistentVolumesProps {
   setItem: (item: V1PersistentVolume | null) => void;
   onDelete?: (item: V1PersistentVolume) => void;
   onEdit?: (item: V1PersistentVolume) => void;
+  contextName?: string;
   updating?: boolean;
   deleting?: boolean;
 }
@@ -18,6 +19,7 @@ export function SidebarPersistentVolumes({
   setItem,
   onDelete,
   onEdit,
+  contextName,
   updating = false,
   deleting = false,
 }: SidebarPersistentVolumesProps) {
@@ -112,6 +114,11 @@ export function SidebarPersistentVolumes({
       item={item}
       setItem={setItem}
       sections={sections}
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'PersistentVolume',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}
