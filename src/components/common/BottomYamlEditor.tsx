@@ -14,6 +14,7 @@ export default function BottomYamlEditor({
   initialYaml,
   onClose,
   onSave,
+  headerChildren,
 }: YamlEditorProps) {
   const [yamlText, setYamlText] = useState(initialYaml);
   const [yamlError, setYamlError] = useState<string | null>(null);
@@ -52,7 +53,9 @@ export default function BottomYamlEditor({
     const trimmed = yamlText.trim();
     const basicConditions = !yamlError && trimmed.length > 0 && !saving;
 
-    if (mode === 'create') {
+    if (mode === 'view') {
+      return false;
+    } else if (mode === 'create') {
       return basicConditions;
     } else {
       return basicConditions && trimmed !== initialYaml.trim();
@@ -126,12 +129,13 @@ export default function BottomYamlEditor({
         />
 
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-          <div className="min-w-0 flex-1 truncate text-sm font-medium text-white/80">
-            {displayTitle}
-          </div>
+          <div className="min-w-0 truncate text-sm font-medium text-white/80">{displayTitle}</div>
+          <div className="min-w-0 flex-1">{headerChildren}</div>
           <div className="flex items-center gap-2">
             <ButtonCancel onClick={onClose} disabled={saving} />
-            <ButtonSave onClick={handleSave} disabled={!canSave} loading={saving} />
+            {mode !== 'view' && (
+              <ButtonSave onClick={handleSave} disabled={!canSave} loading={saving} />
+            )}
             <ButtonExpand onClick={toggleExpand} isExpanded={isExpanded} />
           </div>
         </div>
@@ -141,7 +145,7 @@ export default function BottomYamlEditor({
             value={yamlText}
             onChange={setYamlText}
             heightClass="h-full"
-            readOnly={false}
+            readOnly={mode === 'view'}
             onError={setYamlError}
           />
         </div>

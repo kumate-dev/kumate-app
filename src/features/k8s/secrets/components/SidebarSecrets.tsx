@@ -57,7 +57,7 @@ export function SidebarSecrets({
     const initialEntries = { ...stringEntries, ...decodedEntries };
     kv.load({ ...initialEntries });
     loadedSnapshotRef.current = { ...initialEntries };
-  }, [item]);
+  }, [item, kv]);
 
   const isDirty = useMemo(() => {
     const a = kv.editedData;
@@ -106,8 +106,6 @@ export function SidebarSecrets({
   useAutoSaveOnOutsideClick(canSave && isDirty, editorRef, handleSave);
 
   const renderProperties = (secret: V1Secret) => {
-    const dataKeys = secret.data ? Object.keys(secret.data) : [];
-
     return (
       <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
         <Table className="table-fixed">
@@ -160,7 +158,7 @@ export function SidebarSecrets({
 
   const renderEditableData = () => (
     <div className="space-y-2" ref={editorRef}>
-      <KeyValueEditor title="Data entries" hook={kv} saving={saving} perEntryMaskToggle />
+      <KeyValueEditor hook={kv} saving={saving} perEntryMaskToggle />
     </div>
   );
 

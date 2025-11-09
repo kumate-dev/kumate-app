@@ -6,7 +6,6 @@ import { useKeyValueEditor } from '@/hooks/useKeyValueEditor';
 import { IconEye } from '@/components/common/IconEye';
 
 export interface KeyValueEditorProps {
-  title?: string;
   hook: ReturnType<typeof useKeyValueEditor>;
   saving?: boolean;
   canSave?: boolean;
@@ -16,7 +15,6 @@ export interface KeyValueEditorProps {
 }
 
 export const KeyValueEditor: React.FC<KeyValueEditorProps> = ({
-  title = 'Data entries',
   hook,
   saving = false,
   canSave = false,

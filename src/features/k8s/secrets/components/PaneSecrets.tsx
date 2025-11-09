@@ -121,7 +121,7 @@ export default function PaneSecrets({
         deleting={deleting}
       />
     ),
-    [updating, deleting, contextName]
+    [updating, deleting, onUpdate, contextName]
   );
 
   return (

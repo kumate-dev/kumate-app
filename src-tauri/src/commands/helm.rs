@@ -45,3 +45,53 @@ pub async fn watch_helm_releases(
 
     watch_common(app_handle, name, "helm_releases".to_string(), namespaces, state, watch_fn).await
 }
+
+#[tauri::command]
+pub async fn helm_get_values(
+    name: String,
+    namespace: Option<String>,
+    release_name: String,
+) -> Result<String, String> {
+    HelmManager::get_values(name, namespace, release_name).await
+}
+
+#[tauri::command]
+pub async fn helm_get_history(
+    name: String,
+    namespace: Option<String>,
+    release_name: String,
+) -> Result<Vec<Value>, String> {
+    HelmManager::get_history(name, namespace, release_name).await
+}
+
+#[tauri::command]
+pub async fn helm_upgrade_release(
+    name: String,
+    namespace: Option<String>,
+    release_name: String,
+    chart: Option<String>,
+    values: Option<Value>,
+    reuse_values: bool,
+    version: Option<String>,
+) -> Result<String, String> {
+    HelmManager::upgrade_release(
+        name,
+        namespace,
+        release_name,
+        chart,
+        values,
+        reuse_values,
+        version,
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn helm_rollback_release(
+    name: String,
+    namespace: Option<String>,
+    release_name: String,
+    revision: i32,
+) -> Result<String, String> {
+    HelmManager::rollback_release(name, namespace, release_name, revision).await
+}

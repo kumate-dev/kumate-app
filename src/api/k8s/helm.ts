@@ -21,6 +21,15 @@ export interface HelmChart {
   urls?: string[];
 }
 
+export interface HelmHistoryEntry {
+  revision?: number;
+  updated?: string;
+  status?: string;
+  chart?: string;
+  app_version?: string;
+  description?: string;
+}
+
 export async function listHelmReleases({
   name,
   namespaces,
@@ -49,6 +58,77 @@ export async function uninstallHelmReleases({
 
 export async function listHelmCharts({ name }: { name: string }): Promise<HelmChart[]> {
   return await invoke<HelmChart[]>('helm_list_charts', { name });
+}
+
+export async function getHelmValues({
+  name,
+  namespace,
+  releaseName,
+}: {
+  name: string;
+  namespace?: string;
+  releaseName: string;
+}): Promise<string> {
+  return await invoke<string>('helm_get_values', { name, namespace, releaseName });
+}
+
+export async function getHelmHistory({
+  name,
+  namespace,
+  releaseName,
+}: {
+  name: string;
+  namespace?: string;
+  releaseName: string;
+}): Promise<HelmHistoryEntry[]> {
+  return await invoke<HelmHistoryEntry[]>('helm_get_history', { name, namespace, releaseName });
+}
+
+export async function upgradeHelmRelease({
+  name,
+  namespace,
+  releaseName,
+  chart,
+  values,
+  reuseValues,
+  version,
+}: {
+  name: string;
+  namespace?: string;
+  releaseName: string;
+  chart?: string;
+  values?: any;
+  reuseValues?: boolean;
+  version?: string;
+}): Promise<string> {
+  return await invoke<string>('helm_upgrade_release', {
+    name,
+    namespace,
+    releaseName,
+    chart,
+    values,
+    reuseValues: !!reuseValues,
+    version,
+  });
+}
+
+export async function rollbackHelmRelease({
+  name,
+  namespace,
+  releaseName,
+  revision,
+}: {
+  name: string;
+  namespace?: string;
+  releaseName: string;
+  revision: number;
+}): Promise<string> {
+  return await invoke<string>('helm_rollback_release', {
+    name,
+    namespace,
+    releaseName,
+    revision,
+  });
 }
 
 export interface HelmReleaseEvent {

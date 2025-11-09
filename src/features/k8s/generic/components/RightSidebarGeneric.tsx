@@ -30,6 +30,7 @@ export interface SidebarResourcesProps<T> {
   deleting?: boolean;
   showDefaultActions?: boolean;
   requireDeleteConfirmation?: boolean;
+  closeOnEdit?: boolean;
 }
 
 export function RightSidebarGeneric<T>({
@@ -43,6 +44,7 @@ export function RightSidebarGeneric<T>({
   deleting = false,
   showDefaultActions = true,
   requireDeleteConfirmation = true,
+  closeOnEdit = true,
 }: SidebarResourcesProps<T>) {
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
@@ -65,9 +67,11 @@ export function RightSidebarGeneric<T>({
   const handleEdit = useCallback(() => {
     if (item && onEdit) {
       onEdit(item);
-      closeSidebar();
+      if (closeOnEdit) {
+        closeSidebar();
+      }
     }
-  }, [item, onEdit, closeSidebar]);
+  }, [item, onEdit, closeOnEdit, closeSidebar]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (item && onDelete) {

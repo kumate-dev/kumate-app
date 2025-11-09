@@ -109,7 +109,7 @@ export default function PaneConfigMaps({
         deleting={deleting}
       />
     ),
-    [updating, deleting, contextName]
+    [updating, deleting, onUpdate, contextName]
   );
 
   return (

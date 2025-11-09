@@ -1,11 +1,8 @@
-use crate::constants::helm_repos::HELM_REPOS;
 use crate::manager::k8s::client::K8sClient;
 use crate::types::event::EventType;
 use futures_util::{Stream, StreamExt};
 use k8s_openapi::api::core::v1::{ConfigMap, Secret};
 use kube::api::{Api, ListParams, WatchEvent, WatchParams};
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::pin::Pin;
@@ -23,7 +20,6 @@ impl HelmManager {
             return Self::helm_cli_list_releases(&context_name, namespaces).await;
         }
 
-        // Fallback: scan Secrets/ConfigMaps via Kubernetes API
         let client = K8sClient::for_context(&context_name).await?;
         let use_all = namespaces
             .as_ref()
@@ -140,69 +136,427 @@ impl HelmManager {
         Ok(results)
     }
 
-    pub async fn list_charts(_context_name: String) -> Result<Vec<Value>, String> {
-        #[derive(Debug, Deserialize, Serialize)]
-        struct ChartVersion {
-            #[serde(rename = "version")]
-            chart_version: String,
-            #[serde(rename = "appVersion")]
-            app_version: Option<String>,
-            description: Option<String>,
-            urls: Option<Vec<String>>,
-        }
+    pub async fn get_values(
+        context_name: String,
+        namespace: Option<String>,
+        release_name: String,
+    ) -> Result<String, String> {
+        let helm_bin = Self::resolve_helm_bin()
+            .await
+            .ok_or_else(|| "Helm CLI is not available; get values requires Helm".to_string())?;
 
-        #[derive(Debug, Deserialize)]
-        struct IndexYaml {
-            entries: HashMap<String, Vec<ChartVersion>>,
-        }
-
-        let client = Client::builder()
-            .user_agent("kumate/0.1")
-            .build()
-            .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
-
-        let mut results: Vec<Value> = Vec::new();
-        for repo in HELM_REPOS.iter() {
-            let base = repo.trim_end_matches('/');
-            let url = format!("{}/index.yaml", base);
-            let resp = client
-                .get(&url)
-                .send()
-                .await
-                .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
-            if !resp.status().is_success() {
-                continue;
+        // Resolve namespace if not provided
+        let ns_hint = namespace.as_ref().map(|s| s.trim()).and_then(|s| {
+            let lower = s.to_lowercase();
+            let invalid = ["*", "all", "all namespaces", "all_namespaces"];
+            if s.is_empty() || invalid.contains(&lower.as_str()) {
+                None
+            } else {
+                Some(s)
             }
-            let bytes = resp.bytes().await.map_err(|e| format!("Failed to read {}: {}", url, e))?;
-            let index: IndexYaml = serde_yaml::from_slice(&bytes)
-                .map_err(|e| format!("Failed to parse {}: {}", url, e))?;
+        });
+        let ns_for_rel = if ns_hint.is_some() {
+            ns_hint.map(|s| s.to_string())
+        } else {
+            // Try to resolve from helm list -A
+            if let Ok(items) = Self::helm_cli_list_releases(&context_name, None).await {
+                items.into_iter().find_map(|item| {
+                    let n = item.get("name").and_then(|x| x.as_str()).unwrap_or("");
+                    if n == release_name {
+                        item.get("namespace").and_then(|x| x.as_str()).map(|s| s.to_string())
+                    } else {
+                        None
+                    }
+                })
+            } else {
+                None
+            }
+        };
 
-            for (name, versions) in index.entries.into_iter() {
-                for v in versions.into_iter() {
-                    let urls = v
-                        .urls
-                        .unwrap_or_default()
-                        .into_iter()
-                        .map(|u| {
-                            if u.starts_with("http://") || u.starts_with("https://") {
-                                u
-                            } else {
-                                format!("{}/{}", base, u)
+        let mut cmd = Command::new(&helm_bin);
+        cmd.arg("get").arg("values").arg(&release_name).arg("--all").arg("-o").arg("yaml");
+        if let Some(ns) = ns_for_rel.as_ref() {
+            cmd.arg("--namespace").arg(ns);
+        }
+        if !context_name.trim().is_empty() {
+            cmd.arg("--kube-context").arg(&context_name);
+        }
+
+        match cmd.output().await {
+            Ok(out) if out.status.success() => Ok(String::from_utf8_lossy(&out.stdout).to_string()),
+            Ok(out) => {
+                let stderr = String::from_utf8_lossy(&out.stderr);
+                Err(format!("helm get values failed: {}", stderr.trim()))
+            }
+            Err(e) => Err(format!("failed to run helm get values: {}", e)),
+        }
+    }
+
+    pub async fn get_history(
+        context_name: String,
+        namespace: Option<String>,
+        release_name: String,
+    ) -> Result<Vec<Value>, String> {
+        let helm_bin = Self::resolve_helm_bin()
+            .await
+            .ok_or_else(|| "Helm CLI is not available; history requires Helm".to_string())?;
+
+        // Resolve namespace similarly
+        let ns_hint = namespace.as_ref().map(|s| s.trim()).and_then(|s| {
+            let lower = s.to_lowercase();
+            let invalid = ["*", "all", "all namespaces", "all_namespaces"];
+            if s.is_empty() || invalid.contains(&lower.as_str()) {
+                None
+            } else {
+                Some(s)
+            }
+        });
+        let ns_for_rel = if ns_hint.is_some() {
+            ns_hint.map(|s| s.to_string())
+        } else {
+            if let Ok(items) = Self::helm_cli_list_releases(&context_name, None).await {
+                items.into_iter().find_map(|item| {
+                    let n = item.get("name").and_then(|x| x.as_str()).unwrap_or("");
+                    if n == release_name {
+                        item.get("namespace").and_then(|x| x.as_str()).map(|s| s.to_string())
+                    } else {
+                        None
+                    }
+                })
+            } else {
+                None
+            }
+        };
+
+        let mut cmd = Command::new(&helm_bin);
+        cmd.arg("history").arg(&release_name).arg("-o").arg("json");
+        if let Some(ns) = ns_for_rel.as_ref() {
+            cmd.arg("--namespace").arg(ns);
+        }
+        if !context_name.trim().is_empty() {
+            cmd.arg("--kube-context").arg(&context_name);
+        }
+        let out = cmd.output().await.map_err(|e| format!("Failed to run helm history: {}", e))?;
+        if !out.status.success() {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            return Err(format!("helm history failed: {}", stderr.trim()));
+        }
+        let v: Value = serde_json::from_slice(&out.stdout)
+            .map_err(|e| format!("Failed to parse helm history json: {}", e))?;
+        if let Some(arr) = v.as_array() {
+            Ok(arr.clone())
+        } else {
+            Ok(vec![])
+        }
+    }
+
+    pub async fn upgrade_release(
+        context_name: String,
+        namespace: Option<String>,
+        release_name: String,
+        chart: Option<String>,
+        values: Option<Value>,
+        reuse_values: bool,
+        version: Option<String>,
+    ) -> Result<String, String> {
+        use tokio::fs::File;
+        use tokio::io::AsyncWriteExt;
+
+        let helm_bin = Self::resolve_helm_bin()
+            .await
+            .ok_or_else(|| "Helm CLI is not available; upgrade requires Helm".to_string())?;
+
+        // Resolve namespace and current chart
+        let ns_hint = namespace.as_ref().map(|s| s.trim()).and_then(|s| {
+            let lower = s.to_lowercase();
+            let invalid = ["*", "all", "all namespaces", "all_namespaces"];
+            if s.is_empty() || invalid.contains(&lower.as_str()) {
+                None
+            } else {
+                Some(s)
+            }
+        });
+        let mut target_ns: Option<String> = ns_hint.map(|s| s.to_string());
+        let mut current_chart_name: Option<String> = None;
+        if target_ns.is_none() || chart.is_none() {
+            if let Ok(items) = Self::helm_cli_list_releases(&context_name, None).await {
+                for item in items.into_iter() {
+                    let n = item.get("name").and_then(|x| x.as_str()).unwrap_or("");
+                    if n == release_name {
+                        if target_ns.is_none() {
+                            target_ns = item
+                                .get("namespace")
+                                .and_then(|x| x.as_str())
+                                .map(|s| s.to_string());
+                        }
+                        if current_chart_name.is_none() {
+                            if let Some(c) = item.get("chart").and_then(|x| x.as_str()) {
+                                // chart like "fluent-bit-0.21.6" => name before last dash
+                                let parts: Vec<&str> = c.split('-').collect();
+                                if parts.len() > 1 {
+                                    current_chart_name = Some(parts[..parts.len() - 1].join("-"));
+                                } else {
+                                    current_chart_name = Some(c.to_string());
+                                }
                             }
-                        })
-                        .collect::<Vec<_>>();
-                    results.push(serde_json::json!({
-                        "name": name,
-                        "chart_version": v.chart_version,
-                        "app_version": v.app_version,
-                        "description": v.description,
-                        "urls": urls,
-                    }));
+                        }
+                        break;
+                    }
                 }
             }
         }
 
+        let chart_ref = chart.or(current_chart_name).ok_or_else(|| {
+            "Missing chart reference; please provide chart (e.g., repo/chart) for upgrade"
+                .to_string()
+        })?;
+
+        let mut chart_arg = chart_ref.clone();
+        let needs_resolution = !chart_arg.starts_with("http://")
+            && !chart_arg.starts_with("https://")
+            && !chart_arg.starts_with("oci://")
+            && !chart_arg.contains('/');
+        if needs_resolution {
+            // Resolve bare chart name via user's Helm repos only; do not use any hard-coded repositories.
+            match Self::helm_search_repo_chart(&helm_bin, &chart_arg, version.as_ref()).await {
+                Ok(Some(repo_chart)) => {
+                    chart_arg = repo_chart;
+                }
+                Ok(None) => {
+                    return Err(format!(
+                        "Unable to resolve chart '{}'. Please specify repo/chart (e.g., metrics-server/metrics-server) or add the repo via 'helm repo add'.",
+                        chart_arg
+                    ));
+                }
+                Err(e) => return Err(e),
+            }
+        }
+
+        // Prepare command
+        let mut cmd = Command::new(&helm_bin);
+        cmd.arg("upgrade");
+        cmd.arg(&release_name);
+        cmd.arg(&chart_arg);
+        if let Some(ns) = target_ns.as_ref() {
+            cmd.arg("--namespace").arg(ns);
+        }
+        if !context_name.trim().is_empty() {
+            cmd.arg("--kube-context").arg(&context_name);
+        }
+        if reuse_values {
+            cmd.arg("--reuse-values");
+        }
+        if let Some(ver) = version.as_ref() {
+            if !ver.trim().is_empty() {
+                cmd.arg("--version").arg(ver);
+            }
+        }
+
+        // If values provided, write to a temp file and use -f
+        let mut tmp_path: Option<std::path::PathBuf> = None;
+        if let Some(v) = values.as_ref() {
+            let sanitized_v = Self::expand_dotted_keys(v);
+            let yaml_text = serde_yaml::to_string(&sanitized_v)
+                .map_err(|e| format!("Failed to encode values to YAML: {}", e))?;
+            let dir = std::env::temp_dir();
+            let file_path = dir.join(format!("kumate-helm-values-{}.yaml", release_name));
+            let mut file = File::create(&file_path)
+                .await
+                .map_err(|e| format!("Failed to create temp values file: {}", e))?;
+            file.write_all(yaml_text.as_bytes())
+                .await
+                .map_err(|e| format!("Failed to write temp values file: {}", e))?;
+            tmp_path = Some(file_path.clone());
+            cmd.arg("-f").arg(file_path);
+        }
+
+        println!("Running helm upgrade command: {:?}", cmd);
+
+        let out = cmd.output().await.map_err(|e| format!("Failed to run helm upgrade: {}", e))?;
+        if out.status.success() {
+            // Cleanup temp file
+            if let Some(p) = tmp_path.as_ref() {
+                let _ = tokio::fs::remove_file(p).await;
+            }
+            Ok("Upgrade successful".to_string())
+        } else {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            if let Some(p) = tmp_path.as_ref() {
+                let _ = tokio::fs::remove_file(p).await;
+            }
+            Err(format!("helm upgrade failed: {}", stderr.trim()))
+        }
+    }
+
+    pub async fn rollback_release(
+        context_name: String,
+        namespace: Option<String>,
+        release_name: String,
+        revision: i32,
+    ) -> Result<String, String> {
+        let helm_bin = Self::resolve_helm_bin()
+            .await
+            .ok_or_else(|| "Helm CLI is not available; rollback requires Helm".to_string())?;
+
+        // Resolve namespace
+        let ns_hint = namespace.as_ref().map(|s| s.trim()).and_then(|s| {
+            let lower = s.to_lowercase();
+            let invalid = ["*", "all", "all namespaces", "all_namespaces"];
+            if s.is_empty() || invalid.contains(&lower.as_str()) {
+                None
+            } else {
+                Some(s)
+            }
+        });
+        let mut target_ns: Option<String> = ns_hint.map(|s| s.to_string());
+        if target_ns.is_none() {
+            if let Ok(items) = Self::helm_cli_list_releases(&context_name, None).await {
+                target_ns = items.into_iter().find_map(|item| {
+                    let n = item.get("name").and_then(|x| x.as_str()).unwrap_or("");
+                    if n == release_name {
+                        item.get("namespace").and_then(|x| x.as_str()).map(|s| s.to_string())
+                    } else {
+                        None
+                    }
+                });
+            }
+        }
+
+        let mut cmd = Command::new(&helm_bin);
+        cmd.arg("rollback").arg(&release_name).arg(revision.to_string());
+        if let Some(ns) = target_ns.as_ref() {
+            cmd.arg("--namespace").arg(ns);
+        }
+        if !context_name.trim().is_empty() {
+            cmd.arg("--kube-context").arg(&context_name);
+        }
+
+        let out = cmd.output().await.map_err(|e| format!("Failed to run helm rollback: {}", e))?;
+        if out.status.success() {
+            Ok("Rollback successful".to_string())
+        } else {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            Err(format!("helm rollback failed: {}", stderr.trim()))
+        }
+    }
+
+    pub async fn list_charts(_context_name: String) -> Result<Vec<Value>, String> {
+        // Use Helm CLI to list charts from user's configured repositories. No hard-coded repos.
+        let helm_bin = Self::resolve_helm_bin()
+            .await
+            .ok_or_else(|| "Helm CLI is not available; list charts requires Helm".to_string())?;
+
+        let out = Command::new(&helm_bin)
+            .arg("search")
+            .arg("repo")
+            .arg("-o")
+            .arg("json")
+            .output()
+            .await
+            .map_err(|e| format!("Failed to run 'helm search repo': {}", e))?;
+        if !out.status.success() {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            return Err(format!("helm search repo failed: {}", stderr.trim()));
+        }
+
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        let v: Value = serde_json::from_str(stdout.trim())
+            .map_err(|e| format!("Failed to parse 'helm search repo' JSON: {}", e))?;
+        let mut results: Vec<Value> = Vec::new();
+        if let Some(arr) = v.as_array() {
+            for item in arr.iter() {
+                let name = item.get("name").and_then(|x| x.as_str()).unwrap_or(""); // repo/chart
+                let chart_version = item.get("version").and_then(|x| x.as_str()).unwrap_or("");
+                let app_version = item.get("app_version").and_then(|x| x.as_str());
+                let description = item.get("description").and_then(|x| x.as_str());
+                // Provide a consumable reference in urls with the repo/chart string
+                let urls = vec![name.to_string()];
+                results.push(serde_json::json!({
+                    "name": name,
+                    "chart_version": chart_version,
+                    "app_version": app_version,
+                    "description": description,
+                    "urls": urls,
+                }));
+            }
+        }
         Ok(results)
+    }
+
+    // Try to resolve a chart reference using the user's local Helm repositories.
+    // Returns a repo/chart string like "metrics-server/metrics-server" when found.
+    async fn helm_search_repo_chart(
+        helm_bin: &str,
+        chart_name: &str,
+        version: Option<&String>,
+    ) -> Result<Option<String>, String> {
+        // Query local Helm repos for chart candidates
+        let mut cmd = Command::new(helm_bin);
+        cmd.arg("search").arg("repo").arg(chart_name).arg("-o").arg("json").arg("--versions");
+        let out =
+            cmd.output().await.map_err(|e| format!("Failed to run 'helm search repo': {}", e))?;
+        if !out.status.success() {
+            // If search fails (e.g., no repos), just return None
+            return Ok(None);
+        }
+
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        let results: Value = serde_json::from_str(stdout.trim())
+            .map_err(|e| format!("Failed to parse 'helm search repo' JSON: {}", e))?;
+        let arr = match results.as_array() {
+            Some(a) => a,
+            None => return Ok(None),
+        };
+
+        // Choose best candidate based on scoring:
+        //  - Highest: exact pattern "<chart_name>/<chart_name>"
+        //  - Medium: name ends with "/<chart_name>"
+        //  - Low: name contains chart_name
+        // Within the best score tier, prefer matching version if provided, otherwise pick the first.
+        #[derive(Clone)]
+        struct Candidate {
+            name: String,
+            version: String,
+            score: i32,
+        }
+        let mut candidates: Vec<Candidate> = Vec::new();
+        for item in arr.iter() {
+            let name = item.get("name").and_then(|x| x.as_str()).unwrap_or("");
+            let ver = item.get("version").and_then(|x| x.as_str()).unwrap_or("");
+            let exact = name == format!("{}/{}", chart_name, chart_name);
+            let ends = name.ends_with(&format!("/{chart_name}"));
+            let contains = name.contains(chart_name);
+            let score = if exact {
+                3
+            } else if ends {
+                2
+            } else if contains {
+                1
+            } else {
+                0
+            };
+            if score > 0 {
+                candidates.push(Candidate {
+                    name: name.to_string(),
+                    version: ver.to_string(),
+                    score,
+                });
+            }
+        }
+        if candidates.is_empty() {
+            return Ok(None);
+        }
+        // Determine the highest score tier
+        let max_score = candidates.iter().map(|c| c.score).max().unwrap_or(1);
+        let mut best: Vec<Candidate> =
+            candidates.into_iter().filter(|c| c.score == max_score).collect();
+        if let Some(want_ver) = version {
+            if let Some(found) = best.iter().find(|c| &c.version == want_ver) {
+                return Ok(Some(found.name.clone()));
+            }
+        }
+        // Fallback: pick the first from the best tier
+        Ok(best.first().map(|c| c.name.clone()))
     }
 
     pub async fn watch_releases(
@@ -533,6 +887,88 @@ impl HelmManager {
                     "namespace": namespace,
                 });
                 items.push(obj);
+            }
+        }
+    }
+
+    // Expand keys containing dots into nested maps for YAML values files.
+    // Example: {"metrics-server.hostNetwork": true} -> {"metrics-server": {"hostNetwork": true}}
+    fn expand_dotted_keys(value: &Value) -> Value {
+        match value {
+            Value::Object(obj) => {
+                let mut new_map: serde_json::Map<String, Value> = serde_json::Map::new();
+                for (k, v) in obj.iter() {
+                    let expanded_v = Self::expand_dotted_keys(v);
+                    if k.contains('.') {
+                        let parts: Vec<&str> = k.split('.').collect();
+                        Self::insert_nested(&mut new_map, &parts, expanded_v);
+                    } else {
+                        if let Some(existing) = new_map.get_mut(k) {
+                            if existing.is_object() && expanded_v.is_object() {
+                                let existing_obj = existing.as_object_mut().unwrap();
+                                let expanded_obj = expanded_v.as_object().unwrap();
+                                Self::merge_maps(existing_obj, expanded_obj);
+                            } else {
+                                *existing = expanded_v;
+                            }
+                        } else {
+                            new_map.insert(k.clone(), expanded_v);
+                        }
+                    }
+                }
+                Value::Object(new_map)
+            }
+            Value::Array(arr) => {
+                Value::Array(arr.iter().map(|x| Self::expand_dotted_keys(x)).collect())
+            }
+            _ => value.clone(),
+        }
+    }
+
+    fn insert_nested(map: &mut serde_json::Map<String, Value>, parts: &[&str], val: Value) {
+        if parts.is_empty() {
+            return;
+        }
+        if parts.len() == 1 {
+            let key = parts[0].to_string();
+            if let Some(existing) = map.get_mut(&key) {
+                if existing.is_object() && val.is_object() {
+                    let existing_obj = existing.as_object_mut().unwrap();
+                    let val_obj = val.as_object().unwrap();
+                    Self::merge_maps(existing_obj, val_obj);
+                } else {
+                    *existing = val;
+                }
+            } else {
+                map.insert(key, val);
+            }
+            return;
+        }
+        let head = parts[0].to_string();
+        let rest = &parts[1..];
+        let entry = map.entry(head).or_insert(Value::Object(serde_json::Map::new()));
+        if !entry.is_object() {
+            *entry = Value::Object(serde_json::Map::new());
+        }
+        let sub_map = entry.as_object_mut().unwrap();
+        Self::insert_nested(sub_map, rest, val);
+    }
+
+    fn merge_maps(
+        target: &mut serde_json::Map<String, Value>,
+        src: &serde_json::Map<String, Value>,
+    ) {
+        for (k, v) in src.iter() {
+            if let Some(existing) = target.get_mut(k) {
+                if existing.is_object() && v.is_object() {
+                    let existing_obj = existing.as_object_mut().unwrap();
+                    let v_obj = v.as_object().unwrap();
+                    Self::merge_maps(existing_obj, v_obj);
+                } else {
+                    *existing = v.clone();
+                }
+            } else {
+                target.insert(k.clone(), v.clone());
             }
         }
     }

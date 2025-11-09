@@ -43,7 +43,7 @@ export function SidebarConfigMaps({
     const initial = item?.data ? { ...item.data } : {};
     kv.load(initial);
     loadedSnapshotRef.current = initial;
-  }, [item]);
+  }, [item, kv]);
 
   const editedData = kv.editedData;
 
@@ -129,7 +129,7 @@ export function SidebarConfigMaps({
 
   const renderEditableData = () => (
     <div ref={editorRef}>
-      <KeyValueEditor title="Data entries" hook={kv} saving={saving} />
+      <KeyValueEditor hook={kv} saving={saving} />
     </div>
   );
 

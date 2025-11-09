@@ -6,8 +6,11 @@ import { useListK8sResources } from '@/hooks/useListK8sResources';
 import { listHelmReleases, watchHelmReleases, uninstallHelmReleases } from '@/api/k8s/helm';
 import { PaneResourceContextProps } from '@/features/k8s/generic/components/PaneGeneric';
 import { PaneGeneric } from '@/features/k8s/generic/components/PaneGeneric';
+import { HelmSidebar } from '@/features/k8s/helmReleases/components/HelmSidebar';
 import { ColumnDef } from '@/components/common/TableHeader';
 import { Td } from '@/components/ui/table';
+import { BadgeStatus } from '@/features/k8s/generic/components/BadgeStatus';
+import { getHelmReleaseStatus } from '@/features/k8s/helmReleases/utils/helmStatus';
 import { toast } from 'sonner';
 
 type Release = {
@@ -50,7 +53,9 @@ export default function HelmReleases({ context }: PaneResourceContextProps) {
         <Td>{item.metadata?.namespace ?? item.namespace ?? ''}</Td>
         <Td>{item.revision ?? ''}</Td>
         <Td>{item.updated ?? ''}</Td>
-        <Td>{item.status ?? ''}</Td>
+        <Td>
+          <BadgeStatus status={getHelmReleaseStatus(item.status || '')} />
+        </Td>
         <Td>{item.chart ?? ''}</Td>
         <Td>{item.app_version ?? ''}</Td>
       </>
@@ -87,6 +92,14 @@ export default function HelmReleases({ context }: PaneResourceContextProps) {
       onDelete={onDelete}
       showNamespace={true}
       contextName={context?.name}
+      renderSidebar={(item, actions) => (
+        <HelmSidebar
+          item={item}
+          setItem={actions.setItem as any}
+          onDelete={actions.onDelete as any}
+          contextName={context?.name}
+        />
+      )}
     />
   );
 }
