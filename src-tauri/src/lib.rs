@@ -18,6 +18,7 @@ use crate::commands::cluster_role_bindings;
 use crate::commands::cluster_roles;
 use crate::commands::common;
 use crate::commands::config_maps;
+use crate::commands::connections;
 use crate::commands::contexts;
 use crate::commands::crd_definitions;
 use crate::commands::cron_jobs;
@@ -55,6 +56,8 @@ use crate::commands::services;
 use crate::commands::stateful_sets;
 use crate::commands::storage_classes;
 use crate::commands::validating_webhooks;
+use crate::commands::warmup;
+use crate::utils::connections::ConnectionsManager;
 use crate::utils::watcher::WatchManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -90,14 +93,19 @@ pub fn run() {
 
     builder = builder
         .manage(WatchManager::default())
+        .manage(ConnectionsManager::default())
         .manage(crate::utils::exec::ExecManager::default())
         .manage(crate::utils::port_forward::PortForwardManager::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            connections::set_context_connection,
+            connections::get_context_connections,
+            connections::get_context_connection,
             contexts::import_kube_contexts,
             contexts::list_contexts,
+            warmup::warmup_context,
             common::unwatch,
             events::list_events,
             nodes::list_nodes,

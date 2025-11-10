@@ -2,6 +2,16 @@ import React, { useMemo, useCallback } from 'react';
 import { PageKey } from '@/types/pageKey';
 import { K8sContext } from '@/api/k8s/contexts';
 
+// Generate a pleasant, consistent HSL color from a string (cluster name)
+const stringToHslColor = (str: string, s = 60, l = 50): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, ${s}%, ${l}%)`;
+};
+
 export interface PageItem {
   key?: PageKey;
   label?: string;
@@ -125,6 +135,12 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
   page,
   onSelectPage,
 }) => {
+  const [connMap, setConnMap] = React.useState<Record<string, boolean>>({});
+  const [menu, setMenu] = React.useState<
+    { open: true; x: number; y: number; name: string } | { open: false }
+  >({ open: false });
+  // Expand/Collapse hotbar: when expanded, show cluster name next to avatar
+  const [expanded, setExpanded] = React.useState<boolean>(false);
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
 
@@ -177,14 +193,56 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
     [contexts]
   );
 
+  React.useEffect(() => {
+    // Fetch current connection statuses; default to connected when not present
+    import('@/api/k8s/contexts').then(({ getContextConnections }) => {
+      getContextConnections()
+        .then((items) => {
+          const m: Record<string, boolean> = {};
+          for (const it of items) m[it.name] = it.connected;
+          setConnMap(m);
+        })
+        .catch(() => {
+          // ignore errors, keep defaults
+        });
+    });
+  }, []);
+
   const handleClusterSelect = useCallback(
     (clusterName: string) => {
       const context = contexts.find((ctx) => ctx.name === clusterName);
       onSelectContext?.(context);
+      // Fire a background warmup when switching cluster selection
+      if (clusterName) {
+        import('@/api/k8s/warmup')
+          .then(({ warmupContext }) => warmupContext(clusterName))
+          .catch(() => {});
+      }
       onSelectPage?.('overview');
     },
     [contexts, onSelectContext, onSelectPage]
   );
+
+  const handleClusterContextMenu = useCallback((e: React.MouseEvent, clusterName: string) => {
+    e.preventDefault();
+    setMenu({ open: true as const, x: e.clientX, y: e.clientY, name: clusterName });
+  }, []);
+
+  const closeMenu = useCallback(() => setMenu({ open: false }), []);
+
+  const setConnected = useCallback(async (name: string, connected: boolean) => {
+    try {
+      const { setContextConnection } = await import('@/api/k8s/contexts');
+      await setContextConnection(name, connected);
+      setConnMap((prev) => ({ ...prev, [name]: connected }));
+
+      // Proactively warm up the context after successful connection to reduce initial load time
+      if (connected) {
+        // Fire and forget; we don't block the UI on warmup
+        import('@/api/k8s/warmup').then(({ warmupContext }) => warmupContext(name)).catch(() => {});
+      }
+    } catch {}
+  }, []);
 
   const handlePageSelect = useCallback(
     (pageKey: PageKey) => {
@@ -312,26 +370,100 @@ export const LeftSidebarMenu: React.FC<SidebarMenuProps> = ({
   );
 
   return (
-    <aside className="flex w-64 border-r border-white/10 bg-neutral-950 text-white">
+    <aside className={`flex w-64 border-r border-white/10 bg-neutral-950 text-white`}>
       <div className="flex w-10 flex-col items-center gap-2 border-r border-white/10 bg-neutral-900/30 py-2">
         {hotbarClusters.map((cluster) => {
-          const active = selected?.name === cluster.name;
           const initial = (cluster.name?.[0] || '?').toUpperCase();
+          const connected = connMap[cluster.name] ?? true;
 
           return (
             <button
               key={cluster.name}
-              className={`flex h-8 w-8 items-center justify-center rounded hover:bg-white/10 ${
-                active ? 'bg-white/10' : ''
-              }`}
+              className="m-0 flex h-10 w-10 items-center justify-center border-none bg-transparent p-0 hover:bg-transparent focus:ring-0 focus:outline-none"
               onClick={() => handleClusterSelect(cluster.name)}
+              onContextMenu={(e) => handleClusterContextMenu(e, cluster.name)}
               aria-label={cluster.name}
               title={cluster.name}
             >
-              <span className="text-xs font-semibold">{initial}</span>
+              <span
+                className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${connected ? '' : 'opacity-50'}`}
+                style={{ background: stringToHslColor(cluster.name, 65, 45) }}
+              >
+                {initial}
+                <span
+                  className="absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full ring-1 ring-black/40"
+                  style={{ backgroundColor: connected ? '#22c55e' : '#ef4444' }}
+                />
+              </span>
             </button>
           );
         })}
+        <div className="mt-auto flex items-center justify-center px-0">
+          <button
+            className="flex h-8 w-full items-center justify-center bg-transparent text-xs text-white/60 hover:text-white"
+            onClick={() => setExpanded((v) => !v)}
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+            title={expanded ? 'Collapse' : 'Expand'}
+          >
+            <span className={`transition-transform ${expanded ? 'rotate-180' : ''}`}>›</span>
+          </button>
+        </div>
+        {menu.open && (
+          <div
+            className="fixed z-50 min-w-40 rounded border border-white/10 bg-neutral-900 p-1 text-sm shadow-lg"
+            style={{ top: `${menu.y}px`, left: `${menu.x}px` }}
+            onMouseLeave={closeMenu}
+          >
+            {(() => {
+              const connected = connMap[menu.name] ?? true;
+              return (
+                <ul>
+                  {!connected && (
+                    <li>
+                      <button
+                        className="w-full rounded px-3 py-2 text-left hover:bg-white/10"
+                        onClick={async () => {
+                          await setConnected(menu.name, true);
+                          closeMenu();
+                        }}
+                      >
+                        Connect
+                      </button>
+                    </li>
+                  )}
+                  {connected && (
+                    <>
+                      <li>
+                        <button
+                          className="w-full rounded px-3 py-2 text-left hover:bg-white/10"
+                          onClick={async () => {
+                            // Reconnect: briefly disconnect then connect
+                            await setConnected(menu.name, false);
+                            await setConnected(menu.name, true);
+                            closeMenu();
+                          }}
+                        >
+                          Reconnect
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="w-full rounded px-3 py-2 text-left text-red-300 hover:bg-white/10"
+                          onClick={async () => {
+                            await setConnected(menu.name, false);
+                            closeMenu();
+                          }}
+                        >
+                          Disconnect
+                        </button>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col overflow-auto">{groups.map(renderGroup)}</div>

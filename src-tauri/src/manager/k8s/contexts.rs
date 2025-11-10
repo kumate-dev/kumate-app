@@ -65,6 +65,42 @@ pub struct KubeConfigOut {
 pub struct K8sContexts;
 
 impl K8sContexts {
+    // Recursively collect kubeconfig file paths inside ~/.kube
+    // We consider files named "config" or ending with .yaml/.yml
+    async fn collect_kubeconfig_paths(root: &PathBuf) -> Result<Vec<PathBuf>, String> {
+        let mut out: Vec<PathBuf> = Vec::new();
+        let mut stack: Vec<PathBuf> = vec![root.clone()];
+
+        while let Some(dir) = stack.pop() {
+            let mut rd: ReadDir = match read_dir(&dir).await {
+                Ok(r) => r,
+                Err(_) => continue, // skip unreadable directories
+            };
+
+            while let Some(entry) = rd.next_entry().await.map_err(|e| e.to_string())? {
+                let ft: FileType = entry.file_type().await.map_err(|e| e.to_string())?;
+                let path: PathBuf = entry.path();
+                if ft.is_dir() {
+                    stack.push(path);
+                    continue;
+                }
+                if ft.is_file() {
+                    let fname: &str = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                    // Support kubeconfig variants commonly stored under ~/.kube
+                    // e.g. config, config.local, config.ndd001, config.* as well as *.yaml/*.yml
+                    if fname == "config"
+                        || fname.starts_with("config.")
+                        || fname.ends_with(".yaml")
+                        || fname.ends_with(".yml")
+                    {
+                        out.push(path);
+                    }
+                }
+            }
+        }
+
+        Ok(out)
+    }
     pub async fn get_context_secrets(name: &str) -> Result<(String, String), String> {
         let crypto: Crypto = Crypto::init().map_err(|e| e.to_string())?;
         let kc_key = format!("ctx:{}:kubeconfig", name);
@@ -103,19 +139,11 @@ impl K8sContexts {
     async fn build_kubeconfig_from_home(name: &str) -> Result<String, String> {
         let home = dirs::home_dir().ok_or_else(|| "home dir not found".to_string())?;
         let kube_dir = home.join(".kube");
-        let mut rd: ReadDir =
-            read_dir(&kube_dir).await.map_err(|_| "~/.kube not found".to_string())?;
+        let paths = Self::collect_kubeconfig_paths(&kube_dir)
+            .await
+            .map_err(|_| "~/.kube not found".to_string())?;
 
-        while let Some(entry) = rd.next_entry().await.map_err(|e| e.to_string())? {
-            let ft: FileType = entry.file_type().await.map_err(|e| e.to_string())?;
-            if !ft.is_file() {
-                continue;
-            }
-            let path = entry.path();
-            let fname = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-            if !(fname == "config" || fname.ends_with(".yaml") || fname.ends_with(".yml")) {
-                continue;
-            }
+        for path in paths.into_iter() {
             let content = match tokio::fs::read_to_string(&path).await {
                 Ok(s) => s,
                 Err(_) => continue,
@@ -214,23 +242,14 @@ impl K8sContexts {
             .into_iter()
             .map(|c| c.name)
             .collect();
-        let mut rd: ReadDir = match read_dir(&kube_dir).await {
-            Ok(r) => r,
+
+        let paths = match Self::collect_kubeconfig_paths(&kube_dir).await {
+            Ok(v) => v,
             Err(_) => return Ok(0),
         };
         let crypto: Option<Crypto> = Crypto::init().ok();
 
-        while let Some(entry) = rd.next_entry().await.map_err(|e| e.to_string())? {
-            let ft: FileType = entry.file_type().await.map_err(|e| e.to_string())?;
-            if !ft.is_file() {
-                continue;
-            }
-            let path: PathBuf = entry.path();
-            let fname: &str = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-            if !(fname == "config" || fname.ends_with(".yaml") || fname.ends_with(".yml")) {
-                continue;
-            }
-
+        for path in paths.into_iter() {
             let content: String = match tokio::fs::read_to_string(&path).await {
                 Ok(s) => s,
                 Err(_) => continue,

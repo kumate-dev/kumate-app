@@ -80,6 +80,12 @@ export default function Home() {
       setError('');
       setLoading(true);
       try {
+        // Always attempt to import kube contexts on app load.
+        // Backend will skip duplicates, and we now scan ~/.kube recursively.
+        try {
+          await importKubeContexts();
+        } catch {}
+
         let list: K8sContext[] = [];
         try {
           list = (await listContexts()) || [];
@@ -87,15 +93,6 @@ export default function Home() {
           setContexts([]);
           setSelected(null);
           return;
-        }
-
-        if (list.length === 0) {
-          try {
-            await importKubeContexts();
-          } catch {}
-          try {
-            list = (await listContexts()) || [];
-          } catch {}
         }
         setContexts(list);
 

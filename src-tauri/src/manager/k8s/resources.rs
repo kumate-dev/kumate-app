@@ -211,14 +211,36 @@ where
         Pin<Box<dyn futures_util::Stream<Item = Result<WatchEvent<T>, kube::Error>> + Send>>,
         String,
     > {
-        let wp: WatchParams = WatchParams {
+        // Try to request initial events on watch for better UX.
+        // Some clusters (or Kubernetes versions without the WatchList feature gate) reject this.
+        // In that case, gracefully fall back to a regular watch without initial events.
+        let with_initial: WatchParams = WatchParams {
             send_initial_events: true,
             ..Default::default()
         };
 
-        let stream: Pin<Box<dyn Stream<Item = Result<WatchEvent<T>, kube::Error>> + Send>> =
-            api.watch(&wp, "").await.map_err(|e| e.to_string())?.boxed();
-        Ok(stream)
+        match api.watch(&with_initial, "").await {
+            Ok(stream) => Ok(stream.boxed()),
+            Err(err) => {
+                // Detect "sendInitialEvents is forbidden" style errors and retry without initial events
+                let needs_fallback = match &err {
+                    kube::Error::Api(ae) => {
+                        let m = ae.message.to_lowercase();
+                        m.contains("sendinitialevents")
+                            || m.contains("forbidden")
+                            || ae.reason == "Invalid"
+                    }
+                    _ => false,
+                };
+
+                if needs_fallback {
+                    let default_wp: WatchParams = Default::default();
+                    api.watch(&default_wp, "").await.map(|s| s.boxed()).map_err(|e| e.to_string())
+                } else {
+                    Err(err.to_string())
+                }
+            }
+        }
     }
 
     fn spawn_watch(

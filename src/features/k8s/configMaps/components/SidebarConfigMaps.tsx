@@ -120,8 +120,6 @@ export function SidebarConfigMaps({
 
           <TableYamlRow label="Labels" data={cm.metadata?.labels} maxWidthClass="lg" />
           <TableYamlRow label="Annotations" data={cm.metadata?.annotations} maxWidthClass="xl" />
-
-          <TableYamlRow label="Binary Data" data={cm.binaryData} maxWidthClass="xl" />
         </Tbody>
       </Table>
     </div>

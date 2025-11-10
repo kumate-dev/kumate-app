@@ -7,6 +7,7 @@ use kube::core::NamespaceResourceScope;
 use kube::{Api, Client, Resource};
 
 use crate::manager::k8s::contexts::K8sContexts;
+use crate::utils::connections::ConnectionsManager;
 
 pub struct K8sClient;
 
@@ -29,6 +30,12 @@ impl K8sClient {
     }
 
     pub async fn for_context(name: &str) -> Result<Client, String> {
+        // Check connection gating first; if disconnected, block all requests to this cluster
+        let cm = ConnectionsManager::global();
+        if !cm.is_connected(name).await {
+            return Err("cluster is disconnected".to_string());
+        }
+
         let (kubeconfig, _token) = K8sContexts::get_context_secrets(name).await?;
 
         let sanitized: String = Self::sanitize_yaml(&kubeconfig);

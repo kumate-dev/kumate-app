@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { UnlistenFn } from '@tauri-apps/api/event';
 import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES } from '@/constants/k8s';
 import { WatchEvent } from '@/types/k8sEvent';
-import { unwatch } from '@/api/k8s/unwatch';
+import { getResourceCache, setResourceCache } from '@/store/k8sResourceCache';
 
 export function useListK8sResources<T extends { metadata?: { name?: string; namespace?: string } }>(
   listFn: (params: { name: string; namespaces?: string[] }) => Promise<T[]>,
@@ -20,6 +20,7 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
 
   const listFnRef = useRef(listFn);
   const watchFnRef = useRef(watchFn);
+  const cacheKeyRef = useRef<string | null>(null);
   listFnRef.current = listFn;
   watchFnRef.current = watchFn;
 
@@ -75,12 +76,21 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
             break;
         }
 
-        return Array.from(itemMap.values());
+        const next = Array.from(itemMap.values());
+        // Mark loading as complete once we start receiving watch events
+        setLoading(false);
+        // Update cache so revisiting the page can render instantly
+        if (cacheKeyRef.current) {
+          setResourceCache<T>(cacheKeyRef.current, next);
+        }
+        return next;
       });
     };
 
     const listResources = async (): Promise<void> => {
-      setLoading(true);
+      // If we already have cached data, avoid flipping loading to true again
+      const hasCache = cacheKeyRef.current ? !!getResourceCache<T>(cacheKeyRef.current) : false;
+      if (!hasCache) setLoading(true);
       setError('');
 
       try {
@@ -90,7 +100,11 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
         );
 
         if (active) {
-          setItems(dedupeResources(results || []));
+          const next = dedupeResources(results || []);
+          setItems(next);
+          if (cacheKeyRef.current) {
+            setResourceCache<T>(cacheKeyRef.current, next);
+          }
         }
       } catch (err) {
         if (active) {
@@ -103,11 +117,11 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
       }
     };
 
-    const watchResources = async (): Promise<void> => {
-      if (!watchFnRef.current) return;
+    const watchResources = async (): Promise<string | null> => {
+      if (!watchFnRef.current) return null;
 
       try {
-        const { unlisten: watchUnlisten } = await withTimeout(
+        const { eventName, unlisten: watchUnlisten } = await withTimeout(
           watchFnRef.current({
             name: clusterName,
             namespaces: nsList,
@@ -117,14 +131,24 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
         );
 
         unlisten = watchUnlisten;
+        cacheKeyRef.current = eventName;
+
+        // Prime UI from cache if available
+        const cached = getResourceCache<T>(eventName);
+        if (active && cached && cached.length > 0) {
+          setItems(cached);
+          setLoading(false);
+        }
+        return eventName;
       } catch (err) {
         console.error('Failed to start watch:', err);
+        return null;
       }
     };
 
     const executeOperations = async (): Promise<void> => {
-      await listResources();
       await watchResources();
+      void listResources();
     };
 
     executeOperations();
@@ -132,7 +156,6 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
     return () => {
       active = false;
       unlisten?.();
-      unwatch({ name: clusterName });
     };
   }, [context?.name, namespaces]);
 
