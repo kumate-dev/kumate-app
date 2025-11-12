@@ -77,16 +77,12 @@ export function SidebarIngresses({
       onDelete={onDelete as any}
       onEdit={onEdit as any}
       sections={sections}
-      eventsProps={
-        item
-          ? {
-              contextName,
-              namespace: item?.metadata?.namespace,
-              resourceKind: 'Ingress',
-              resourceName: item?.metadata?.name,
-            }
-          : undefined
-      }
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'Ingress',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       updating={updating}
       deleting={deleting}
     />

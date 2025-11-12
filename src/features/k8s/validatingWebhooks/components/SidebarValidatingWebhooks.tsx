@@ -68,15 +68,11 @@ export default function SidebarValidatingWebhooks({
       onDelete={onDelete}
       onEdit={onEdit}
       sections={sections}
-      eventsProps={
-        item
-          ? {
-              contextName,
-              resourceKind: 'ValidatingWebhookConfiguration',
-              resourceName: item?.metadata?.name,
-            }
-          : undefined
-      }
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'ValidatingWebhookConfiguration',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       updating={updating}
       deleting={deleting}
     />

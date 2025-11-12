@@ -107,6 +107,8 @@ pub fn run() {
             contexts::list_contexts,
             warmup::warmup_context,
             common::unwatch,
+            common::unwatch_context,
+            common::watchers_count,
             events::list_events,
             nodes::list_nodes,
             nodes::watch_nodes,

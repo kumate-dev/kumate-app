@@ -68,15 +68,11 @@ export default function SidebarMutatingWebhooks({
       onDelete={onDelete}
       onEdit={onEdit}
       sections={sections}
-      eventsProps={
-        item
-          ? {
-              contextName,
-              resourceKind: 'MutatingWebhookConfiguration',
-              resourceName: item?.metadata?.name,
-            }
-          : undefined
-      }
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'MutatingWebhookConfiguration',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       updating={updating}
       deleting={deleting}
     />

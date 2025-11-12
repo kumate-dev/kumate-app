@@ -97,16 +97,12 @@ export function SidebarNetworkPolicies({
       item={item}
       setItem={setItem}
       sections={sections}
-      eventsProps={
-        item
-          ? {
-              contextName,
-              namespace: item?.metadata?.namespace,
-              resourceKind: 'NetworkPolicy',
-              resourceName: item?.metadata?.name,
-            }
-          : undefined
-      }
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'NetworkPolicy',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { UnlistenFn } from '@tauri-apps/api/event';
-import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES } from '@/constants/k8s';
+import { K8S_REQUEST_TIMEOUT, ALL_NAMESPACES, K8S_RESOURCE_CACHE_TTL_MS } from '@/constants/k8s';
 import { WatchEvent } from '@/types/k8sEvent';
-import { getResourceCache, setResourceCache } from '@/store/k8sResourceCache';
+import { getResourceCache, setResourceCacheWithTTL } from '@/store/k8sResourceCache';
+import { unwatchContext } from '@/api/k8s/unwatch';
 
 export function useListK8sResources<T extends { metadata?: { name?: string; namespace?: string } }>(
   listFn: (params: { name: string; namespaces?: string[] }) => Promise<T[]>,
@@ -21,6 +22,7 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
   const listFnRef = useRef(listFn);
   const watchFnRef = useRef(watchFn);
   const cacheKeyRef = useRef<string | null>(null);
+  const prevClusterRef = useRef<string | null>(null);
   listFnRef.current = listFn;
   watchFnRef.current = watchFn;
 
@@ -28,6 +30,11 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
     if (!context?.name || !listFnRef.current) return;
 
     const clusterName = context.name;
+    // If the cluster changed, proactively unwatch all watchers for the previous cluster to prevent leaks
+    if (prevClusterRef.current && prevClusterRef.current !== clusterName) {
+      void unwatchContext({ prefix: `k8s://${prevClusterRef.current}/` });
+    }
+    prevClusterRef.current = clusterName;
     const nsList = namespaces?.includes(ALL_NAMESPACES) ? undefined : namespaces;
 
     let active = true;
@@ -81,7 +88,7 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
         setLoading(false);
         // Update cache so revisiting the page can render instantly
         if (cacheKeyRef.current) {
-          setResourceCache<T>(cacheKeyRef.current, next);
+          setResourceCacheWithTTL<T>(cacheKeyRef.current, next, K8S_RESOURCE_CACHE_TTL_MS);
         }
         return next;
       });
@@ -103,7 +110,7 @@ export function useListK8sResources<T extends { metadata?: { name?: string; name
           const next = dedupeResources(results || []);
           setItems(next);
           if (cacheKeyRef.current) {
-            setResourceCache<T>(cacheKeyRef.current, next);
+            setResourceCacheWithTTL<T>(cacheKeyRef.current, next, K8S_RESOURCE_CACHE_TTL_MS);
           }
         }
       } catch (err) {

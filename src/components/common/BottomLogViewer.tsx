@@ -10,6 +10,7 @@ import { Dropdown } from '@/components/common/Dropdown';
 import DropdownTrigger from '@/components/ui/dropdown';
 import { ButtonDownloadLog } from './ButtonDownloadLog';
 import { ButtonClear } from './ButtonClear';
+import { Spinner } from '@/components/ui/spinner';
 
 export interface LogViewerProps {
   open: boolean;
@@ -200,9 +201,9 @@ export default function BottomLogViewer({
 
         <div className="h-[calc(100%-49px)] p-4">
           <div className={logContentClass}>
-            {loading && !logs && (
-              <div className="flex h-full items-center justify-center text-neutral-500 dark:text-white/60">
-                Loading logs...
+            {(loading || (isStreaming && !logs)) && (
+              <div className="flex h-full items-center justify-center">
+                <Spinner size="md" className="text-neutral-500 dark:text-white/60" />
               </div>
             )}
 
@@ -215,7 +216,7 @@ export default function BottomLogViewer({
               </div>
             )}
 
-            {!loading && !error && !logs && (
+            {!loading && !isStreaming && !error && !logs && (
               <div className="flex h-full items-center justify-center text-neutral-500 dark:text-white/60">
                 No logs available
               </div>

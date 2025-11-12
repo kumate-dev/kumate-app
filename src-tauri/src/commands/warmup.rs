@@ -1,13 +1,10 @@
-use std::sync::Arc;
-
 use serde_json::Value;
 use tauri::AppHandle;
 
-use crate::commands::{common, deployments, namespaces, nodes, pods, services};
+use crate::commands::{deployments, namespaces, nodes, pods, services};
 use crate::utils::watcher::WatchManager;
 
 fn value_to_ns_name(v: &Value) -> Option<String> {
-    // Try typical Kubernetes object path: metadata.name
     v.get("metadata").and_then(|m| m.get("name")).and_then(|n| n.as_str()).map(|s| s.to_string())
 }
 
@@ -19,12 +16,10 @@ pub async fn warmup_context(
 ) -> Result<(), String> {
     use tokio::time::{timeout, Duration};
 
-    // 1) List namespaces first (with timeout) to choose a small subset for early watches
     let ns_list: Vec<Value> =
         match timeout(Duration::from_secs(15), namespaces::list_namespaces(name.clone())).await {
             Ok(Ok(v)) => v,
             Ok(Err(e)) => {
-                // If cannot list namespaces, still proceed to start minimal cluster-level watchers
                 eprintln!("warmup: list_namespaces error: {}", e);
                 Vec::new()
             }
@@ -46,15 +41,12 @@ pub async fn warmup_context(
         }
     }
 
-    // Add a few more namespaces to the warmup set to enhance first-navigation performance
     ns_names.retain(|n| !selected_ns.iter().any(|s| s == n));
     ns_names.sort();
     for n in ns_names.into_iter().take(4) {
         selected_ns.push(n);
     }
 
-    // 2) Start lightweight watchers so UI pages receive events promptly
-    //    We ignore errors (e.g., already watching) because warmup may be called more than once.
     let _ = namespaces::watch_namespaces(app_handle.clone(), name.clone(), state.clone()).await;
     let _ = nodes::watch_nodes(app_handle.clone(), name.clone(), state.clone()).await;
     if !selected_ns.is_empty() {

@@ -131,14 +131,14 @@ export default function BottomYamlEditor({
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
           <div className="min-w-0 truncate text-sm font-medium text-white/80">{displayTitle}</div>
           <div className="min-w-0 flex-1">{headerChildren}</div>
-          <div className="flex items-center gap-2">
-            <ButtonCancel onClick={onClose} disabled={saving} />
-            {mode !== 'view' && (
-              <ButtonSave onClick={handleSave} disabled={!canSave} loading={saving} />
-            )}
-            <ButtonExpand onClick={toggleExpand} isExpanded={isExpanded} />
-          </div>
+        <div className="flex items-center gap-2">
+          <ButtonCancel onClick={onClose} disabled={saving} />
+          {mode !== 'view' && (
+            <ButtonSave onClick={handleSave} disabled={!canSave} loading={saving} />
+          )}
+          <ButtonExpand onClick={toggleExpand} isExpanded={isExpanded} />
         </div>
+      </div>
 
         <div className="h-[calc(100%-49px)] p-4">
           <YamlEditor

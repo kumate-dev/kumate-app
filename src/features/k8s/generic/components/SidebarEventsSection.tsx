@@ -104,21 +104,15 @@ export function SidebarEventsSection({
         <Tbody>
           {loading ? (
             <Tr>
-              <Td colSpan={4} className="text-center">
-                Loading events...
-              </Td>
+              <Td colSpan={4} className="text-center">Loading events...</Td>
             </Tr>
           ) : error ? (
             <Tr>
-              <Td colSpan={4} className="text-center text-red-400">
-                {error}
-              </Td>
+              <Td colSpan={4} className="text-center text-red-400">{error}</Td>
             </Tr>
           ) : events.length === 0 ? (
             <Tr>
-              <Td colSpan={4} className="text-center">
-                No events found
-              </Td>
+              <Td colSpan={4} className="text-center">No events found</Td>
             </Tr>
           ) : (
             events.map((ev, idx) => (

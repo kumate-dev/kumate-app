@@ -12,6 +12,52 @@ use crate::utils::connections::ConnectionsManager;
 pub struct K8sClient;
 
 impl K8sClient {
+    // Ensure common locations for CLI auth plugins (e.g., aws) are on PATH.
+    // This helps when the app is launched from a GUI where PATH is limited.
+    fn ensure_exec_plugin_path_env() {
+        use std::env;
+        let mut current = env::var("PATH").unwrap_or_default();
+        // Common Homebrew and legacy locations on macOS/Linux
+        let candidates = vec![
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+        ];
+        let sep = if cfg!(windows) { ";" } else { ":" };
+
+        let mut added = false;
+        for p in candidates {
+            if !current.split(sep).any(|s| s == p) {
+                if current.is_empty() {
+                    current = p.to_string();
+                } else {
+                    current.push_str(sep);
+                    current.push_str(p);
+                }
+                added = true;
+            }
+        }
+
+        // Windows default AWS CLI install path
+        if cfg!(windows) {
+            // Use a raw string for Windows path to avoid escaping issues
+            let win_candidate: &str = r#"C:\Program Files\Amazon\AWSCLI\bin"#;
+            if !current.split(sep).any(|s| s == win_candidate) {
+                if current.is_empty() {
+                    current = win_candidate.to_string();
+                } else {
+                    current.push_str(sep);
+                    current.push_str(win_candidate);
+                }
+                added = true;
+            }
+        }
+
+        if added {
+            let _ = env::set_var("PATH", current);
+        }
+    }
     pub async fn api<K>(client: Client, namespace: Option<String>) -> Api<K>
     where
         K: Resource<DynamicType = (), Scope = NamespaceResourceScope>
@@ -35,6 +81,10 @@ impl K8sClient {
         if !cm.is_connected(name).await {
             return Err("cluster is disconnected".to_string());
         }
+
+        // Make sure PATH includes common locations, so auth exec plugins like 'aws' are resolvable.
+        // This particularly helps for EKS contexts when the app is launched from Finder/Start Menu.
+        Self::ensure_exec_plugin_path_env();
 
         let (kubeconfig, _token) = K8sContexts::get_context_secrets(name).await?;
 

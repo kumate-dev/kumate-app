@@ -85,15 +85,11 @@ export function SidebarStorageClasses({
       item={item}
       setItem={setItem}
       sections={sections}
-      eventsProps={
-        item
-          ? {
-              contextName,
-              resourceKind: 'StorageClass',
-              resourceName: item?.metadata?.name,
-            }
-          : undefined
-      }
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'StorageClass',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

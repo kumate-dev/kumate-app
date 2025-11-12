@@ -40,14 +40,16 @@ export default function BottomExecTerminal({
   const [shellMode] = useState<'auto' | 'bash' | 'sh' | 'ash' | 'zsh' | 'powershell' | 'cmd'>(
     'auto'
   );
-  const [currentCommand, setCurrentCommand] = useState<string[]>(['bash', '-l']);
+  const [currentCommand, setCurrentCommand] = useState<string[]>(['sh', '-l']);
   const autoTriedRef = useRef(0);
   const lastStatusRef = useRef<'none' | 'noSession' | 'connecting'>('none');
   const [showConnectionError, setShowConnectionError] = useState(false);
+  const [firstDataReceived, setFirstDataReceived] = useState(false);
 
   const handleStream = useCallback((evt: ExecEvent) => {
     if (!termRef.current) return;
     if ((evt.type === 'EXEC_STDOUT' || evt.type === 'EXEC_STDERR') && evt.data) {
+      setFirstDataReceived(true);
       termRef.current.write(evt.data);
       try {
         termRef.current.scrollToBottom();
@@ -118,7 +120,7 @@ export default function BottomExecTerminal({
 
   const shellCommands = useMemo(
     () => ({
-      auto: ['bash', '-l'],
+      auto: ['sh', '-l'],
       bash: ['bash', '-l'],
       zsh: ['zsh', '-l'],
       ash: ['ash', '-l'],
@@ -131,11 +133,11 @@ export default function BottomExecTerminal({
 
   const autoCandidates = useMemo(
     () => [
-      ['bash', '-l'],
-      ['zsh', '-l'],
-      ['ash', '-l'],
       ['sh', '-l'],
       ['sh'],
+      ['ash', '-l'],
+      ['bash', '-l'],
+      ['zsh', '-l'],
       ['powershell.exe', '-NoLogo', '-NoProfile'],
       ['cmd.exe'],
     ],
@@ -147,6 +149,7 @@ export default function BottomExecTerminal({
       setShowConnectionError(false);
       lastStatusRef.current = 'none';
       autoTriedRef.current = 0;
+      setFirstDataReceived(false);
     }
   }, [open]);
 
@@ -263,6 +266,9 @@ export default function BottomExecTerminal({
       ]);
     }
   }, [isConnected, loading, error, open, showConnectionError]);
+
+  // Removed auto-Enter kick on connect to avoid sending an unwanted newline.
+  // Users will now see the prompt as provided by the container without automatic input.
 
   useEffect(() => {
     if (!open) return;
@@ -385,6 +391,28 @@ export default function BottomExecTerminal({
               onMouseDown={handleTerminalClick}
               className="h-full w-full overflow-hidden font-mono text-sm text-white/80"
             />
+            {loading && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
+                <div className="flex flex-col items-center gap-3 text-white/80">
+                  <span className="sr-only">Connecting...</span>
+                  <div className="inline-block animate-spin rounded-full border-2 border-white/70 border-t-transparent w-6 h-6" />
+                </div>
+              </div>
+            )}
+            {isConnected && !firstDataReceived && !loading && !error && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20">
+                <div className="text-xs text-white/70">
+                  Connected. Waiting for prompt… Press Enter if nothing appears.
+                </div>
+              </div>
+            )}
+            {error && showConnectionError && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
+                <div className="text-xs text-red-300">
+                  Could not start an interactive shell. Try a different shell or check container image.
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -56,6 +56,19 @@ pub async fn unwatch(state: tauri::State<'_, WatchManager>, name: String) -> Res
     state.unwatch(&name).await
 }
 
+#[tauri::command]
+pub async fn unwatch_context(
+    state: tauri::State<'_, WatchManager>,
+    prefix: String,
+) -> Result<u32, String> {
+    state.unwatch_prefix(&prefix).await
+}
+
+#[tauri::command]
+pub async fn watchers_count(state: tauri::State<'_, WatchManager>) -> Result<usize, String> {
+    Ok(state.count().await)
+}
+
 pub fn restart_patch() -> Value {
     serde_json::json!({
         "spec": {

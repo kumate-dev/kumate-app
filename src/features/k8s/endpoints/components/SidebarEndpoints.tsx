@@ -68,16 +68,12 @@ export function SidebarEndpoints({
       onDelete={onDelete}
       onEdit={onEdit}
       sections={[{ key: 'properties', title: 'Properties', content: renderProperties }]}
-      eventsProps={
-        item
-          ? {
-              contextName,
-              namespace: item?.metadata?.namespace,
-              resourceKind: 'Endpoints',
-              resourceName: item?.metadata?.name,
-            }
-          : undefined
-      }
+      eventsProps={item ? {
+        contextName,
+        namespace: item?.metadata?.namespace,
+        resourceKind: 'Endpoints',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       updating={updating}
       deleting={deleting}
     />

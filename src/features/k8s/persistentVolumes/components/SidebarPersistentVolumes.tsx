@@ -114,15 +114,11 @@ export function SidebarPersistentVolumes({
       item={item}
       setItem={setItem}
       sections={sections}
-      eventsProps={
-        item
-          ? {
-              contextName,
-              resourceKind: 'PersistentVolume',
-              resourceName: item?.metadata?.name,
-            }
-          : undefined
-      }
+      eventsProps={item ? {
+        contextName,
+        resourceKind: 'PersistentVolume',
+        resourceName: item?.metadata?.name,
+      } : undefined}
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}
