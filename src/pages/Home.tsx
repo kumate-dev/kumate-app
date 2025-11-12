@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { LeftSidebarMenu } from '@/features/k8s/generic/components/LeftSidebarMenu';
+import { toast } from 'sonner';
+import { SidebarHotbar } from '@/features/k8s/generic/components/SidebarHotbar';
+import { SidebarCategories } from '@/features/k8s/generic/components/SidebarCategories';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { PageKey } from '@/types/pageKey';
 import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';
@@ -50,6 +52,7 @@ export default function Home() {
   const [error, setError] = useState<string>('');
   const [selected, setSelected] = useState<K8sContext | null>(null);
   const [page, setPage] = useState<PageKey>('overview');
+  const [connMap, setConnMap] = useState<Record<string, boolean | null>>({});
 
   const resetNsToAll = () => useNamespaceStore.setState({ selectedNamespaces: [ALL_NAMESPACES] });
   const selectedRef = useRef(selected);
@@ -80,8 +83,6 @@ export default function Home() {
       setError('');
       setLoading(true);
       try {
-        // Always attempt to import kube contexts on app load.
-        // Backend will skip duplicates, and we now scan ~/.kube recursively.
         try {
           await importKubeContexts();
         } catch {}
@@ -105,6 +106,19 @@ export default function Home() {
     }
 
     fetchContexts();
+  }, []);
+
+  // Load current connection map once on mount
+  useEffect(() => {
+    import('@/api/k8s/contexts').then(({ getContextConnections }) => {
+      getContextConnections()
+        .then((items) => {
+          const m: Record<string, boolean | null> = {};
+          for (const it of items) m[it.name] = it.connected;
+          setConnMap(m);
+        })
+        .catch(() => {});
+    });
   }, []);
 
   useEffect(() => {
@@ -167,20 +181,66 @@ export default function Home() {
   };
 
   const PageComponent = pageComponents[page] || ComingSoon;
+  const [hotbarExpanded, setHotbarExpanded] = useState(false);
+
+  const hotbarClusters = contexts.map((c) => ({ name: c.name }));
+
+  const setConnected = useCallback(async (name: string, connected: boolean): Promise<boolean> => {
+    try {
+      const { setContextConnection } = await import('@/api/k8s/contexts');
+      await setContextConnection(name, connected);
+
+      if (connected) {
+        try {
+          const { checkContextConnection } = await import('@/api/k8s/contexts');
+          await checkContextConnection(name);
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          toast.error(`Connect failed: ${msg || 'Unknown error during connection check'}`);
+          return false;
+        }
+      }
+      try {
+        const { getContextConnection } = await import('@/api/k8s/contexts');
+        const latest = await getContextConnection(name);
+        setConnMap((prev) => ({ ...prev, [name]: latest }));
+      } catch {}
+      if (connected) {
+        toast.success(`Connected to ${name}`);
+      } else {
+        toast.success(`Disconnected from ${name}`);
+      }
+      return true;
+    } catch (err) {
+      const actionText = connected ? 'Connect' : 'Disconnect';
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`${actionText} failed: ${msg}`);
+      return false;
+    }
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-950 text-white">
-      <aside className="w-64 flex-shrink-0 overflow-y-auto overscroll-none border-r border-white/10">
-        <LeftSidebarMenu
-          contexts={contexts}
-          selected={selected ?? undefined}
-          onSelectContext={(c) => {
-            setSelected(c ?? null);
-            setPage('overview');
-          }}
-          page={page}
-          onSelectPage={(p) => setPage(p as PageKey)}
-        />
+      <aside className={`flex-shrink-0 overflow-y-auto overscroll-none border-r border-white/10`}>
+        <div className="flex h-full bg-neutral-950 text-white overflow-x-hidden">
+          <SidebarHotbar
+            clusters={hotbarClusters}
+            connMap={connMap}
+            setConnected={setConnected}
+            expanded={hotbarExpanded}
+            onExpandChange={setHotbarExpanded}
+            onClusterClick={(clusterName) => {
+              const context = contexts.find((ctx) => ctx.name === clusterName) || null;
+              setSelected(context);
+              setPage('overview');
+            }}
+          />
+          <SidebarCategories
+            selected={selected ?? undefined}
+            page={page}
+            onSelectPage={(p) => setPage(p as PageKey)}
+          />
+        </div>
       </aside>
 
       <main className="relative flex-1 overflow-hidden">
@@ -198,6 +258,7 @@ export default function Home() {
           <PageComponent context={selected ?? undefined} />
         </div>
       </main>
+
     </div>
   );
 }

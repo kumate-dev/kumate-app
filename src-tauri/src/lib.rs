@@ -57,6 +57,7 @@ use crate::commands::stateful_sets;
 use crate::commands::storage_classes;
 use crate::commands::validating_webhooks;
 use crate::commands::warmup;
+use crate::commands::check;
 use crate::utils::connections::ConnectionsManager;
 use crate::utils::watcher::WatchManager;
 
@@ -106,6 +107,7 @@ pub fn run() {
             contexts::import_kube_contexts,
             contexts::list_contexts,
             warmup::warmup_context,
+            check::check_context_connection,
             common::unwatch,
             common::unwatch_context,
             common::watchers_count,

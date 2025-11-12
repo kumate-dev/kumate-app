@@ -26,6 +26,8 @@ export function YamlEditor({
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLPreElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
+  const lineNumbersContentRef = useRef<HTMLDivElement>(null);
 
   const validateYaml = useCallback(
     (yamlString: string) => {
@@ -114,6 +116,11 @@ export function YamlEditor({
       highlightRef.current.scrollTop = e.currentTarget.scrollTop;
       highlightRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
+    // Keep line numbers vertically in sync with the textarea without showing a scrollbar
+    if (lineNumbersContentRef.current) {
+      const y = e.currentTarget.scrollTop;
+      lineNumbersContentRef.current.style.transform = `translateY(-${y}px)`;
+    }
   }, []);
 
   const borderClass = useMemo(
@@ -137,12 +144,17 @@ export function YamlEditor({
         } ${readOnly ? 'opacity-70' : ''} ${heightClass ?? ''}`}
         style={!heightClass ? { height } : undefined}
       >
-        <div className="absolute top-0 left-0 z-[5] h-full w-16 overflow-hidden bg-neutral-900 px-2 py-4 text-right font-mono text-[14px] leading-[1.5] text-gray-500 select-none">
-          {lines.map((line) => (
-            <div key={line} className="leading-6">
-              {line}
-            </div>
-          ))}
+        <div
+          ref={lineNumbersRef}
+          className="absolute top-0 left-0 z-[5] h-full w-16 overflow-hidden bg-neutral-900 px-2 py-4 text-right font-mono text-[14px] leading-[1.5] text-gray-500 select-none"
+        >
+          <div ref={lineNumbersContentRef} className="will-change-transform">
+            {lines.map((line) => (
+              <div key={line} className="leading-[1.5]">
+                {line}
+              </div>
+            ))}
+          </div>
         </div>
 
         <textarea
