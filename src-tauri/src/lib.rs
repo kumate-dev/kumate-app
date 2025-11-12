@@ -14,6 +14,7 @@ mod state;
 mod types;
 mod utils;
 
+use crate::commands::check;
 use crate::commands::cluster_role_bindings;
 use crate::commands::cluster_roles;
 use crate::commands::common;
@@ -57,7 +58,6 @@ use crate::commands::stateful_sets;
 use crate::commands::storage_classes;
 use crate::commands::validating_webhooks;
 use crate::commands::warmup;
-use crate::commands::check;
 use crate::utils::connections::ConnectionsManager;
 use crate::utils::watcher::WatchManager;
 
@@ -108,6 +108,7 @@ pub fn run() {
             contexts::list_contexts,
             warmup::warmup_context,
             check::check_context_connection,
+            check::get_context_version,
             common::unwatch,
             common::unwatch_context,
             common::watchers_count,

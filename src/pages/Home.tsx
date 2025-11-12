@@ -4,7 +4,14 @@ import { SidebarHotbar } from '@/features/k8s/generic/components/SidebarHotbar';
 import { SidebarCategories } from '@/features/k8s/generic/components/SidebarCategories';
 import { useNamespaceStore } from '@/store/namespaceStore';
 import { PageKey } from '@/types/pageKey';
-import { importKubeContexts, K8sContext, listContexts } from '@/api/k8s/contexts';
+import {
+  checkContextConnection,
+  getContextConnection,
+  importKubeContexts,
+  K8sContext,
+  listContexts,
+  setContextConnection,
+} from '@/api/k8s/contexts';
 import { ALL_NAMESPACES } from '@/constants/k8s';
 import Overview from '@/features/k8s/overview/components/Overview';
 import ComingSoon from './ComingSoon';
@@ -187,12 +194,10 @@ export default function Home() {
 
   const setConnected = useCallback(async (name: string, connected: boolean): Promise<boolean> => {
     try {
-      const { setContextConnection } = await import('@/api/k8s/contexts');
       await setContextConnection(name, connected);
 
       if (connected) {
         try {
-          const { checkContextConnection } = await import('@/api/k8s/contexts');
           await checkContextConnection(name);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
@@ -201,14 +206,13 @@ export default function Home() {
         }
       }
       try {
-        const { getContextConnection } = await import('@/api/k8s/contexts');
         const latest = await getContextConnection(name);
         setConnMap((prev) => ({ ...prev, [name]: latest }));
       } catch {}
       if (connected) {
         toast.success(`Connected to ${name}`);
       } else {
-        toast.success(`Disconnected from ${name}`);
+        toast.error(`Disconnected from ${name}`);
       }
       return true;
     } catch (err) {
@@ -222,7 +226,7 @@ export default function Home() {
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-950 text-white">
       <aside className={`flex-shrink-0 overflow-y-auto overscroll-none border-r border-white/10`}>
-        <div className="flex h-full bg-neutral-950 text-white overflow-x-hidden">
+        <div className="flex h-full overflow-x-hidden bg-neutral-950 text-white">
           <SidebarHotbar
             clusters={hotbarClusters}
             connMap={connMap}
@@ -258,7 +262,6 @@ export default function Home() {
           <PageComponent context={selected ?? undefined} />
         </div>
       </main>
-
     </div>
   );
 }

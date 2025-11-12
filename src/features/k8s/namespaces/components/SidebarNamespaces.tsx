@@ -74,11 +74,15 @@ export function SidebarNamespaces({
       item={item}
       setItem={setItem}
       sections={sections}
-      eventsProps={item ? {
-        contextName,
-        resourceKind: 'Namespace',
-        resourceName: item?.metadata?.name,
-      } : undefined}
+      eventsProps={
+        item
+          ? {
+              contextName,
+              resourceKind: 'Namespace',
+              resourceName: item?.metadata?.name,
+            }
+          : undefined
+      }
       onDelete={onDelete}
       onEdit={onEdit}
       updating={updating}

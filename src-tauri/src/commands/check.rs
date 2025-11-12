@@ -1,15 +1,11 @@
-use tokio::time::{timeout, Duration};
+use crate::manager::k8s::client::K8sClient;
 
 #[tauri::command]
 pub async fn check_context_connection(name: String) -> Result<(), String> {
-    match timeout(
-        Duration::from_secs(10),
-        crate::commands::namespaces::list_namespaces(name),
-    )
-    .await
-    {
-        Ok(Ok(_)) => Ok(()),
-        Ok(Err(e)) => Err(e),
-        Err(_) => Err("Connection check timed out".to_string()),
-    }
+    K8sClient::check_context_connection(&name).await
+}
+
+#[tauri::command]
+pub async fn get_context_version(name: String) -> Result<String, String> {
+    K8sClient::get_context_version(&name).await
 }

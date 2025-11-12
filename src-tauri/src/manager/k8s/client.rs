@@ -18,12 +18,7 @@ impl K8sClient {
         use std::env;
         let mut current = env::var("PATH").unwrap_or_default();
         // Common Homebrew and legacy locations on macOS/Linux
-        let candidates = vec![
-            "/opt/homebrew/bin",
-            "/usr/local/bin",
-            "/usr/bin",
-            "/bin",
-        ];
+        let candidates = vec!["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"];
         let sep = if cfg!(windows) { ";" } else { ":" };
 
         let mut added = false;
@@ -90,11 +85,21 @@ impl K8sClient {
 
         let sanitized: String = Self::sanitize_yaml(&kubeconfig);
 
-        if let Some(client) = Self::try_client_from_custom(&sanitized, name).await? {
+        let mut errs: Vec<String> = Vec::new();
+        if let Some(client) = Self::try_client_from_custom(&sanitized, name, &mut errs).await? {
             return Ok(client);
         }
 
-        Self::client_from_default_with_temp(name, &sanitized).await
+        match Self::client_from_default_with_temp(name, &sanitized).await {
+            Ok(c) => Ok(c),
+            Err(msg) => {
+                if errs.is_empty() {
+                    Err(msg)
+                } else {
+                    Err(format!("{}\n{}", errs.join("\n"), msg))
+                }
+            }
+        }
     }
 
     fn sanitize_yaml(s: &str) -> String {
@@ -106,7 +111,11 @@ impl K8sClient {
             .collect()
     }
 
-    async fn try_client_from_custom(sanitized: &str, name: &str) -> Result<Option<Client>, String> {
+    async fn try_client_from_custom(
+        sanitized: &str,
+        name: &str,
+        errs: &mut Vec<String>,
+    ) -> Result<Option<Client>, String> {
         match serde_yaml::from_str::<Kubeconfig>(sanitized) {
             Ok(kcfg) => {
                 let opts = KubeConfigOptions {
@@ -117,18 +126,25 @@ impl K8sClient {
                     Ok(cfg) => match Client::try_from(cfg) {
                         Ok(c) => Ok(Some(c)),
                         Err(e) => {
-                            println!("client_from_context: Client::try_from error: {}", e);
+                            let msg = format!("client_from_context: Client::try_from error: {}", e);
+                            println!("{}", msg);
+                            errs.push(msg);
                             Ok(None)
                         }
                     },
                     Err(e) => {
-                        println!("client_from_context: from_custom_kubeconfig error: {}", e);
+                        let msg =
+                            format!("client_from_context: from_custom_kubeconfig error: {}", e);
+                        println!("{}", msg);
+                        errs.push(msg);
                         Ok(None)
                     }
                 }
             }
             Err(e) => {
-                println!("client_from_context: serde_yaml->Kubeconfig parse error: {}", e);
+                let msg = format!("client_from_context: serde_yaml->Kubeconfig parse error: {}", e);
+                println!("{}", msg);
+                errs.push(msg);
                 Ok(None)
             }
         }
@@ -149,5 +165,37 @@ impl K8sClient {
         }
 
         result
+    }
+
+    /// Check connectivity to a context by querying the apiserver version.
+    /// Performs a bounded wait to avoid hanging the UI.
+    pub async fn check_context_connection(name: &str) -> Result<(), String> {
+        use tokio::time::{timeout, Duration};
+        match timeout(Duration::from_secs(10), async move {
+            let client = Self::for_context(name).await?;
+            client.apiserver_version().await.map(|_| ()).map_err(|e| e.to_string())
+        })
+        .await
+        {
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(e)) => Err(e),
+            Err(_) => Err("Connection check timed out".to_string()),
+        }
+    }
+
+    /// Retrieve the git version string for the given context by calling apiserver_version.
+    /// Performs a bounded wait to avoid hanging the UI.
+    pub async fn get_context_version(name: &str) -> Result<String, String> {
+        use tokio::time::{timeout, Duration};
+        match timeout(Duration::from_secs(10), async move {
+            let client = Self::for_context(name).await?;
+            client.apiserver_version().await.map(|v| v.git_version).map_err(|e| e.to_string())
+        })
+        .await
+        {
+            Ok(Ok(ver)) => Ok(ver),
+            Ok(Err(e)) => Err(e),
+            Err(_) => Err("Connection check timed out".to_string()),
+        }
     }
 }

@@ -35,3 +35,7 @@ export async function getContextConnection(name: string): Promise<boolean> {
 export async function checkContextConnection(name: string): Promise<void> {
   return invoke('check_context_connection', { name });
 }
+
+export async function getContextVersion(name: string): Promise<string> {
+  return invoke('get_context_version', { name });
+}

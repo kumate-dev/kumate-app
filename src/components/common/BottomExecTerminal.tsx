@@ -395,7 +395,7 @@ export default function BottomExecTerminal({
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
                 <div className="flex flex-col items-center gap-3 text-white/80">
                   <span className="sr-only">Connecting...</span>
-                  <div className="inline-block animate-spin rounded-full border-2 border-white/70 border-t-transparent w-6 h-6" />
+                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
                 </div>
               </div>
             )}
@@ -409,7 +409,8 @@ export default function BottomExecTerminal({
             {error && showConnectionError && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
                 <div className="text-xs text-red-300">
-                  Could not start an interactive shell. Try a different shell or check container image.
+                  Could not start an interactive shell. Try a different shell or check container
+                  image.
                 </div>
               </div>
             )}

@@ -88,11 +88,19 @@ const CATEGORY_GROUPS: PageItem[] = [
     collapsible: true,
   },
   { title: 'Helm', items: [{ key: 'helm_releases', label: 'Releases' }], collapsible: true },
-  { title: 'Custom Resources', items: [{ key: 'custom_resource_definitions', label: 'Definitions' }], collapsible: true },
+  {
+    title: 'Custom Resources',
+    items: [{ key: 'custom_resource_definitions', label: 'Definitions' }],
+    collapsible: true,
+  },
   { title: 'Events', navigateKey: 'events' as PageKey, collapsible: false },
 ];
 
-export const SidebarCategories: React.FC<SidebarCategoriesProps> = ({ selected, page, onSelectPage }) => {
+export const SidebarCategories: React.FC<SidebarCategoriesProps> = ({
+  selected,
+  page,
+  onSelectPage,
+}) => {
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
     CATEGORY_GROUPS.forEach((group) => {
@@ -133,9 +141,15 @@ export const SidebarCategories: React.FC<SidebarCategoriesProps> = ({ selected, 
                 )}
                 <span>{item.title}</span>
               </span>
-              <span className={`inline-block transition-transform ${isCollapsed ? 'rotate-0' : 'rotate-90'}`}>›</span>
+              <span
+                className={`inline-block transition-transform ${isCollapsed ? 'rotate-0' : 'rotate-90'}`}
+              >
+                ›
+              </span>
             </button>
-            <div className={`overflow-hidden transition-all duration-200 ${!isCollapsed ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div
+              className={`overflow-hidden transition-all duration-200 ${!isCollapsed ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}
+            >
               <ul>{item.items?.map((child) => renderGroupItem(child, item.title))}</ul>
             </div>
           </div>
@@ -188,12 +202,18 @@ export const SidebarCategories: React.FC<SidebarCategoriesProps> = ({ selected, 
                 <span>{group.title}</span>
               </span>
               {isCollapsible && (
-                <span className={`inline-block transition-transform ${isCollapsed ? 'rotate-0' : 'rotate-90'}`}>›</span>
+                <span
+                  className={`inline-block transition-transform ${isCollapsed ? 'rotate-0' : 'rotate-90'}`}
+                >
+                  ›
+                </span>
               )}
             </button>
           )}
 
-          <div className={`overflow-hidden transition-all duration-200 ${!group.title || !isCollapsible || !isCollapsed ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div
+            className={`overflow-hidden transition-all duration-200 ${!group.title || !isCollapsible || !isCollapsed ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}
+          >
             <ul>{group.items?.map((item) => renderGroupItem(item, group.title))}</ul>
           </div>
         </div>
@@ -202,5 +222,9 @@ export const SidebarCategories: React.FC<SidebarCategoriesProps> = ({ selected, 
     [collapsed, toggleGroup, renderGroupItem, page, onSelectPage]
   );
 
-  return <div className="flex w-[14rem] min-w-[14rem] flex-shrink-0 flex-col overflow-y-auto pl-2 pr-2">{groups.map(renderGroup)}</div>;
+  return (
+    <div className="flex w-[14rem] min-w-[14rem] flex-shrink-0 flex-col overflow-y-auto pr-2 pl-2">
+      {groups.map(renderGroup)}
+    </div>
+  );
 };

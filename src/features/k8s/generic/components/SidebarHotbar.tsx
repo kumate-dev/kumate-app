@@ -1,5 +1,4 @@
 import React from 'react';
-import { toast } from 'sonner';
 
 export interface SidebarHotbarProps {
   clusters: { name: string }[];
@@ -10,7 +9,6 @@ export interface SidebarHotbarProps {
   onClusterClick?: (clusterName: string) => void;
 }
 
-// Generate a pleasant, consistent HSL color from a string (cluster name)
 const stringToHslColor = (str: string, s = 60, l = 50): string => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -40,9 +38,27 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
 
   const closeMenu = React.useCallback(() => setMenu({ open: false }), []);
 
+  // Helper to show a full-screen centered spinner during connect/reconnect operations
+  const showConnectOverlay = React.useCallback(() => {
+    if (typeof document === 'undefined') return () => {};
+    const overlay = document.createElement('div');
+    overlay.id = 'kumate-connect-overlay';
+    overlay.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/30';
+    const spinner = document.createElement('span');
+    spinner.className =
+      'h-12 w-12 rounded-full border-4 border-white/40 border-t-transparent animate-spin';
+    overlay.appendChild(spinner);
+    document.body.appendChild(overlay);
+    return () => {
+      try {
+        overlay.remove();
+      } catch {}
+    };
+  }, []);
+
   return (
     <div
-      className={`flex h-full flex-shrink-0 flex-col items-stretch gap-3 overflow-y-auto overscroll-none bg-neutral-900/30 py-3 transition-all ${expanded ? 'pl-2 pr-3 w-40' : 'pl-0 pr-0 w-12'} mr-2`}
+      className={`flex h-full flex-shrink-0 flex-col items-stretch gap-3 overflow-y-auto overscroll-none bg-neutral-900/30 py-3 transition-all ${expanded ? 'w-40 pr-3 pl-2' : 'w-12 pr-0 pl-0'} mr-2`}
     >
       {clusters.map((cluster) => {
         const initial = (cluster.name?.[0] || '?').toUpperCase();
@@ -52,15 +68,17 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
         return (
           <button
             key={cluster.name}
-            className={`m-0 flex h-12 ${expanded ? 'w-full justify-start px-2' : 'w-full justify-center px-0'} items-center border-none bg-transparent hover:bg-white/5 rounded focus:ring-0 focus:outline-none ${loading ? 'opacity-60 cursor-wait' : ''}`}
-            disabled={loading}
+            className={`m-0 flex h-12 ${expanded ? 'w-full justify-start px-2' : 'w-full justify-center px-0'} items-center rounded border-none bg-transparent hover:bg-white/5 focus:ring-0 focus:outline-none`}
+            // Keep responsive click behavior without disabling or showing loading cursor
             onClick={async () => {
               const status = cluster.name in connMap ? connMap[cluster.name] : null;
-              if (status !== true) {
+              if (!loading && status !== true) {
                 setLoadingMap((prev) => ({ ...prev, [cluster.name]: true }));
-                const ok = await setConnected(cluster.name, true).finally(() =>
-                  setLoadingMap((prev) => ({ ...prev, [cluster.name]: false }))
-                );
+                const hide = showConnectOverlay();
+                const ok = await setConnected(cluster.name, true).finally(() => {
+                  setLoadingMap((prev) => ({ ...prev, [cluster.name]: false }));
+                  hide();
+                });
                 if (!ok) return;
               }
               onClusterClick?.(cluster.name);
@@ -74,23 +92,16 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
               style={{ background: stringToHslColor(cluster.name, 65, 45) }}
             >
               {initial}
-              {loading ? (
-                <span className="absolute right-[2px] bottom-[2px] h-2.5 w-2.5 rounded-full border-2 border-white/60 border-t-transparent animate-spin" />
-              ) : (
-                (() => {
-                  const color = connected === true
-                    ? '#22c55e'
-                    : connected === false
-                    ? '#ef4444'
-                    : '#9ca3af';
-                  return (
-                    <span
-                      className="absolute right-[2px] bottom-[2px] h-2.5 w-2.5 rounded-full ring-1 ring-black/40"
-                      style={{ backgroundColor: color }}
-                    />
-                  );
-                })()
-              )}
+              {(() => {
+                const color =
+                  connected === true ? '#22c55e' : connected === false ? '#ef4444' : '#9ca3af';
+                return (
+                  <span
+                    className="absolute right-[2px] bottom-[2px] h-2.5 w-2.5 rounded-full ring-1 ring-black/40"
+                    style={{ backgroundColor: color }}
+                  />
+                );
+              })()}
             </span>
             {expanded && (
               <span className="ml-2 truncate text-xs text-white/80">{cluster.name}</span>
@@ -121,23 +132,23 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
         >
           {(() => {
             const connected = menu.name in connMap ? connMap[menu.name] : null;
-            const loading = !!loadingMap[menu.name];
             return (
               <ul>
                 {!connected && (
                   <li>
                     <button
-                      className={`w-full rounded px-3 py-2 text-left hover:bg-white/10 ${loading ? 'opacity-60 cursor-wait' : ''}`}
-                      disabled={loading}
+                      className={`w-full rounded px-3 py-2 text-left hover:bg-white/10`}
                       onClick={async () => {
-                        setLoadingMap((prev) => ({ ...prev, [menu.name]: true }));
-                        await setConnected(menu.name, true).finally(() =>
-                          setLoadingMap((prev) => ({ ...prev, [menu.name]: false }))
-                        );
+                        const hide = showConnectOverlay();
+                        try {
+                          await setConnected(menu.name, true);
+                        } finally {
+                          hide();
+                        }
                         closeMenu();
                       }}
                     >
-                      {loading ? 'Connecting…' : 'Connect'}
+                      {'Connect'}
                     </button>
                   </li>
                 )}
@@ -145,35 +156,30 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
                   <>
                     <li>
                       <button
-                        className={`w-full rounded px-3 py-2 text-left hover:bg-white/10 ${loading ? 'opacity-60 cursor-wait' : ''}`}
-                        disabled={loading}
+                        className={`w-full rounded px-3 py-2 text-left hover:bg-white/10`}
                         onClick={async () => {
-                          setLoadingMap((prev) => ({ ...prev, [menu.name]: true }));
+                          const hide = showConnectOverlay();
                           try {
                             await setConnected(menu.name, false);
                             await setConnected(menu.name, true);
                           } finally {
-                            setLoadingMap((prev) => ({ ...prev, [menu.name]: false }));
+                            hide();
                           }
                           closeMenu();
                         }}
                       >
-                        {loading ? 'Reconnecting…' : 'Reconnect'}
+                        {'Reconnect'}
                       </button>
                     </li>
                     <li>
                       <button
-                        className={`w-full rounded px-3 py-2 text-left text-red-300 hover:bg-white/10 ${loading ? 'opacity-60 cursor-wait' : ''}`}
-                        disabled={loading}
+                        className={`w-full rounded px-3 py-2 text-left text-red-300 hover:bg-white/10`}
                         onClick={async () => {
-                          setLoadingMap((prev) => ({ ...prev, [menu.name]: true }));
-                          await setConnected(menu.name, false).finally(() =>
-                            setLoadingMap((prev) => ({ ...prev, [menu.name]: false }))
-                          );
+                          await setConnected(menu.name, false);
                           closeMenu();
                         }}
                       >
-                        {loading ? 'Disconnecting…' : 'Disconnect'}
+                        {'Disconnect'}
                       </button>
                     </li>
                   </>

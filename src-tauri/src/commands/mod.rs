@@ -1,3 +1,4 @@
+pub mod check;
 pub mod cluster_role_bindings;
 pub mod cluster_roles;
 pub mod common;
@@ -41,4 +42,3 @@ pub mod stateful_sets;
 pub mod storage_classes;
 pub mod validating_webhooks;
 pub mod warmup;
-pub mod check;
