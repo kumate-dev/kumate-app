@@ -140,7 +140,7 @@ export default function BottomLogViewer({
             <mark
               id={`log-match-${i}`}
               key={`h-${i}`}
-              className={`${i === currentMatchIndex ? 'bg-amber-300 ring-2 ring-amber-500' : 'bg-yellow-300'} text-black dark:text-black`}
+              className={`${i === currentMatchIndex ? 'bg-amber-300 ring-2 ring-amber-500' : 'bg-yellow-300'} text-black`}
             >
               {matches[i]}
             </mark>
@@ -186,7 +186,7 @@ export default function BottomLogViewer({
 
   const containerClass = useMemo(
     () =>
-      `fixed right-0 bottom-0 left-0 z-[60] border-l border-neutral-200 bg-white/95 shadow-xl backdrop-blur-sm transition-transform duration-300 dark:border-white/10 dark:bg-neutral-900/95 ${
+      `fixed right-0 bottom-0 left-0 z-[60] border-l border-white/10 bg-neutral-900/95 shadow-xl backdrop-blur-sm transition-transform duration-300 ${
         isResizing ? 'select-none' : ''
       }`,
     [isResizing]
@@ -194,7 +194,7 @@ export default function BottomLogViewer({
 
   const logContentClass = useMemo(
     () =>
-      'relative h-full overflow-auto rounded-md border border-neutral-200 bg-neutral-50 font-mono text-sm break-words whitespace-pre-wrap dark:border-white/20 dark:bg-black',
+      'relative h-full overflow-auto rounded-md border border-white/20 bg-black font-mono text-sm break-words whitespace-pre-wrap',
     []
   );
 
@@ -215,12 +215,12 @@ export default function BottomLogViewer({
         onClick={handleContainerClick}
       >
         <div
-          className="absolute top-0 right-0 left-0 h-2 cursor-ns-resize bg-transparent hover:bg-neutral-200/60 active:bg-neutral-200/80 dark:hover:bg-white/10 dark:active:bg-white/20"
+          className="absolute top-0 right-0 left-0 h-2 cursor-ns-resize bg-transparent hover:bg-white/10 active:bg-white/20"
           onMouseDown={onResize}
         />
 
-        <div className="flex items-center gap-2 border-b border-neutral-200 px-4 py-3 dark:border-white/10">
-          <div className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-800 dark:text-white/80">
+        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+          <div className="min-w-0 flex-1 truncate text-sm font-medium text-white/80">
             {displayTitle}
           </div>
 
@@ -246,8 +246,8 @@ export default function BottomLogViewer({
               onQueryChange={setSearchQuery}
               className="max-w-xs min-w-0 flex-shrink"
             />
-            <div className="flex items-center gap-1 text-xs text-neutral-700 dark:text-white/70">
-              <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-neutral-200/60 dark:hover:bg-white/10">
+            <div className="flex items-center gap-1 text-xs text-white/70">
+              <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-white/10">
                 <input
                   type="checkbox"
                   checked={isCaseSensitive}
@@ -255,7 +255,7 @@ export default function BottomLogViewer({
                 />
                 <span title="Match case">Aa</span>
               </label>
-              <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-neutral-200/60 dark:hover:bg-white/10">
+              <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-white/10">
                 <input
                   type="checkbox"
                   checked={isRegex}
@@ -265,7 +265,7 @@ export default function BottomLogViewer({
               </label>
               <button
                 type="button"
-                className="rounded-md p-1 text-neutral-800 hover:bg-neutral-200/60 hover:text-black disabled:opacity-50 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
+                className="rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-50"
                 onClick={() => {
                   if (matchesCount > 0) {
                     setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount);
@@ -282,7 +282,7 @@ export default function BottomLogViewer({
               </span>
               <button
                 type="button"
-                className="rounded-md p-1 text-neutral-800 hover:bg-neutral-200/60 hover:text-black disabled:opacity-50 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
+                className="rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-50"
                 onClick={() => {
                   if (matchesCount > 0) {
                     setCurrentMatchIndex((i) => (i + 1) % matchesCount);
@@ -308,7 +308,7 @@ export default function BottomLogViewer({
               {tailOptions.map((val) => (
                 <div
                   key={val}
-                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-neutral-100 dark:hover:bg-white/10"
+                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-white/10"
                   onClick={() => handleTailSelect(val)}
                 >
                   <Check
@@ -316,7 +316,7 @@ export default function BottomLogViewer({
                       selectedTail === val ? 'opacity-100' : 'opacity-0'
                     }`}
                   />
-                  <span className="truncate text-xs text-neutral-800 dark:text-white">
+                  <span className="truncate text-xs text-white">
                     {val === -1 ? 'All' : `${val} lines`}
                   </span>
                 </div>
@@ -342,21 +342,21 @@ export default function BottomLogViewer({
           <div className={logContentClass}>
             {(loading || (isStreaming && !logs)) && (
               <div className="flex h-full items-center justify-center">
-                <Spinner size="md" className="text-neutral-500 dark:text-white/60" />
+                <Spinner size="md" className="text-white/60" />
               </div>
             )}
 
-            {error && <div className="mb-4 text-red-600 dark:text-red-400">Error: {error}</div>}
+            {error && <div className="mb-4 text-red-400">Error: {error}</div>}
 
             {logs && (
-              <div ref={logContainerRef} className="text-neutral-800 dark:text-white/80">
+              <div ref={logContainerRef} className="text-white/80">
                 {highlightedLogs}
                 <div ref={logEndRef} />
               </div>
             )}
 
             {!loading && !isStreaming && !error && !logs && (
-              <div className="flex h-full items-center justify-center text-neutral-500 dark:text-white/60">
+              <div className="flex h-full items-center justify-center text-white/60">
                 No logs available
               </div>
             )}

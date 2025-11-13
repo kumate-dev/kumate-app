@@ -2,27 +2,83 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
+    paths:
+      - CHANGELOG.md
+  workflow_dispatch:
 
 jobs:
-  build:
-    env:
-      # Derive app version from tag name. Strip leading 'v' if present.
-      APP_VERSION: ${{ startsWith(github.ref_name, 'v') && replace(github.ref_name, 'v', '') || github.ref_name }}
+  pre-release:
+      runs-on: ubuntu-latest
+      outputs:
+        version: ${{ steps.extract_version.outputs.version }}
+        exists: ${{ steps.check_version.outputs.exists }}
+        changelog: ${{ steps.changelog.outputs.content }}
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from CHANGELOG.md
+        id: extract_version
+        run: |
+          # Extract version from CHANGELOG.md
+          VERSION=$(grep -oE '^## \[v?[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md | head -1 | sed 's/^## \[//;s/]$//')
+
+          if [ -z "$VERSION" ]; then
+            echo "No version found in CHANGELOG.md"
+            echo "Please add a version entry in CHANGELOG.md format: ## [0.1.0]()"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION from CHANGELOG.md"
+
+      - name: Check if version already exists
+        id: check_version
+        run: |
+          VERSION="${{ steps.extract_version.outputs.version }}"
+
+          # Check if tag already exists
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Version $VERSION already exists, skipping release"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Version $VERSION is new, proceeding with release"
+          fi
+
+      - name: Extract Changelog
+        id: changelog
+        if: steps.check_version.outputs.exists == 'false'
+        uses: nickohold/changelog-version-extractor@v1.0.0
+        with:
+          version_prefix: '## ['
+          version: ${{ steps.extract_version.outputs.version }}
+          changelog_path: './CHANGELOG.md'
+
+  release:
+    needs: pre-release
+    if: needs.pre-release.outputs.exists == 'false'
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v2
+        id: github_app_token
         with:
-          bun-version: 'latest'
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
@@ -41,17 +97,28 @@ jobs:
         with:
           workspaces: 'src-tauri -> target'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
       - name: Install frontend dependencies
         run: bun install
+
+      - name: Set APP_VERSION from pre-release version
+        run: |
+          RAW="${{ needs.pre-release.outputs.version }}"
+          APP_VERSION="${RAW#v}"
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.github_app_token.outputs.token }}
+          TAURI_APP_VERSION: ${{ env.APP_VERSION }}
         with:
           tagName: app-v${{ env.APP_VERSION }}
           releaseName: 'App v${{ env.APP_VERSION }}'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseBody: ${{ needs.pre-release.outputs.changelog }}
           releaseDraft: true
-          prerelease: false
-          args: ${{ matrix.args }}
+          prerelease: true

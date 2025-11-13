@@ -84,9 +84,8 @@ export function YamlEditor({
         const flags = isCaseSensitive ? 'g' : 'gi';
         const pattern = new RegExp(source, flags);
         let idx = 0;
-        // Post-process Prism HTML: wrap matches in <mark> + data-index
         html = html.replace(pattern, (m) => {
-          const markClass = 'bg-yellow-300 text-black dark:bg-yellow-300 dark:text-black';
+          const markClass = 'bg-yellow-300 text-black';
           const out = `<mark data-idx="${idx}" class="${markClass}">${m}</mark>`;
           idx += 1;
           return out;
