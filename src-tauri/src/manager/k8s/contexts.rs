@@ -7,6 +7,8 @@ use tokio::fs::{read_dir, ReadDir};
 use uuid::Uuid;
 
 use crate::{state::AppState, types::k8s_contexts::K8sContext, utils::crypto::Crypto};
+use image::{imageops::FilterType, GenericImageView, ImageOutputFormat};
+use std::io::Cursor;
 
 #[derive(Deserialize, Clone)]
 pub struct KCNamedContext {
@@ -368,15 +370,39 @@ impl K8sContexts {
         display_name: Option<String>,
         avatar_b64: Option<String>,
     ) -> Result<K8sContext, String> {
-        // Decode base64 avatar if provided
+        // Decode base64 avatar if provided, then process and encode to WebP (square, cover)
         let avatar_bytes: Option<Vec<u8>> = if let Some(b64) = avatar_b64 {
+            // Empty string means clear avatar
             if b64.is_empty() {
                 Some(Vec::new())
             } else {
-                match base64::engine::general_purpose::STANDARD.decode(b64) {
-                    Ok(v) => Some(v),
-                    Err(e) => return Err(format!("invalid avatar base64: {}", e)),
-                }
+                let raw: Vec<u8> = base64::engine::general_purpose::STANDARD
+                    .decode(b64)
+                    .map_err(|e| format!("invalid avatar base64: {}", e))?;
+
+                // Downscale to a square avatar sized for the 36px UI slot (no 2x retina buffer).
+                const AVATAR_SIZE: u32 = 36;
+
+                let img = image::load_from_memory(&raw)
+                    .map_err(|e| format!("cannot decode image: {}", e))?;
+                // Get original dimensions
+                let (w, h) = img.dimensions();
+                // Center-crop to square (cover behavior)
+                let side = w.min(h);
+                let x = (w - side) / 2;
+                let y = (h - side) / 2;
+                let cropped = img.crop_imm(x, y, side, side);
+                // Resize to target size with high-quality filter
+                let resized = cropped.resize_exact(AVATAR_SIZE, AVATAR_SIZE, FilterType::Lanczos3);
+
+                // Encode as WebP with quality ~85
+                let mut out: Vec<u8> = Vec::new();
+                let mut cursor = Cursor::new(&mut out);
+                // Encode as WebP (image crate WebP encoder doesn't expose quality here)
+                resized
+                    .write_to(&mut cursor, ImageOutputFormat::WebP)
+                    .map_err(|e| format!("cannot encode webp: {}", e))?;
+                Some(out)
             }
         } else {
             None

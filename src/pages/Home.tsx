@@ -49,7 +49,7 @@ import { useKubeContexts } from '@/hooks/useKubeContexts';
 import { useContextConnections } from '@/hooks/useContextConnections';
 import { useMainScrollWheelGuard } from '@/hooks/useMainScrollWheelGuard';
 import { useResetNamespacesOnContext } from '@/hooks/useResetNamespacesOnContext';
-import { toDataUrlFromBytes, detectImageMime } from '@/utils/image';
+import { encodeBytesToBase64 } from '@/utils/base64';
 
 export default function Home() {
   const { contexts, selected, setSelected, error, refreshContexts } = useKubeContexts();
@@ -124,7 +124,10 @@ export default function Home() {
   const hotbarClusters = contexts.map((c) => ({
     name: c.name,
     displayName: c.display_name ?? c.name,
-    avatarSrc: c.avatar && c.avatar.length > 0 ? toDataUrlFromBytes(c.avatar) : undefined,
+    avatarSrc:
+      c.avatar && c.avatar.length > 0
+        ? `data:image/webp;base64,${encodeBytesToBase64(c.avatar)}`
+        : undefined,
   }));
 
   return (
@@ -195,8 +198,8 @@ export default function Home() {
               (() => {
                 const target = contexts.find((c) => c.name === editingName);
                 if (!target?.avatar || target.avatar.length === 0) return undefined;
-                const arr = new Uint8Array(target.avatar);
-                return detectImageMime(arr);
+                // Backend chuẩn hoá avatar về WebP
+                return 'image/webp';
               })()) ||
             undefined
           }

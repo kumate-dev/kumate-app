@@ -1,5 +1,6 @@
 import React from 'react';
 import { ButtonSecondary } from '@/components/common/ButtonSecondary';
+import { stringToHslColor } from '@/utils/string';
 
 export interface SidebarHotbarProps {
   clusters: { name: string; displayName?: string; avatarSrc?: string }[];
@@ -10,15 +11,6 @@ export interface SidebarHotbarProps {
   onClusterClick?: (clusterName: string) => void;
   onEditCluster?: (clusterName: string) => void;
 }
-
-const stringToHslColor = (str: string, s = 60, l = 50): string => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const h = Math.abs(hash) % 360;
-  return `hsl(${h}, ${s}%, ${l}%)`;
-};
 
 export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
   clusters,

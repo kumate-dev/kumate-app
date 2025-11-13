@@ -4,9 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogFooter } from '@/components/ui/dialog';
 import { ButtonCancel } from '@/components/common/ButtonCancel';
 import { ButtonSave } from '@/components/common/ButtonSave';
-import { ButtonClear } from '@/components/common/ButtonClear';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import { readFile } from '@tauri-apps/plugin-fs';
+import { stringToHslColor } from '@/utils/string';
 
 export interface ModalEditContextProps {
   open: boolean;
@@ -77,10 +77,7 @@ export const ModalEditContext: React.FC<ModalEditContextProps> = ({
     }
   };
 
-  const clearAvatar = () => {
-    setAvatarB64('');
-    setAvatarMime(undefined);
-  };
+  // Removed the ability to clear/remove avatar per request.
 
   const disabled = patching || !!error || !displayName.trim();
 
@@ -108,7 +105,12 @@ export const ModalEditContext: React.FC<ModalEditContextProps> = ({
               Avatar
             </label>
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 overflow-hidden rounded-full border border-white/20 bg-white/10">
+              <div
+                className="h-12 w-12 overflow-hidden rounded-full border border-white/20"
+                style={{
+                  background: avatarB64 ? 'transparent' : stringToHslColor(contextName, 65, 45),
+                }}
+              >
                 {avatarB64 ? (
                   <img
                     src={`data:${avatarMime ?? 'image/png'};base64,${avatarB64}`}
@@ -116,9 +118,9 @@ export const ModalEditContext: React.FC<ModalEditContextProps> = ({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-xs text-white/50">
-                    No image
-                  </div>
+                  <span className="flex h-full w-full items-center justify-center text-sm font-bold text-white">
+                    {(displayName || contextName)?.[0]?.toUpperCase() || '?'}
+                  </span>
                 )}
               </div>
 
@@ -130,10 +132,6 @@ export const ModalEditContext: React.FC<ModalEditContextProps> = ({
               >
                 Choose image...
               </ButtonSecondary>
-
-              {avatarB64 && (
-                <ButtonClear onClick={clearAvatar} disabled={patching} text="Remove avatar" />
-              )}
             </div>
             {error && (
               <p className="text-xs text-red-500" role="alert">
