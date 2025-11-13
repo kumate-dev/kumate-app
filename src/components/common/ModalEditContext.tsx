@@ -72,7 +72,7 @@ export const ModalEditContext: React.FC<ModalEditContextProps> = ({
       };
       setAvatarB64(b64);
       setAvatarMime((ext && mimeMap[ext]) || 'image/png');
-    } catch (err) {
+    } catch {
       setError('Cannot open image. Please try again.');
     }
   };
@@ -122,7 +122,12 @@ export const ModalEditContext: React.FC<ModalEditContextProps> = ({
                 )}
               </div>
 
-              <ButtonSecondary id="ctx-avatar" type="button" onClick={pickAvatarWithSystemDialog} disabled={patching}>
+              <ButtonSecondary
+                id="ctx-avatar"
+                type="button"
+                onClick={pickAvatarWithSystemDialog}
+                disabled={patching}
+              >
                 Choose image...
               </ButtonSecondary>
 

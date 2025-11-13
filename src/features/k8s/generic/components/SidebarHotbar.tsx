@@ -34,7 +34,6 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
     { open: true; x: number; y: number; name: string } | { open: false }
   >({ open: false });
   const menuRef = React.useRef<HTMLDivElement | null>(null);
-  
 
   const handleClusterContextMenu = React.useCallback((e: React.MouseEvent, clusterName: string) => {
     e.preventDefault();

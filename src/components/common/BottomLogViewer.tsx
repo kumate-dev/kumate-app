@@ -172,7 +172,9 @@ export default function BottomLogViewer({
   const scrollToCurrentMatch = useCallback(() => {
     if (!logContainerRef.current) return;
     if (matchesCount === 0) return;
-    const el = logContainerRef.current.querySelector(`#log-match-${currentMatchIndex}`) as HTMLElement | null;
+    const el = logContainerRef.current.querySelector(
+      `#log-match-${currentMatchIndex}`
+    ) as HTMLElement | null;
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -228,38 +230,64 @@ export default function BottomLogViewer({
               if (e.key === 'Enter') {
                 e.preventDefault();
                 if (e.shiftKey) {
-                  matchesCount > 0 && setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount);
+                  if (matchesCount > 0) {
+                    setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount);
+                  }
                 } else {
-                  matchesCount > 0 && setCurrentMatchIndex((i) => (i + 1) % matchesCount);
+                  if (matchesCount > 0) {
+                    setCurrentMatchIndex((i) => (i + 1) % matchesCount);
+                  }
                 }
               }
             }}
           >
-            <Search query={searchQuery} onQueryChange={setSearchQuery} className="max-w-xs min-w-0 flex-shrink" />
+            <Search
+              query={searchQuery}
+              onQueryChange={setSearchQuery}
+              className="max-w-xs min-w-0 flex-shrink"
+            />
             <div className="flex items-center gap-1 text-xs text-neutral-700 dark:text-white/70">
               <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-neutral-200/60 dark:hover:bg-white/10">
-                <input type="checkbox" checked={isCaseSensitive} onChange={(e) => setIsCaseSensitive(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={isCaseSensitive}
+                  onChange={(e) => setIsCaseSensitive(e.target.checked)}
+                />
                 <span title="Match case">Aa</span>
               </label>
               <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-neutral-200/60 dark:hover:bg-white/10">
-                <input type="checkbox" checked={isRegex} onChange={(e) => setIsRegex(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={isRegex}
+                  onChange={(e) => setIsRegex(e.target.checked)}
+                />
                 <span title="Regex">.*</span>
               </label>
               <button
                 type="button"
                 className="rounded-md p-1 text-neutral-800 hover:bg-neutral-200/60 hover:text-black disabled:opacity-50 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
-                onClick={() => matchesCount > 0 && setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount)}
+                onClick={() => {
+                  if (matchesCount > 0) {
+                    setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount);
+                  }
+                }}
                 disabled={matchesCount === 0}
                 aria-label="Previous match"
                 title="Previous match"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span>{matchesCount > 0 ? currentMatchIndex + 1 : 0}/{matchesCount}</span>
+              <span>
+                {matchesCount > 0 ? currentMatchIndex + 1 : 0}/{matchesCount}
+              </span>
               <button
                 type="button"
                 className="rounded-md p-1 text-neutral-800 hover:bg-neutral-200/60 hover:text-black disabled:opacity-50 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
-                onClick={() => matchesCount > 0 && setCurrentMatchIndex((i) => (i + 1) % matchesCount)}
+                onClick={() => {
+                  if (matchesCount > 0) {
+                    setCurrentMatchIndex((i) => (i + 1) % matchesCount);
+                  }
+                }}
                 disabled={matchesCount === 0}
                 aria-label="Next match"
                 title="Next match"

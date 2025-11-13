@@ -12,6 +12,7 @@ import { YamlEditorProps } from '@/types/yaml';
 import { TableHeader, ColumnDef } from '@/components/common/TableHeader';
 import { stringify } from 'yaml';
 import { ALL_NAMESPACES } from '@/constants/k8s';
+import { useFilteredItems } from '@/hooks/useFilteredItems';
 
 export interface PaneResourceContextProps {
   context?: K8sContext | null;
@@ -90,6 +91,16 @@ export function PaneGeneric<T>({
   const [showSkeleton, setShowSkeleton] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  // Items hiển thị sau khi áp dụng filter theo search và namespace
+  const displayItems = useFilteredItems<any>(
+    items,
+    selectedNamespaces,
+    q,
+    ['name'],
+    '' as string, // Không sort lại ở đây để giữ thứ tự từ Pane cụ thể
+    'asc'
+  );
+
   useEffect(() => {
     if (!selectedItem) return;
 
@@ -149,9 +160,9 @@ export function PaneGeneric<T>({
 
   const toggleAll = useCallback(
     (checked: boolean) => {
-      setSelectedItems(checked ? [...items] : []);
+      setSelectedItems(checked ? [...displayItems] : []);
     },
-    [items]
+    [displayItems]
   );
 
   const handleDeleteSelected = useCallback(async () => {
@@ -249,10 +260,10 @@ export function PaneGeneric<T>({
         setSortOrder={setSortOrder}
         onToggleAll={toggleAll}
         selectedItems={selectedItems}
-        totalItems={items}
+        totalItems={displayItems}
       />
     ),
-    [columns, sortBy, sortOrder, setSortBy, setSortOrder, toggleAll, selectedItems, items]
+    [columns, sortBy, sortOrder, setSortBy, setSortOrder, toggleAll, selectedItems, displayItems]
   );
 
   const yamlEditorProps: YamlEditorProps = useMemo(
@@ -285,7 +296,7 @@ export function PaneGeneric<T>({
       ));
     }
 
-    if (!loading && items.length === 0) {
+    if (!loading && displayItems.length === 0) {
       return (
         <Tr className="text-center">
           <Td colSpan={totalColSpan} className="absolute w-full py-4 text-center text-white/60">
@@ -295,7 +306,7 @@ export function PaneGeneric<T>({
       );
     }
 
-    return items.map((item) => {
+    return displayItems.map((item) => {
       const metadata = (item as any).metadata ?? {};
       const uid = metadata.uid ?? metadata.name ?? items.indexOf(item);
 
@@ -317,9 +328,10 @@ export function PaneGeneric<T>({
       );
     });
   }, [
+    items,
     showSkeleton,
     loading,
-    items,
+    displayItems,
     emptyText,
     totalColSpan,
     colSpan,

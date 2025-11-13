@@ -52,14 +52,11 @@ import { useResetNamespacesOnContext } from '@/hooks/useResetNamespacesOnContext
 import { toDataUrlFromBytes, detectImageMime } from '@/utils/image';
 
 export default function Home() {
-  const { contexts, selected, setSelected, loading, error, refreshContexts } = useKubeContexts();
+  const { contexts, selected, setSelected, error, refreshContexts } = useKubeContexts();
   const [page, setPage] = useState<PageKey>('overview');
   const { connMap, setConnected } = useContextConnections(refreshContexts);
   const mainScrollRef = useRef<HTMLDivElement>(null);
-  const { handleMainScrollCapture: handleMainWheelCapture } = (() => {
-    const { handleMainWheelCapture } = useMainScrollWheelGuard();
-    return { handleMainScrollCapture: handleMainWheelCapture };
-  })();
+  const { handleMainWheelCapture } = useMainScrollWheelGuard();
 
   useResetNamespacesOnContext(selected?.name);
 
@@ -129,8 +126,6 @@ export default function Home() {
     displayName: c.display_name ?? c.name,
     avatarSrc: c.avatar && c.avatar.length > 0 ? toDataUrlFromBytes(c.avatar) : undefined,
   }));
-
-  
 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-950 text-white">
