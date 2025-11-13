@@ -6,6 +6,7 @@ export const startResizing = (
     minSize?: number;
     maxSize?: number;
     axis: 'horizontal' | 'vertical';
+    invert?: boolean;
   },
   setIsResizing: (resizing: boolean) => void
 ) => {
@@ -16,6 +17,7 @@ export const startResizing = (
     getCurrentSize,
     setSize,
     axis,
+    invert = false,
     minSize = 200,
     maxSize = axis === 'vertical' ? window.innerHeight * 0.9 : window.innerWidth * 0.9,
   } = options;
@@ -26,7 +28,7 @@ export const startResizing = (
   const handleMouseMove = (moveEvent: MouseEvent) => {
     const currentPos = axis === 'vertical' ? moveEvent.clientY : moveEvent.clientX;
     const delta = startPos - currentPos;
-    const newSize = startSize + delta;
+    const newSize = invert ? startSize - delta : startSize + delta;
     const clampedSize = Math.min(Math.max(newSize, minSize), maxSize);
 
     setSize(clampedSize);

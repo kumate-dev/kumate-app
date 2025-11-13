@@ -10,12 +10,12 @@ on:
 
 jobs:
   pre-release:
-      runs-on: ubuntu-latest
-      outputs:
-        version: ${{ steps.extract_version.outputs.version }}
-        exists: ${{ steps.check_version.outputs.exists }}
-        changelog: ${{ steps.changelog.outputs.content }}
-      steps:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      exists: ${{ steps.check_version.outputs.exists }}
+      changelog: ${{ steps.changelog.outputs.content }}
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:

@@ -121,9 +121,9 @@ export function YamlEditor({
     }
   }, [currentMatchIndex, highlightedHtml]);
 
-  // Jump to a specific match index by selecting it in the textarea
   useEffect(() => {
-    if (!textareaRef.current) return;
+    const ta = textareaRef.current;
+    if (!ta) return;
     if (!searchQuery || !searchQuery.trim()) return;
     if (currentMatchIndex == null || currentMatchIndex < 0) return;
 
@@ -138,10 +138,11 @@ export function YamlEditor({
 
       const target = matches[currentMatchIndex];
       if (!target) return;
-      const ta = textareaRef.current;
-      ta.focus();
-      ta.setSelectionRange(target.start, target.end);
-      // Nudge scroll to center the selection approximately
+      // Only set selection if the textarea is already focused; never force-focus
+      if (document.activeElement === ta) {
+        ta.setSelectionRange(target.start, target.end);
+      }
+      // Adjust scroll to center the target region approximately
       const preText = value.slice(0, target.start);
       const lineCount = (preText.match(/\n/g) || []).length;
       const approxLineHeight = 14 * 1.5; // matches our CSS line-height and font-size

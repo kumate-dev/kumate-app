@@ -1,6 +1,10 @@
 import React from 'react';
-import { ButtonSecondary } from '@/components/common/ButtonSecondary';
 import { stringToHslColor } from '@/utils/string';
+import { startResizing } from '@/utils/resizing';
+import { useDynamicHotbarMaxWidth } from '@/hooks/useDynamicHotbarMaxWidth';
+
+const MIN_HOTBAR_WIDTH = 70;
+const MAX_HOTBAR_WIDTH = 600;
 
 export interface SidebarHotbarProps {
   clusters: { name: string; displayName?: string; avatarSrc?: string }[];
@@ -16,8 +20,6 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
   clusters,
   connMap,
   setConnected,
-  expanded,
-  onExpandChange,
   onClusterClick,
   onEditCluster,
 }) => {
@@ -84,10 +86,74 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
     };
   }, []);
 
+  const [isResizing, setIsResizing] = React.useState(false);
+  const dynamicMaxWidth = useDynamicHotbarMaxWidth(clusters, MIN_HOTBAR_WIDTH, MAX_HOTBAR_WIDTH);
+  const [hotbarWidth, setHotbarWidth] = React.useState<number>(() => {
+    try {
+      const stored =
+        typeof window !== 'undefined' ? localStorage.getItem('kumate.hotbar.width') : null;
+      const w = stored ? parseInt(stored, 10) : 200; // default expanded width aligns with right sidebar min
+      const max = dynamicMaxWidth;
+      const val = Number.isFinite(w) ? w : 200;
+      return Math.min(Math.max(val, MIN_HOTBAR_WIDTH), max);
+    } catch {
+      return 200;
+    }
+  });
+
+  // Clamp current width if dynamic max shrinks due to cluster changes
+  React.useEffect(() => {
+    setHotbarWidth((prev) => Math.min(prev, dynamicMaxWidth));
+  }, [dynamicMaxWidth]);
+
+  React.useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kumate.hotbar.width', String(hotbarWidth));
+      }
+    } catch {}
+  }, [hotbarWidth]);
+
+  const onResize = React.useCallback(
+    (e: React.MouseEvent) => {
+      startResizing(
+        e,
+        {
+          getCurrentSize: () => hotbarWidth,
+          setSize: setHotbarWidth,
+          minSize: MIN_HOTBAR_WIDTH, // minimum width
+          maxSize: dynamicMaxWidth,
+          axis: 'horizontal',
+          invert: true, // right-edge handle: dragging to the right increases width
+        },
+        setIsResizing
+      );
+    },
+    [hotbarWidth, dynamicMaxWidth]
+  );
+
   return (
     <div
-      className={`flex h-full flex-shrink-0 flex-col items-stretch gap-3 overflow-y-auto overscroll-none bg-neutral-900/30 py-3 transition-all ${expanded ? 'w-40 pr-3 pl-2' : 'w-12 pr-0 pl-0'} mr-2`}
+      className={`relative mr-2 flex h-full flex-shrink-0 flex-col items-stretch gap-3 overflow-y-auto overscroll-none bg-neutral-900/30 py-3 pr-3 pl-2 transition-all ${isResizing ? 'select-none' : ''}`}
+      style={{ width: `${hotbarWidth}px` }}
     >
+      <div
+        className="absolute top-0 right-0 z-10 h-full w-3 cursor-ew-resize touch-none bg-transparent hover:bg-white/10 active:bg-white/20"
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          onResize(e);
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          try {
+            const tolerance = 2; // px tolerance when comparing with max
+            const atMax = Math.abs(hotbarWidth - dynamicMaxWidth) <= tolerance;
+            setHotbarWidth(atMax ? MIN_HOTBAR_WIDTH : dynamicMaxWidth);
+          } finally {
+            setIsResizing(false);
+          }
+        }}
+      />
       {clusters.map((cluster) => {
         const initial = (cluster.displayName || cluster.name)?.[0]?.toUpperCase() || '?';
         const connected = cluster.name in connMap ? connMap[cluster.name] : null;
@@ -96,8 +162,7 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
         return (
           <button
             key={cluster.name}
-            className={`m-0 flex h-12 ${expanded ? 'w-full justify-start px-2' : 'w-full justify-center px-0'} items-center rounded border-none bg-transparent hover:bg-white/5 focus:ring-0 focus:outline-none`}
-            // Keep responsive click behavior without disabling or showing loading cursor
+            className={`m-0 flex h-12 w-full items-center justify-start rounded border-none bg-transparent px-2 hover:bg-white/5 focus:ring-0 focus:outline-none`}
             onClick={async () => {
               const status = cluster.name in connMap ? connMap[cluster.name] : null;
               if (!loading && status !== true) {
@@ -143,28 +208,14 @@ export const SidebarHotbar: React.FC<SidebarHotbarProps> = ({
                 );
               })()}
             </span>
-            {expanded && (
-              <span className="ml-2 truncate text-xs text-white/80">
-                {cluster.displayName || cluster.name}
-              </span>
-            )}
+            <span className="ml-2 truncate text-xs text-white/80">
+              {cluster.displayName || cluster.name}
+            </span>
           </button>
         );
       })}
 
-      <div className="mt-auto flex items-center justify-center px-0">
-        <ButtonSecondary
-          className="group h-9 w-9 rounded-full border border-white/20 bg-white/5 text-xs text-white/80 hover:bg-white/10 hover:text-white"
-          onClick={() => {
-            const next = !expanded;
-            onExpandChange?.(next);
-          }}
-          aria-label={expanded ? 'Collapse' : 'Expand'}
-          title={expanded ? 'Collapse' : 'Expand'}
-        >
-          <span className={`transition-transform ${expanded ? 'rotate-180' : ''}`}>›</span>
-        </ButtonSecondary>
-      </div>
+      {/* Hotbar is only controlled by drag-resize; expanded/collapsed sizing removed */}
 
       {menu.open && (
         <div
