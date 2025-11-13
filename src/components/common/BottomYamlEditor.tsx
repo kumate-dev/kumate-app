@@ -6,6 +6,8 @@ import { ButtonSave } from './ButtonSave';
 import { YamlEditorProps } from '@/types/yaml';
 import { startResizing } from '@/utils/resizing';
 import { ButtonExpand } from './ButtonExpand';
+import { Search } from '@/components/common/Search';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function BottomYamlEditor({
   open,
@@ -22,6 +24,26 @@ export default function BottomYamlEditor({
   const [isResizing, setIsResizing] = useState(false);
   const [editorHeight, setEditorHeight] = useState(() => window.innerHeight * 0.5);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [isCaseSensitive, setIsCaseSensitive] = useState(false);
+  const [isRegex, setIsRegex] = useState(false);
+
+  const matchesCount = useMemo(() => {
+    if (!searchQuery.trim()) return 0;
+    try {
+      const source = isRegex ? searchQuery : searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const flags = isCaseSensitive ? 'g' : 'gi';
+      const pattern = new RegExp(source, flags);
+      return (yamlText.match(pattern) || []).length;
+    } catch {
+      return 0;
+    }
+  }, [yamlText, searchQuery, isCaseSensitive, isRegex]);
+
+  useEffect(() => {
+    setCurrentMatchIndex(0);
+  }, [searchQuery]);
 
   const onResize = useCallback(
     (e: React.MouseEvent) => {
@@ -130,7 +152,53 @@ export default function BottomYamlEditor({
 
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
           <div className="min-w-0 truncate text-sm font-medium text-white/80">{displayTitle}</div>
-          <div className="min-w-0 flex-1">{headerChildren}</div>
+          <div
+            className="min-w-0 flex-1 flex items-center gap-2"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                  matchesCount > 0 && setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount);
+                } else {
+                  matchesCount > 0 && setCurrentMatchIndex((i) => (i + 1) % matchesCount);
+                }
+              }
+            }}
+          >
+            {headerChildren}
+            <Search query={searchQuery} onQueryChange={setSearchQuery} className="max-w-xs min-w-0 flex-shrink" />
+            <div className="flex items-center gap-1 text-xs text-white/70">
+              <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-white/10">
+                <input type="checkbox" checked={isCaseSensitive} onChange={(e) => setIsCaseSensitive(e.target.checked)} />
+                <span title="Match case">Aa</span>
+              </label>
+              <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-white/10">
+                <input type="checkbox" checked={isRegex} onChange={(e) => setIsRegex(e.target.checked)} />
+                <span title="Regex">.*</span>
+              </label>
+              <button
+                type="button"
+                className="rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-50"
+                onClick={() => matchesCount > 0 && setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount)}
+                disabled={matchesCount === 0}
+                aria-label="Previous match"
+                title="Previous match"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span>{matchesCount > 0 ? currentMatchIndex + 1 : 0}/{matchesCount}</span>
+              <button
+                type="button"
+                className="rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-50"
+                onClick={() => matchesCount > 0 && setCurrentMatchIndex((i) => (i + 1) % matchesCount)}
+                disabled={matchesCount === 0}
+                aria-label="Next match"
+                title="Next match"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <ButtonCancel onClick={onClose} disabled={saving} />
             {mode !== 'view' && (
@@ -147,6 +215,10 @@ export default function BottomYamlEditor({
             heightClass="h-full"
             readOnly={mode === 'view'}
             onError={setYamlError}
+            searchQuery={searchQuery}
+            currentMatchIndex={matchesCount > 0 ? currentMatchIndex : -1}
+            isCaseSensitive={isCaseSensitive}
+            isRegex={isRegex}
           />
         </div>
       </div>

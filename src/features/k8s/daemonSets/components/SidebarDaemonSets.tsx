@@ -7,7 +7,7 @@ import { TableYamlRow } from '@/components/common/TableYamlRow';
 import { RightSidebarGeneric } from '../../generic/components/RightSidebarGeneric';
 import { BadgeStatus } from '../../generic/components/BadgeStatus';
 import { getDaemonSetStatus } from '../utils/daemonSetStatus';
-import { Button } from '@/components/ui/button';
+import { ButtonForward } from '@/components/common/ButtonForward';
 import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 import { toast } from 'sonner';
 import { ButtonRestart } from '@/components/common/ButtonRestart';
@@ -132,18 +132,13 @@ export function SidebarDaemonSets({
                                   {p.name && <span className="ml-2 text-white/60">{p.name}</span>}
                                 </Td>
                                 <Td className="text-right">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="min-w-[96px] px-3"
+                                  <ButtonForward
                                     onClick={() => {
                                       setSelectedRemotePort(p.containerPort || 0);
                                       setPfDialogOpen(true);
                                     }}
                                     disabled={!contextName || deleting || updating}
-                                  >
-                                    Forward...
-                                  </Button>
+                                  />
                                 </Td>
                               </Tr>
                             ))}

@@ -25,7 +25,7 @@ export const ButtonLog: React.FC<ButtonLogProps> = ({
 
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       size="sm"
       className={`flex gap-1 px-3 ${className}`}
       onClick={handleClick}

@@ -1,8 +1,7 @@
-import { Terminal, Loader2 } from 'lucide-react';
 import React from 'react';
-import Button from '../ui/button';
+import { Button } from '@/components/ui/button';
 
-interface ButtonShellProps {
+interface ButtonForwardProps {
   onClick: () => void;
   className?: string;
   text?: string;
@@ -10,7 +9,7 @@ interface ButtonShellProps {
   loading?: boolean;
 }
 
-export const ButtonShell: React.FC<ButtonShellProps> = ({
+export const ButtonForward: React.FC<ButtonForwardProps> = ({
   onClick,
   className = '',
   text,
@@ -30,15 +29,12 @@ export const ButtonShell: React.FC<ButtonShellProps> = ({
       size="sm"
       className={`flex gap-1 px-3 ${className}`}
       onClick={handleClick}
-      title={loading ? 'Opening shell...' : 'Open Shell'}
+      title={loading ? 'Forwarding...' : 'Forward'}
       disabled={disabled || loading}
     >
-      {loading ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <Terminal className="h-3.5 w-3.5" />
-      )}
-      {text ?? (loading ? 'Opening...' : 'Shell')}
+      {text ?? (loading ? 'Forwarding...' : 'Forward')}
     </Button>
   );
 };
+
+export default ButtonForward;

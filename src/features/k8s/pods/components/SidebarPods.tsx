@@ -12,7 +12,7 @@ import BottomExecTerminal from '@/components/common/BottomExecTerminal';
 import { useState, useCallback, useMemo } from 'react';
 import BottomLogViewer from '@/components/common/BottomLogViewer';
 import { ButtonShell } from '@/components/common/ButtonShell';
-import { Button } from '@/components/ui/button';
+import { ButtonForward } from '@/components/common/ButtonForward';
 import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 import { SidebarEnvSection } from '@/features/k8s/generic/components/SidebarEnvSection';
 
@@ -244,15 +244,10 @@ export function SidebarPods({
                                           )}
                                         </Td>
                                         <Td className="text-right">
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="min-w-[96px] px-3"
+                                          <ButtonForward
                                             onClick={() => handleOpenPortForward(p.containerPort)}
                                             disabled={!item}
-                                          >
-                                            Forward...
-                                          </Button>
+                                          />
                                         </Td>
                                       </Tr>
                                     ))}

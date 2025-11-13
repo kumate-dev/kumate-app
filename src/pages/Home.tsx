@@ -1,18 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { SidebarHotbar } from '@/features/k8s/generic/components/SidebarHotbar';
 import { SidebarCategories } from '@/features/k8s/generic/components/SidebarCategories';
-import { useNamespaceStore } from '@/store/namespaceStore';
 import { PageKey } from '@/types/pageKey';
-import {
-  checkContextConnection,
-  getContextConnection,
-  importKubeContexts,
-  K8sContext,
-  listContexts,
-  setContextConnection,
-} from '@/api/k8s/contexts';
-import { ALL_NAMESPACES } from '@/constants/k8s';
+import { K8sContext } from '@/api/k8s/contexts';
 import Overview from '@/features/k8s/overview/components/Overview';
 import ComingSoon from './ComingSoon';
 import Pods from '@/features/k8s/pods/pages/Pods';
@@ -52,85 +43,25 @@ import ClusterRoleBindings from '@/features/k8s/clusterRoleBindings/pages/Cluste
 import HelmReleases from '@/features/k8s/helmReleases/pages/HelmReleases';
 import Definitions from '@/features/k8s/customResources/pages/Definitions';
 import PortForwarding from '@/features/k8s/portForwarding/pages/PortForwarding';
+import { ModalEditContext } from '@/components/common/ModalEditContext';
+import { updateContextMetadata } from '@/api/k8s/contexts';
+import { useKubeContexts } from '@/hooks/useKubeContexts';
+import { useContextConnections } from '@/hooks/useContextConnections';
+import { useMainScrollWheelGuard } from '@/hooks/useMainScrollWheelGuard';
+import { useResetNamespacesOnContext } from '@/hooks/useResetNamespacesOnContext';
+import { toDataUrlFromBytes, detectImageMime } from '@/utils/image';
 
 export default function Home() {
-  const [contexts, setContexts] = useState<K8sContext[]>([]);
-  const [, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [selected, setSelected] = useState<K8sContext | null>(null);
+  const { contexts, selected, setSelected, loading, error, refreshContexts } = useKubeContexts();
   const [page, setPage] = useState<PageKey>('overview');
-  const [connMap, setConnMap] = useState<Record<string, boolean | null>>({});
-
-  const resetNsToAll = () => useNamespaceStore.setState({ selectedNamespaces: [ALL_NAMESPACES] });
-  const selectedRef = useRef(selected);
+  const { connMap, setConnected } = useContextConnections(refreshContexts);
   const mainScrollRef = useRef<HTMLDivElement>(null);
+  const { handleMainScrollCapture: handleMainWheelCapture } = (() => {
+    const { handleMainWheelCapture } = useMainScrollWheelGuard();
+    return { handleMainScrollCapture: handleMainWheelCapture };
+  })();
 
-  const handleMainWheelCapture = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const canScroll = el.scrollHeight > el.clientHeight;
-
-    if (!canScroll) {
-      e.stopPropagation();
-      e.preventDefault();
-      return;
-    }
-
-    const delta = e.deltaY;
-    const atTop = el.scrollTop <= 0;
-    const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
-
-    if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-  }, []);
-
-  useEffect(() => {
-    async function fetchContexts() {
-      setError('');
-      setLoading(true);
-      try {
-        try {
-          await importKubeContexts();
-        } catch {}
-
-        let list: K8sContext[] = [];
-        try {
-          list = (await listContexts()) || [];
-        } catch {
-          setContexts([]);
-          setSelected(null);
-          return;
-        }
-        setContexts(list);
-
-        if (!selectedRef.current && list.length > 0) setSelected(list[0]);
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : String(e));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchContexts();
-  }, []);
-
-  // Load current connection map once on mount
-  useEffect(() => {
-    import('@/api/k8s/contexts').then(({ getContextConnections }) => {
-      getContextConnections()
-        .then((items) => {
-          const m: Record<string, boolean | null> = {};
-          for (const it of items) m[it.name] = it.connected;
-          setConnMap(m);
-        })
-        .catch(() => {});
-    });
-  }, []);
-
-  useEffect(() => {
-    if (selected?.name) resetNsToAll();
-  }, [selected?.name]);
+  useResetNamespacesOnContext(selected?.name);
 
   const pageComponents: Record<string, React.FC<{ context?: K8sContext | null }>> = {
     overview: Overview,
@@ -189,39 +120,17 @@ export default function Home() {
 
   const PageComponent = pageComponents[page] || ComingSoon;
   const [hotbarExpanded, setHotbarExpanded] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const [patchingEdit, setPatchingEdit] = useState(false);
 
-  const hotbarClusters = contexts.map((c) => ({ name: c.name }));
+  const hotbarClusters = contexts.map((c) => ({
+    name: c.name,
+    displayName: c.display_name ?? c.name,
+    avatarSrc: c.avatar && c.avatar.length > 0 ? toDataUrlFromBytes(c.avatar) : undefined,
+  }));
 
-  const setConnected = useCallback(async (name: string, connected: boolean): Promise<boolean> => {
-    try {
-      await setContextConnection(name, connected);
-
-      if (connected) {
-        try {
-          await checkContextConnection(name);
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : String(e);
-          toast.error(`Connect failed: ${msg || 'Unknown error during connection check'}`);
-          return false;
-        }
-      }
-      try {
-        const latest = await getContextConnection(name);
-        setConnMap((prev) => ({ ...prev, [name]: latest }));
-      } catch {}
-      if (connected) {
-        toast.success(`Connected to ${name}`);
-      } else {
-        toast.error(`Disconnected from ${name}`);
-      }
-      return true;
-    } catch (err) {
-      const actionText = connected ? 'Connect' : 'Disconnect';
-      const msg = err instanceof Error ? err.message : String(err);
-      toast.error(`${actionText} failed: ${msg}`);
-      return false;
-    }
-  }, []);
+  
 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-950 text-white">
@@ -237,6 +146,10 @@ export default function Home() {
               const context = contexts.find((ctx) => ctx.name === clusterName) || null;
               setSelected(context);
               setPage('overview');
+            }}
+            onEditCluster={(name) => {
+              setEditingName(name);
+              setEditOpen(true);
             }}
           />
           <SidebarCategories
@@ -261,6 +174,53 @@ export default function Home() {
         >
           <PageComponent context={selected ?? undefined} />
         </div>
+
+        <ModalEditContext
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          patching={patchingEdit}
+          contextName={editingName ?? ''}
+          currentDisplayName={
+            (editingName && contexts.find((c) => c.name === editingName)?.display_name) || undefined
+          }
+          currentAvatarBase64={
+            (editingName &&
+              (() => {
+                const target = contexts.find((c) => c.name === editingName);
+                if (!target?.avatar || target.avatar.length === 0) return undefined;
+                const arr = new Uint8Array(target.avatar);
+                let binary = '';
+                for (let i = 0; i < arr.length; i++) binary += String.fromCharCode(arr[i]);
+                return btoa(binary);
+              })()) ||
+            undefined
+          }
+          currentAvatarMime={
+            (editingName &&
+              (() => {
+                const target = contexts.find((c) => c.name === editingName);
+                if (!target?.avatar || target.avatar.length === 0) return undefined;
+                const arr = new Uint8Array(target.avatar);
+                return detectImageMime(arr);
+              })()) ||
+            undefined
+          }
+          onConfirm={async (displayName, avatarBase64) => {
+            if (!editingName) return;
+            setPatchingEdit(true);
+            try {
+              await updateContextMetadata(editingName, displayName, avatarBase64 ?? undefined);
+              await refreshContexts();
+              toast.success('Saved changes');
+              setEditOpen(false);
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : String(e);
+              toast.error(`Save failed: ${msg}`);
+            } finally {
+              setPatchingEdit(false);
+            }
+          }}
+        />
       </main>
     </div>
   );

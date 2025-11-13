@@ -106,6 +106,7 @@ pub fn run() {
             connections::get_context_connection,
             contexts::import_kube_contexts,
             contexts::list_contexts,
+            contexts::update_context_metadata,
             warmup::warmup_context,
             check::check_context_connection,
             check::get_context_version,

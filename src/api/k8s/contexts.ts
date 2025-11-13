@@ -2,12 +2,15 @@ import { invoke } from '@tauri-apps/api/core';
 
 export interface K8sContext {
   name: string;
+  display_name?: string;
   cluster?: string;
   user?: string;
+  avatar?: number[]; // raw bytes from backend
 }
 
 export async function listContexts(): Promise<K8sContext[]> {
-  return invoke('list_contexts');
+  const contexts = (await invoke('list_contexts')) as K8sContext[];
+  return contexts;
 }
 
 export async function importKubeContexts(): Promise<void> {
@@ -38,4 +41,17 @@ export async function checkContextConnection(name: string): Promise<void> {
 
 export async function getContextVersion(name: string): Promise<string> {
   return invoke('get_context_version', { name });
+}
+
+export async function updateContextMetadata(
+  name: string,
+  displayName?: string,
+  avatarBase64?: string
+): Promise<K8sContext> {
+  const payload: Record<string, unknown> = {
+    name,
+    display_name: displayName,
+    avatar_base64: avatarBase64,
+  };
+  return invoke('update_context_metadata', { args: payload });
 }

@@ -13,7 +13,7 @@ import { ButtonRestart } from '@/components/common/ButtonRestart';
 import { ButtonScale } from '@/components/common/ButtonScale';
 import { ModalRestart } from '@/components/common/ModalRestart';
 import { ModalScale } from '@/components/common/ModalScale';
-import { Button } from '@/components/ui/button';
+import { ButtonForward } from '@/components/common/ButtonForward';
 import { ModalPortForwarder } from '@/components/common/ModalPortForwarder';
 
 interface SidebarDeploymentsProps {
@@ -175,18 +175,13 @@ export function SidebarDeployments({
                                   {p.name && <span className="ml-2 text-white/60">{p.name}</span>}
                                 </Td>
                                 <Td className="text-right">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="min-w-[96px] px-3"
+                                  <ButtonForward
                                     onClick={() => {
                                       setSelectedRemotePort(p.containerPort || 0);
                                       setPfDialogOpen(true);
                                     }}
                                     disabled={!contextName || deleting || updating || patching}
-                                  >
-                                    Forward...
-                                  </Button>
+                                  />
                                 </Td>
                               </Tr>
                             ))}

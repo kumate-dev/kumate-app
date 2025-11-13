@@ -324,6 +324,7 @@ impl K8sContexts {
                     .add_context(&K8sContext {
                         id: Uuid::new_v4().to_string(),
                         name: name.clone(),
+                        display_name: None,
                         cluster: Some(nc.context.cluster.clone()),
                         user: nc.context.user.clone(),
                         avatar: None,
@@ -352,11 +353,37 @@ impl K8sContexts {
         let ctx: K8sContext = K8sContext {
             id,
             name: name.clone(),
+            display_name: None,
             cluster,
             user,
             avatar: None,
             created_at: Utc::now().timestamp(),
         };
         app_state.k8s_contexts.add_context(&ctx).map_err(|e| e.to_string())
+    }
+
+    pub fn update_context_metadata(
+        app_state: &AppState,
+        name: String,
+        display_name: Option<String>,
+        avatar_b64: Option<String>,
+    ) -> Result<K8sContext, String> {
+        // Decode base64 avatar if provided
+        let avatar_bytes: Option<Vec<u8>> = if let Some(b64) = avatar_b64 {
+            if b64.is_empty() {
+                Some(Vec::new())
+            } else {
+                match base64::engine::general_purpose::STANDARD.decode(b64) {
+                    Ok(v) => Some(v),
+                    Err(e) => return Err(format!("invalid avatar base64: {}", e)),
+                }
+            }
+        } else {
+            None
+        };
+        app_state
+            .k8s_contexts
+            .update_context_fields(&name, display_name, avatar_bytes)
+            .map_err(|e| e.to_string())
     }
 }

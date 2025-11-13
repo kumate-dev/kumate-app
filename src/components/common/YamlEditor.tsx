@@ -11,6 +11,10 @@ interface YamlEditorProps {
   heightClass?: string;
   readOnly?: boolean;
   onError?: (error: string | null) => void;
+  searchQuery?: string;
+  currentMatchIndex?: number;
+  isCaseSensitive?: boolean;
+  isRegex?: boolean;
 }
 
 export function YamlEditor({
@@ -20,6 +24,10 @@ export function YamlEditor({
   heightClass,
   readOnly = false,
   onError,
+  searchQuery,
+  currentMatchIndex,
+  isCaseSensitive = false,
+  isRegex = false,
 }: YamlEditorProps) {
   const [isValid, setIsValid] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -62,21 +70,87 @@ export function YamlEditor({
     return Array.from({ length: Math.max(1, lineCount) }, (_, i) => i + 1);
   }, [value]);
 
+  const escapeRegExp = useCallback((s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), []);
+
   const highlightedHtml = useMemo(() => {
     const code = value || '';
     try {
-      return Prism.highlight(code, Prism.languages.yaml, 'yaml');
+      let html = Prism.highlight(code, Prism.languages.yaml, 'yaml');
+      if (searchQuery && searchQuery.trim()) {
+        let source = searchQuery;
+        if (!isRegex) {
+          source = escapeRegExp(source);
+        }
+        const flags = isCaseSensitive ? 'g' : 'gi';
+        const pattern = new RegExp(source, flags);
+        let idx = 0;
+        // Post-process Prism HTML: wrap matches in <mark> + data-index
+        html = html.replace(pattern, (m) => {
+          const markClass = 'bg-yellow-300 text-black dark:bg-yellow-300 dark:text-black';
+          const out = `<mark data-idx="${idx}" class="${markClass}">${m}</mark>`;
+          idx += 1;
+          return out;
+        });
+      }
+      return html;
     } catch (error) {
       console.warn('Prism highlighting failed:', error);
       return code;
     }
-  }, [value]);
+  }, [value, searchQuery, escapeRegExp, isCaseSensitive, isRegex]);
 
   useEffect(() => {
     if (highlightRef.current) {
       highlightRef.current.innerHTML = highlightedHtml;
     }
   }, [highlightedHtml]);
+
+  // Emphasize current match in the highlighted layer
+  useEffect(() => {
+    const root = highlightRef.current;
+    if (!root) return;
+    const marks = root.querySelectorAll('mark[data-idx]');
+    marks.forEach((el) => {
+      el.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-300');
+      el.classList.add('bg-yellow-300');
+    });
+    if (currentMatchIndex == null || currentMatchIndex < 0) return;
+    const current = root.querySelector(`mark[data-idx="${currentMatchIndex}"]`);
+    if (current) {
+      current.classList.remove('bg-yellow-300');
+      current.classList.add('bg-amber-300', 'ring-2', 'ring-amber-500');
+    }
+  }, [currentMatchIndex, highlightedHtml]);
+
+  // Jump to a specific match index by selecting it in the textarea
+  useEffect(() => {
+    if (!textareaRef.current) return;
+    if (!searchQuery || !searchQuery.trim()) return;
+    if (currentMatchIndex == null || currentMatchIndex < 0) return;
+
+    try {
+      const pattern = new RegExp(escapeRegExp(searchQuery), 'gi');
+      const matches: Array<{ start: number; end: number }> = [];
+      let m: RegExpExecArray | null;
+      while ((m = pattern.exec(value)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length });
+        if (m.index === pattern.lastIndex) pattern.lastIndex++;
+      }
+
+      const target = matches[currentMatchIndex];
+      if (!target) return;
+      const ta = textareaRef.current;
+      ta.focus();
+      ta.setSelectionRange(target.start, target.end);
+      // Nudge scroll to center the selection approximately
+      const preText = value.slice(0, target.start);
+      const lineCount = (preText.match(/\n/g) || []).length;
+      const approxLineHeight = 14 * 1.5; // matches our CSS line-height and font-size
+      ta.scrollTop = Math.max(0, lineCount * approxLineHeight - ta.clientHeight / 2);
+    } catch {
+      // ignore
+    }
+  }, [currentMatchIndex, searchQuery, value, escapeRegExp, isCaseSensitive, isRegex]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

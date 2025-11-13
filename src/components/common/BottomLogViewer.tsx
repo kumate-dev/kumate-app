@@ -11,6 +11,8 @@ import DropdownTrigger from '@/components/ui/dropdown';
 import { ButtonDownloadLog } from './ButtonDownloadLog';
 import { ButtonClear } from './ButtonClear';
 import { Spinner } from '@/components/ui/spinner';
+import { Search } from '@/components/common/Search';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface LogViewerProps {
   open: boolean;
@@ -37,6 +39,11 @@ export default function BottomLogViewer({
   const [editorHeight, setEditorHeight] = useState(() => window.innerHeight * 0.5);
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedTail, setSelectedTail] = useState(50);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [isCaseSensitive, setIsCaseSensitive] = useState(false);
+  const [isRegex, setIsRegex] = useState(false);
+  const logContainerRef = useRef<HTMLDivElement>(null);
 
   const logEndRef = useRef<HTMLDivElement>(null);
 
@@ -115,6 +122,66 @@ export default function BottomLogViewer({
   const tailOptions = useMemo(() => [50, 100, 500, 1000, -1], []);
   const displayTitle = useMemo(() => title ?? 'Pod Logs', [title]);
 
+  const escapeRegExp = useCallback((s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), []);
+  const highlightedLogs = useMemo(() => {
+    if (!logs) return null;
+    if (!searchQuery.trim()) return logs;
+    try {
+      const source = isRegex ? searchQuery : escapeRegExp(searchQuery);
+      const flags = isCaseSensitive ? 'g' : 'gi';
+      const pattern = new RegExp(source, flags);
+      const parts = logs.split(pattern);
+      const matches = logs.match(pattern) || [];
+      const nodes: React.ReactNode[] = [];
+      for (let i = 0; i < parts.length; i++) {
+        nodes.push(parts[i]);
+        if (i < matches.length) {
+          nodes.push(
+            <mark
+              id={`log-match-${i}`}
+              key={`h-${i}`}
+              className={`${i === currentMatchIndex ? 'bg-amber-300 ring-2 ring-amber-500' : 'bg-yellow-300'} text-black dark:text-black`}
+            >
+              {matches[i]}
+            </mark>
+          );
+        }
+      }
+      return nodes;
+    } catch {
+      return logs;
+    }
+  }, [logs, searchQuery, escapeRegExp, isCaseSensitive, isRegex, currentMatchIndex]);
+
+  const matchesCount = useMemo(() => {
+    if (!logs || !searchQuery.trim()) return 0;
+    try {
+      const source = isRegex ? searchQuery : escapeRegExp(searchQuery);
+      const flags = isCaseSensitive ? 'g' : 'gi';
+      const pattern = new RegExp(source, flags);
+      return (logs.match(pattern) || []).length;
+    } catch {
+      return 0;
+    }
+  }, [logs, searchQuery, escapeRegExp, isCaseSensitive, isRegex]);
+
+  useEffect(() => {
+    setCurrentMatchIndex(0);
+  }, [searchQuery]);
+
+  const scrollToCurrentMatch = useCallback(() => {
+    if (!logContainerRef.current) return;
+    if (matchesCount === 0) return;
+    const el = logContainerRef.current.querySelector(`#log-match-${currentMatchIndex}`) as HTMLElement | null;
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentMatchIndex, matchesCount]);
+
+  useEffect(() => {
+    scrollToCurrentMatch();
+  }, [scrollToCurrentMatch, highlightedLogs]);
+
   const containerClass = useMemo(
     () =>
       `fixed right-0 bottom-0 left-0 z-[60] border-l border-neutral-200 bg-white/95 shadow-xl backdrop-blur-sm transition-transform duration-300 dark:border-white/10 dark:bg-neutral-900/95 ${
@@ -155,7 +222,51 @@ export default function BottomLogViewer({
             {displayTitle}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                  matchesCount > 0 && setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount);
+                } else {
+                  matchesCount > 0 && setCurrentMatchIndex((i) => (i + 1) % matchesCount);
+                }
+              }
+            }}
+          >
+            <Search query={searchQuery} onQueryChange={setSearchQuery} className="max-w-xs min-w-0 flex-shrink" />
+            <div className="flex items-center gap-1 text-xs text-neutral-700 dark:text-white/70">
+              <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-neutral-200/60 dark:hover:bg-white/10">
+                <input type="checkbox" checked={isCaseSensitive} onChange={(e) => setIsCaseSensitive(e.target.checked)} />
+                <span title="Match case">Aa</span>
+              </label>
+              <label className="flex items-center gap-1 rounded-md px-1 py-0.5 hover:bg-neutral-200/60 dark:hover:bg-white/10">
+                <input type="checkbox" checked={isRegex} onChange={(e) => setIsRegex(e.target.checked)} />
+                <span title="Regex">.*</span>
+              </label>
+              <button
+                type="button"
+                className="rounded-md p-1 text-neutral-800 hover:bg-neutral-200/60 hover:text-black disabled:opacity-50 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
+                onClick={() => matchesCount > 0 && setCurrentMatchIndex((i) => (i - 1 + matchesCount) % matchesCount)}
+                disabled={matchesCount === 0}
+                aria-label="Previous match"
+                title="Previous match"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span>{matchesCount > 0 ? currentMatchIndex + 1 : 0}/{matchesCount}</span>
+              <button
+                type="button"
+                className="rounded-md p-1 text-neutral-800 hover:bg-neutral-200/60 hover:text-black disabled:opacity-50 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
+                onClick={() => matchesCount > 0 && setCurrentMatchIndex((i) => (i + 1) % matchesCount)}
+                disabled={matchesCount === 0}
+                aria-label="Next match"
+                title="Next match"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
             <Dropdown
               trigger={
                 <DropdownTrigger
@@ -210,8 +321,8 @@ export default function BottomLogViewer({
             {error && <div className="mb-4 text-red-600 dark:text-red-400">Error: {error}</div>}
 
             {logs && (
-              <div className="text-neutral-800 dark:text-white/80">
-                {logs}
+              <div ref={logContainerRef} className="text-neutral-800 dark:text-white/80">
+                {highlightedLogs}
                 <div ref={logEndRef} />
               </div>
             )}
