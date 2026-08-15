@@ -1,0 +1,4 @@
+edition = "2024"
+
+# Widths
+max_width = 100

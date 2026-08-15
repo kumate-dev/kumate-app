@@ -1,0 +1,108 @@
+import { invoke } from '@tauri-apps/api/core';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import type { EventHandler, EventType } from '@/types/k8sEvent';
+import type { V1DaemonSet } from '@kubernetes/client-node';
+import type { K8sResponse } from '@/types/k8sResponse';
+
+export interface DaemonSetEvent {
+  type: EventType;
+  object: V1DaemonSet;
+}
+
+export async function createDaemonSet({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1DaemonSet;
+}): Promise<V1DaemonSet> {
+  return await invoke<V1DaemonSet>('create_daemon_set', { name, namespace, manifest });
+}
+
+export async function updateDaemonSet({
+  name,
+  namespace,
+  manifest,
+}: {
+  name: string;
+  namespace?: string;
+  manifest: V1DaemonSet;
+}): Promise<V1DaemonSet> {
+  return await invoke<V1DaemonSet>('update_daemon_set', { name, namespace, manifest });
+}
+
+export async function listDaemonSets({
+  name,
+  namespaces,
+}: {
+  name: string;
+  namespaces?: string[];
+}): Promise<V1DaemonSet[]> {
+  return await invoke<V1DaemonSet[]>('list_daemon_sets', { name, namespaces });
+}
+
+export async function watchDaemonSets({
+  name,
+  namespaces,
+  onEvent,
+}: {
+  name: string;
+  namespaces?: string[];
+  onEvent?: EventHandler<DaemonSetEvent>;
+}): Promise<{ eventName: string; unlisten: UnlistenFn }> {
+  const eventName = await invoke<string>('watch_daemon_sets', { name, namespaces });
+
+  const unlisten = await listen<DaemonSetEvent>(eventName, (evt) => {
+    try {
+      onEvent?.(evt.payload);
+    } catch (err) {
+      console.error('Error in onEvent handler:', err);
+    }
+  });
+
+  return { eventName, unlisten };
+}
+
+export async function deleteDaemonSets({
+  name,
+  namespace,
+  resourceNames,
+}: {
+  name: string;
+  namespace?: string;
+  resourceNames: string[];
+}): Promise<K8sResponse[]> {
+  return await invoke<K8sResponse[]>('delete_daemon_sets', {
+    name,
+    namespace,
+    resourceNames,
+  });
+}
+
+export async function restartDaemonSet({
+  name,
+  namespace,
+  resourceName,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+}): Promise<V1DaemonSet> {
+  return await invoke<V1DaemonSet>('restart_daemon_set', { name, namespace, resourceName });
+}
+
+export async function scaleDaemonSet({
+  name,
+  namespace,
+  resourceName,
+  replicas,
+}: {
+  name: string;
+  namespace?: string;
+  resourceName: string;
+  replicas: number;
+}): Promise<V1DaemonSet> {
+  return await invoke<V1DaemonSet>('scale_daemon_set', { name, namespace, resourceName, replicas });
+}

@@ -1,0 +1,1306 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - CHANGELOG.md
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+
+# ============================================================
+# Release
+#
+# Artifacts:
+#
+# Linux:
+#   x64
+#   ARM64
+#
+# macOS:
+#   x64
+#   ARM64
+#
+# Windows:
+#   x64
+#   ARM64
+#
+# Incremental build:
+#
+# If app-v0.1.0 already exists:
+#   - existing assets are NOT rebuilt
+#   - missing assets ARE rebuilt
+#
+# ============================================================
+
+
+jobs:
+
+  # ============================================================
+  # PRE-RELEASE
+  # ============================================================
+
+  pre-release:
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      tag: ${{ steps.release_info.outputs.tag }}
+      release_exists: ${{ steps.release_info.outputs.release_exists }}
+      changelog: ${{ steps.changelog.outputs.content }}
+
+    steps:
+
+      # ----------------------------------------------------------
+      # Checkout
+      # ----------------------------------------------------------
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+
+      # ----------------------------------------------------------
+      # GitHub CLI
+      # ----------------------------------------------------------
+
+      - name: Check GitHub CLI
+        run: |
+          gh --version
+
+
+      # ----------------------------------------------------------
+      # Extract version
+      #
+      # Expected:
+      #
+      # ## [v0.1.0]() (2026-08-15)
+      #
+      # Result:
+      #
+      # v0.1.0
+      # ----------------------------------------------------------
+
+      - name: Extract version from CHANGELOG.md
+        id: extract_version
+        shell: bash
+        run: |
+          set -e
+
+          VERSION=$(
+            grep -oE '^## \[v?[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md \
+              | head -1 \
+              | sed -E 's/^## \[([^]]+)\].*/\1/'
+          )
+
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: No version found in CHANGELOG.md"
+            echo
+            echo "Expected format:"
+            echo "## [v0.1.0]() (2026-08-15)"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          echo
+          echo "========================================"
+          echo "Extracted version"
+          echo "========================================"
+          echo "$VERSION"
+
+
+      # ----------------------------------------------------------
+      # Check GitHub Release
+      # ----------------------------------------------------------
+
+      - name: Check release
+        id: release_info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.extract_version.outputs.version }}
+
+        shell: bash
+        run: |
+          set -e
+
+          TAG="app-${VERSION}"
+
+          echo
+          echo "========================================"
+          echo "GitHub Release"
+          echo "========================================"
+
+          echo "Version : $VERSION"
+          echo "Tag     : $TAG"
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+
+          if gh release view "$TAG" \
+            --repo "${GITHUB_REPOSITORY}" \
+            >/dev/null 2>&1; then
+
+            echo "release_exists=true" >> "$GITHUB_OUTPUT"
+
+            echo
+            echo "Release already exists."
+
+          else
+
+            echo "release_exists=false" >> "$GITHUB_OUTPUT"
+
+            echo
+            echo "Release does not exist."
+
+          fi
+
+
+      # ----------------------------------------------------------
+      # Extract changelog
+      # ----------------------------------------------------------
+
+      - name: Extract Changelog
+        id: changelog
+        shell: bash
+        env:
+          VERSION: ${{ steps.extract_version.outputs.version }}
+
+        run: |
+          set -e
+
+          CONTENT=$(
+            awk -v version="$VERSION" '
+              $0 ~ "^## \\[" version "\\]" {
+                found=1
+                next
+              }
+
+              found && /^## \[/ {
+                exit
+              }
+
+              found {
+                print
+              }
+            ' CHANGELOG.md
+          )
+
+          if [ -z "$CONTENT" ]; then
+            echo "ERROR: No changelog content found for $VERSION"
+            exit 1
+          fi
+
+          {
+            echo 'content<<EOF'
+            echo "$CONTENT"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          echo
+          echo "========================================"
+          echo "Changelog"
+          echo "========================================"
+          echo "$CONTENT"
+
+
+  # ============================================================
+  # BUILD
+  #
+  # Every matrix job checks GitHub Release itself.
+  #
+  # Existing asset:
+  #   SKIP
+  #
+  # Missing asset:
+  #   BUILD
+  #
+  # This makes the workflow resumable.
+  # ============================================================
+
+  build:
+
+    needs:
+      - pre-release
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+
+          # ======================================================
+          # Linux x64
+          # ======================================================
+
+          - os: ubuntu-24.04
+            platform: linux-x64
+            target: x86_64-unknown-linux-gnu
+            artifact_pattern: 'Kumate_*_linux-x64.deb'
+
+
+          # ======================================================
+          # Linux ARM64
+          # ======================================================
+
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            target: aarch64-unknown-linux-gnu
+            artifact_pattern: 'Kumate_*_linux-arm64.deb'
+
+
+          # ======================================================
+          # macOS x64
+          # ======================================================
+
+          - os: macos-15-intel
+            platform: macos-x64
+            target: x86_64-apple-darwin
+            artifact_pattern: 'Kumate_*_macos-x64.dmg'
+
+
+          # ======================================================
+          # macOS ARM64
+          # ======================================================
+
+          - os: macos-15
+            platform: macos-arm64
+            target: aarch64-apple-darwin
+            artifact_pattern: 'Kumate_*_macos-arm64.dmg'
+
+
+          # ======================================================
+          # Windows x64
+          # ======================================================
+
+          - os: windows-2022
+            platform: windows-x64
+            target: x86_64-pc-windows-msvc
+            artifact_pattern: 'Kumate_*_windows-x64-setup.exe'
+
+
+          # ======================================================
+          # Windows ARM64
+          # ======================================================
+
+          - os: windows-11-arm
+            platform: windows-arm64
+            target: aarch64-pc-windows-msvc
+            artifact_pattern: 'Kumate_*_windows-arm64-setup.exe'
+
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 90
+
+    steps:
+
+      # ==========================================================
+      # Checkout
+      # ==========================================================
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+
+      # ==========================================================
+      # Check existing release asset
+      # ==========================================================
+
+      - name: Check existing release asset
+        id: existing_asset
+
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.pre-release.outputs.tag }}
+          PATTERN: ${{ matrix.artifact_pattern }}
+
+        shell: bash
+
+        run: |
+          set -e
+
+          echo
+          echo "========================================"
+          echo "Checking existing release asset"
+          echo "========================================"
+
+          echo "Tag      : $TAG"
+          echo "Platform : ${{ matrix.platform }}"
+          echo "Target   : ${{ matrix.target }}"
+          echo "Pattern  : $PATTERN"
+
+
+          # ------------------------------------------------------
+          # Release does not exist
+          #
+          # Must build.
+          # ------------------------------------------------------
+
+          if ! gh release view "$TAG" \
+            --repo "${GITHUB_REPOSITORY}" \
+            >/dev/null 2>&1; then
+
+            echo
+            echo "Release does not exist."
+            echo "BUILD"
+
+            echo "build=true" >> "$GITHUB_OUTPUT"
+
+            exit 0
+
+          fi
+
+
+          # ------------------------------------------------------
+          # Get existing assets
+          # ------------------------------------------------------
+
+          ASSETS=$(
+            gh release view "$TAG" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json assets \
+              --jq '.assets[].name'
+          )
+
+
+          echo
+          echo "Existing assets:"
+
+          if [ -n "$ASSETS" ]; then
+            echo "$ASSETS"
+          else
+            echo "(none)"
+          fi
+
+
+          # ------------------------------------------------------
+          # Search matching asset
+          # ------------------------------------------------------
+
+          MATCH=""
+
+          while IFS= read -r ASSET; do
+
+            if [[ "$ASSET" == $PATTERN ]]; then
+              MATCH="$ASSET"
+              break
+            fi
+
+          done <<< "$ASSETS"
+
+
+          # ------------------------------------------------------
+          # Asset exists
+          # ------------------------------------------------------
+
+          if [ -n "$MATCH" ]; then
+
+            echo
+            echo "========================================"
+            echo "Asset already exists"
+            echo "========================================"
+
+            echo "Platform : ${{ matrix.platform }}"
+            echo "Asset    : $MATCH"
+            echo
+
+            echo "BUILD SKIPPED"
+
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "existing_asset=$MATCH" >> "$GITHUB_OUTPUT"
+
+          else
+
+            echo
+            echo "========================================"
+            echo "Asset is missing"
+            echo "========================================"
+
+            echo "Platform : ${{ matrix.platform }}"
+            echo "Pattern  : $PATTERN"
+            echo
+
+            echo "BUILD REQUIRED"
+
+            echo "build=true" >> "$GITHUB_OUTPUT"
+
+          fi
+
+
+      # ==========================================================
+      # Linux dependencies
+      # ==========================================================
+
+      - name: Install system dependencies (Linux)
+        if: |
+          steps.existing_asset.outputs.build == 'true' &&
+          runner.os == 'Linux'
+
+        shell: bash
+
+        run: |
+          set -e
+
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            xdg-utils
+
+
+      # ==========================================================
+      # Rust
+      # ==========================================================
+
+      - name: Setup Rust toolchain
+        if: steps.existing_asset.outputs.build == 'true'
+
+        uses: dtolnay/rust-toolchain@stable
+
+        with:
+          targets: ${{ matrix.target }}
+
+
+      # ==========================================================
+      # Windows MSVC
+      #
+      # IMPORTANT:
+      #
+      # This must happen BEFORE Cargo/Tauri build.
+      #
+      # We DO NOT set RUSTFLAGS manually.
+      #
+      # ilammy/msvc-dev-cmd configures:
+      #
+      #   INCLUDE
+      #   LIB
+      #   PATH
+      #   Windows SDK
+      #   MSVC tools
+      #
+      # ==========================================================
+
+      - name: Setup MSVC environment
+        if: |
+          steps.existing_asset.outputs.build == 'true' &&
+          runner.os == 'Windows'
+
+        uses: ilammy/msvc-dev-cmd@v1
+
+
+      # ==========================================================
+      # FIX WINDOWS LINKER
+      #
+      # Git for Windows contains:
+      #
+      #   C:\Program Files\Git\usr\bin\link.exe
+      #
+      # That is NOT Microsoft's linker.
+      #
+      # We remove Git/usr/bin from PATH instead of using RUSTFLAGS.
+      #
+      # This allows Cargo/Rust to resolve the correct MSVC linker.
+      #
+      # Works for:
+      #
+      #   x86_64-pc-windows-msvc
+      #   aarch64-pc-windows-msvc
+      #
+      # ==========================================================
+
+      - name: Configure Windows MSVC linker
+        if: |
+          steps.existing_asset.outputs.build == 'true' &&
+          runner.os == 'Windows'
+
+        shell: pwsh
+
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host "Configure Rust MSVC linker"
+          Write-Host "========================================"
+
+          Write-Host "Target: $env:CARGO_BUILD_TARGET"
+
+          # --------------------------------------------------------
+          # Remove Git/usr/bin from PATH.
+          #
+          # Git's link.exe is a Unix utility and MUST NOT be used
+          # by Rust MSVC.
+          # --------------------------------------------------------
+
+          $gitUsrBin = "C:\Program Files\Git\usr\bin"
+
+          $pathEntries = $env:PATH -split ';'
+
+          $filteredPath = $pathEntries |
+            Where-Object {
+              $_.TrimEnd('\') -ne $gitUsrBin.TrimEnd('\')
+            }
+
+          $newPath = $filteredPath -join ';'
+
+          $env:PATH = $newPath
+
+          # Persist PATH for all subsequent steps.
+          "PATH=$newPath" | Out-File `
+            -FilePath $env:GITHUB_ENV `
+            -Encoding utf8 `
+            -Append
+
+
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host "PATH"
+          Write-Host "========================================"
+
+          $env:PATH -split ';' |
+            Where-Object {
+              $_ -match 'Git\\usr\\bin|Visual Studio|Windows Kits'
+            } |
+            ForEach-Object {
+              Write-Host $_
+            }
+
+
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host "where.exe link.exe"
+          Write-Host "========================================"
+
+          where.exe link.exe
+
+
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host "link.exe"
+          Write-Host "========================================"
+
+          $link = Get-Command link.exe -ErrorAction Stop
+
+          Write-Host "Path:"
+          Write-Host $link.Source
+
+          Write-Host ""
+
+          & link.exe 2>&1 | Select-Object -First 3
+
+
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host "MSVC environment"
+          Write-Host "========================================"
+
+          Write-Host "VCINSTALLDIR = $env:VCINSTALLDIR"
+          Write-Host "VCToolsInstallDir = $env:VCToolsInstallDir"
+          Write-Host "WindowsSdkDir = $env:WindowsSdkDir"
+
+
+          # --------------------------------------------------------
+          # Safety check:
+          #
+          # Rust MUST NOT resolve Git's linker.
+          # --------------------------------------------------------
+
+          if ($link.Source -like "*\Git\usr\bin\link.exe") {
+
+            Write-Error `
+              "ERROR: Git link.exe is still being selected."
+
+          }
+
+          Write-Host ""
+          Write-Host "MSVC linker configuration OK."
+
+
+      # ==========================================================
+      # Rust cache
+      # ==========================================================
+
+      - name: Cache Rust build
+        if: steps.existing_asset.outputs.build == 'true'
+
+        uses: swatinem/rust-cache@v2
+
+        with:
+          workspaces: 'src-tauri -> target'
+
+
+      # ==========================================================
+      # Bun
+      # ==========================================================
+
+      - name: Setup Bun
+        if: steps.existing_asset.outputs.build == 'true'
+
+        uses: oven-sh/setup-bun@v2
+
+        with:
+          bun-version: latest
+
+
+      # ==========================================================
+      # Frontend dependencies
+      # ==========================================================
+
+      - name: Install frontend dependencies
+        if: steps.existing_asset.outputs.build == 'true'
+
+        shell: bash
+
+        run: |
+          set -e
+
+          bun install
+
+
+      # ==========================================================
+      # Version
+      # ==========================================================
+
+      - name: Set APP_VERSION
+        if: steps.existing_asset.outputs.build == 'true'
+
+        shell: bash
+
+        run: |
+          set -e
+
+          RAW="${{ needs.pre-release.outputs.version }}"
+
+          APP_VERSION="${RAW#v}"
+
+          echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
+
+          echo "APP_VERSION=$APP_VERSION"
+
+
+      # ==========================================================
+      # Windows diagnostics
+      # ==========================================================
+
+      - name: Windows build diagnostics
+        if: |
+          steps.existing_asset.outputs.build == 'true' &&
+          runner.os == 'Windows'
+
+        shell: pwsh
+
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host "Windows build diagnostics"
+          Write-Host "========================================"
+
+          Write-Host ""
+          Write-Host "Target:"
+          Write-Host "${{ matrix.target }}"
+
+          Write-Host ""
+          Write-Host "Rust:"
+          rustc -vV
+
+          Write-Host ""
+          Write-Host "Cargo:"
+          cargo -V
+
+          Write-Host ""
+          Write-Host "Bun:"
+          bun --version
+
+          Write-Host ""
+          Write-Host "link.exe:"
+          where.exe link.exe
+
+          Write-Host ""
+          Get-Command link.exe | Format-List *
+
+
+      # ==========================================================
+      # Build Tauri
+      # ==========================================================
+
+      - name: Build Tauri app
+        if: steps.existing_asset.outputs.build == 'true'
+
+        shell: bash
+
+        run: |
+          set -e
+
+          echo
+          echo "========================================"
+          echo "Building Tauri application"
+          echo "========================================"
+
+          echo "Platform : ${{ matrix.platform }}"
+          echo "Target   : ${{ matrix.target }}"
+          echo "Version  : $APP_VERSION"
+
+          echo
+          echo "========================================"
+
+
+          bun run tauri build \
+            --target "${{ matrix.target }}"
+
+
+      # ==========================================================
+      # List bundle
+      # ==========================================================
+
+      - name: List build artifacts
+        if: steps.existing_asset.outputs.build == 'true'
+
+        shell: bash
+
+        run: |
+          set -e
+
+          BUNDLE_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
+
+          echo
+          echo "========================================"
+          echo "Tauri bundle"
+          echo "========================================"
+
+          if [ -d "$BUNDLE_DIR" ]; then
+
+            find "$BUNDLE_DIR" \
+              -type f \
+              -print
+
+          else
+
+            echo "ERROR: Bundle directory does not exist:"
+            echo "$BUNDLE_DIR"
+
+            exit 1
+
+          fi
+
+
+      # ==========================================================
+      # Prepare release assets
+      #
+      # IMPORTANT:
+      #
+      # We rename files into deterministic names.
+      #
+      # Linux:
+      #
+      #   Kumate_0.1.0_linux-x64.deb
+      #   Kumate_0.1.0_linux-x64.AppImage
+      #
+      # macOS:
+      #
+      #   Kumate_0.1.0_macos-x64.dmg
+      #
+      # Windows:
+      #
+      #   Kumate_0.1.0_windows-x64-setup.exe
+      #   Kumate_0.1.0_windows-x64.msi
+      #
+      # ==========================================================
+
+      - name: Prepare release assets
+        if: steps.existing_asset.outputs.build == 'true'
+
+        shell: bash
+
+        env:
+          VERSION: ${{ needs.pre-release.outputs.version }}
+
+        run: |
+          set -e
+
+          VERSION="${VERSION#v}"
+
+          mkdir -p release-assets
+
+          BUNDLE_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
+
+          echo
+          echo "========================================"
+          echo "Preparing release assets"
+          echo "========================================"
+
+          echo "Version : $VERSION"
+          echo "Platform: ${{ matrix.platform }}"
+          echo "Bundle  : $BUNDLE_DIR"
+
+
+          # ========================================================
+          # Linux
+          # ========================================================
+
+          if [[ "${{ matrix.platform }}" == linux-* ]]; then
+
+            DEB=$(
+              find "$BUNDLE_DIR/deb" \
+                -maxdepth 1 \
+                -type f \
+                -name '*.deb' \
+                | head -1
+            )
+
+
+            APPIMAGE=$(
+              find "$BUNDLE_DIR/appimage" \
+                -maxdepth 1 \
+                -type f \
+                -name '*.AppImage' \
+                | head -1
+            )
+
+
+            if [ -z "$DEB" ]; then
+              echo "ERROR: DEB package not found"
+              exit 1
+            fi
+
+
+            if [ -z "$APPIMAGE" ]; then
+              echo "ERROR: AppImage not found"
+              exit 1
+            fi
+
+
+            cp "$DEB" \
+              "release-assets/Kumate_${VERSION}_${{ matrix.platform }}.deb"
+
+
+            cp "$APPIMAGE" \
+              "release-assets/Kumate_${VERSION}_${{ matrix.platform }}.AppImage"
+
+
+          # ========================================================
+          # macOS
+          # ========================================================
+
+          elif [[ "${{ matrix.platform }}" == macos-* ]]; then
+
+            DMG=$(
+              find "$BUNDLE_DIR/dmg" \
+                -maxdepth 1 \
+                -type f \
+                -name '*.dmg' \
+                | head -1
+            )
+
+
+            if [ -z "$DMG" ]; then
+              echo "ERROR: DMG not found"
+              exit 1
+            fi
+
+
+            cp "$DMG" \
+              "release-assets/Kumate_${VERSION}_${{ matrix.platform }}.dmg"
+
+
+          # ========================================================
+          # Windows
+          # ========================================================
+
+          elif [[ "${{ matrix.platform }}" == windows-* ]]; then
+
+            MSI=$(
+              find "$BUNDLE_DIR/msi" \
+                -maxdepth 1 \
+                -type f \
+                -name '*.msi' \
+                | head -1
+            )
+
+
+            EXE=$(
+              find "$BUNDLE_DIR/nsis" \
+                -maxdepth 1 \
+                -type f \
+                -name '*.exe' \
+                | head -1
+            )
+
+
+            if [ -z "$MSI" ]; then
+              echo "ERROR: MSI not found"
+              exit 1
+            fi
+
+
+            if [ -z "$EXE" ]; then
+              echo "ERROR: EXE not found"
+              exit 1
+            fi
+
+
+            cp "$EXE" \
+              "release-assets/Kumate_${VERSION}_${{ matrix.platform }}-setup.exe"
+
+
+            cp "$MSI" \
+              "release-assets/Kumate_${VERSION}_${{ matrix.platform }}.msi"
+
+
+          else
+
+            echo "ERROR: Unknown platform:"
+            echo "${{ matrix.platform }}"
+
+            exit 1
+
+          fi
+
+
+          # ========================================================
+          # Verify
+          # ========================================================
+
+          echo
+          echo "========================================"
+          echo "Release assets"
+          echo "========================================"
+
+          find release-assets \
+            -maxdepth 1 \
+            -type f \
+            -print
+
+
+          COUNT=$(
+            find release-assets \
+              -maxdepth 1 \
+              -type f \
+              | wc -l
+          )
+
+
+          echo
+          echo "Asset count: $COUNT"
+
+
+          if [ "$COUNT" -eq 0 ]; then
+
+            echo "ERROR: No release assets found."
+
+            exit 1
+
+          fi
+
+
+      # ==========================================================
+      # Upload workflow artifact
+      # ==========================================================
+
+      - name: Upload Tauri artifacts
+        if: steps.existing_asset.outputs.build == 'true'
+
+        uses: actions/upload-artifact@v4
+
+        with:
+          name: tauri-${{ matrix.platform }}-${{ needs.pre-release.outputs.version }}
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 7
+
+
+  # ============================================================
+  # RELEASE
+  #
+  # Creates release if missing.
+  #
+  # Downloads only artifacts generated by this workflow run.
+  #
+  # Uploads only assets that don't already exist.
+  # ============================================================
+
+  release:
+
+    needs:
+      - pre-release
+      - build
+
+    if: |
+      always() &&
+      needs.pre-release.result == 'success' &&
+      needs.build.result == 'success'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ==========================================================
+      # Checkout
+      # ==========================================================
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+
+      # ==========================================================
+      # Download build artifacts
+      #
+      # If every platform was already complete, there may be no
+      # workflow artifacts. That is OK.
+      # ==========================================================
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: tauri-*
+          path: release-artifacts
+          merge-multiple: false
+
+
+      # ==========================================================
+      # List downloaded artifacts
+      # ==========================================================
+
+      - name: List release artifacts
+        shell: bash
+
+        run: |
+          echo
+          echo "========================================"
+          echo "Downloaded release artifacts"
+          echo "========================================"
+
+          if [ -d "release-artifacts" ]; then
+
+            find release-artifacts \
+              -type f \
+              -print
+
+          else
+
+            echo "No newly built artifacts."
+
+          fi
+
+
+      # ==========================================================
+      # Create release if missing
+      # ==========================================================
+
+      - name: Create GitHub Release if missing
+
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.pre-release.outputs.tag }}
+          VERSION: ${{ needs.pre-release.outputs.version }}
+          CHANGELOG: ${{ needs.pre-release.outputs.changelog }}
+
+        shell: bash
+
+        run: |
+          set -e
+
+          echo
+          echo "========================================"
+          echo "Checking GitHub Release"
+          echo "========================================"
+
+          echo "Tag: $TAG"
+
+
+          if gh release view "$TAG" \
+            --repo "${GITHUB_REPOSITORY}" \
+            >/dev/null 2>&1; then
+
+            echo
+            echo "Release already exists."
+            echo "Nothing to create."
+
+          else
+
+            echo
+            echo "Release does not exist."
+            echo "Creating release..."
+
+
+            gh release create "$TAG" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "App ${VERSION}" \
+              --notes "$CHANGELOG" \
+              --draft \
+              --prerelease
+
+          fi
+
+
+      # ==========================================================
+      # Upload only missing assets
+      # ==========================================================
+
+      - name: Upload missing release assets
+
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.pre-release.outputs.tag }}
+
+        shell: bash
+
+        run: |
+          set -e
+
+          echo
+          echo "========================================"
+          echo "Uploading release binaries"
+          echo "========================================"
+
+
+          # ------------------------------------------------------
+          # Get existing GitHub assets
+          # ------------------------------------------------------
+
+          EXISTING_ASSETS_FILE="$(mktemp)"
+
+          gh release view "$TAG" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --json assets \
+            --jq '.assets[].name' \
+            > "$EXISTING_ASSETS_FILE"
+
+
+          echo
+          echo "Existing GitHub assets:"
+
+          if [ -s "$EXISTING_ASSETS_FILE" ]; then
+            cat "$EXISTING_ASSETS_FILE"
+          else
+            echo "(none)"
+          fi
+
+
+          # ------------------------------------------------------
+          # Track files uploaded during this run
+          # ------------------------------------------------------
+
+          UPLOADED_FILE_NAMES="$(mktemp)"
+
+
+          # ------------------------------------------------------
+          # No artifacts
+          # ------------------------------------------------------
+
+          if [ ! -d "release-artifacts" ]; then
+
+            echo
+            echo "No release artifacts."
+            exit 0
+
+          fi
+
+
+          # ------------------------------------------------------
+          # Find release binaries
+          # ------------------------------------------------------
+
+          find release-artifacts \
+            -type f \
+            \( \
+              -name '*.exe' \
+              -o -name '*.msi' \
+              -o -name '*.deb' \
+              -o -name '*.AppImage' \
+              -o -name '*.dmg' \
+            \) \
+            -print0 |
+          while IFS= read -r -d '' FILE; do
+
+            BASENAME="$(basename "$FILE")"
+
+
+            echo
+            echo "----------------------------------------"
+            echo "File:"
+            echo "$BASENAME"
+            echo
+            echo "Path:"
+            echo "$FILE"
+            echo "----------------------------------------"
+
+
+            # --------------------------------------------------
+            # Already exists on GitHub
+            # --------------------------------------------------
+
+            if grep -Fxq "$BASENAME" "$EXISTING_ASSETS_FILE"; then
+
+              echo "SKIP"
+              echo "Asset already exists on GitHub:"
+              echo "$BASENAME"
+
+              continue
+
+            fi
+
+
+            # --------------------------------------------------
+            # Duplicate inside this workflow
+            # --------------------------------------------------
+
+            if grep -Fxq "$BASENAME" "$UPLOADED_FILE_NAMES"; then
+
+              echo "SKIP"
+              echo "Duplicate filename:"
+              echo "$BASENAME"
+
+              continue
+
+            fi
+
+
+            # --------------------------------------------------
+            # Upload
+            # --------------------------------------------------
+
+            echo "UPLOAD:"
+            echo "$BASENAME"
+
+
+            gh release upload "$TAG" "$FILE" \
+              --repo "${GITHUB_REPOSITORY}"
+
+
+            echo "$BASENAME" >> "$UPLOADED_FILE_NAMES"
+
+
+          done
+
+
+          # ------------------------------------------------------
+          # Final release assets
+          # ------------------------------------------------------
+
+          echo
+          echo "========================================"
+          echo "Final GitHub Release Assets"
+          echo "========================================"
+
+
+          gh release view "$TAG" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --json assets \
+            --jq '.assets[].name'

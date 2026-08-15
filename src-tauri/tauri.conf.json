@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Kumate",
+  "version": "0.1.0",
+  "identifier": "kumate.dev",
+  "build": {
+    "beforeDevCommand": "bun run build",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Kumate",
+        "width": 1366,
+        "height": 768,
+        "minWidth": 940,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset: http://asset.localhost; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "msi", "nsis", "deb", "appimage"],
+    "icon": ["icons/icon.icns", "icons/icon.ico", "icons/icon.png"],
+
+    "resources": [],
+    "externalBin": [],
+    "copyright": "© 2025 Kumate",
+    "category": "DeveloperTool",
+    "shortDescription": "A modern Kubernetes resource manager",
+    "longDescription": "Kumate helps developers visualize, monitor, and manage Kubernetes clusters efficiently.",
+
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "signingIdentity": null,
+      "dmg": {
+        "background": null
+      }
+    },
+
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      },
+      "nsis": {
+        "displayLanguageSelector": false
+      }
+    },
+
+    "linux": {
+      "deb": {
+        "depends": ["libgtk-3-0", "libayatana-appindicator3-1", "libwebkit2gtk-4.0-37"]
+      }
+    }
+  }
+}

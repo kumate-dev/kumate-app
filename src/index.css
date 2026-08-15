@@ -1,0 +1,253 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+/*
+ * Kumate design tokens.
+ *
+ * Target: a native desktop developer tool — dense, technical, calm. Not a web
+ * dashboard. Concretely that means: tight vertical rhythm, hairline borders instead
+ * of shadows and cards, one accent colour used sparingly, and status conveyed by hue
+ * rather than by decoration.
+ *
+ * Everything is a CSS variable so dark and light are the same component tree with a
+ * different palette, and so the YAML editor and terminal can be themed from the same
+ * source of truth rather than carrying their own hardcoded colours.
+ *
+ * Dark is the default and gets the most attention — it is what this class of tool is
+ * used in — but light is a first-class target, not an afterthought.
+ */
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:
+    ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  /* Dense by design: a 28px row fits ~24 pods on a 768px window. */
+  --spacing-row: 1.75rem;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces, from furthest back to furthest forward. */
+  --surface-base: hsl(222 18% 8%);
+  --surface-raised: hsl(222 16% 11%);
+  --surface-overlay: hsl(222 16% 13%);
+  --surface-hover: hsl(222 14% 16%);
+  --surface-active: hsl(222 14% 19%);
+  --surface-inset: hsl(222 22% 6%);
+
+  /* Hairlines. `border-strong` is for structural separation only. */
+  --border-subtle: hsl(222 12% 18%);
+  --border-default: hsl(222 12% 22%);
+  --border-strong: hsl(222 12% 30%);
+
+  --text-primary: hsl(210 20% 96%);
+  --text-secondary: hsl(215 12% 68%);
+  --text-tertiary: hsl(215 10% 48%);
+  --text-inverted: hsl(222 18% 8%);
+
+  --accent: hsl(207 90% 61%);
+  --accent-hover: hsl(207 90% 68%);
+  --accent-subtle: hsl(207 90% 61% / 0.14);
+  --accent-border: hsl(207 90% 61% / 0.4);
+
+  /*
+   * Status hues map to Kubernetes state, not to severity in the abstract:
+   *   ok       Running, Ready, Bound, Active, Completed-and-succeeded
+   *   warn     Pending, ContainerCreating, Progressing, Terminating
+   *   danger   CrashLoopBackOff, Failed, Error, Evicted, ImagePullBackOff
+   *   info     Suspended, Unknown, Completed
+   * Kept distinguishable in the common red-green deficiencies: `ok` is cyan-leaning
+   * green and `danger` is orange-leaning red, so they differ in lightness too.
+   */
+  --status-ok: hsl(150 62% 45%);
+  --status-ok-subtle: hsl(150 62% 45% / 0.14);
+  --status-warn: hsl(38 92% 55%);
+  --status-warn-subtle: hsl(38 92% 55% / 0.14);
+  --status-danger: hsl(4 82% 60%);
+  --status-danger-subtle: hsl(4 82% 60% / 0.14);
+  --status-info: hsl(215 14% 55%);
+  --status-info-subtle: hsl(215 14% 55% / 0.14);
+
+  --focus-ring: hsl(207 90% 61%);
+
+  /* Used almost nowhere. Overlays and popovers only; never on a table row. */
+  --shadow-overlay: 0 8px 28px -6px hsl(0 0% 0% / 0.55);
+
+  /* Syntax colours, shared by the YAML viewer and the terminal. */
+  --code-key: hsl(207 80% 70%);
+  --code-string: hsl(95 45% 62%);
+  --code-number: hsl(28 85% 66%);
+  --code-boolean: hsl(280 60% 72%);
+  --code-comment: hsl(215 10% 45%);
+  --code-punctuation: hsl(215 12% 58%);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --surface-base: hsl(210 20% 99%);
+  --surface-raised: hsl(210 20% 100%);
+  --surface-overlay: hsl(210 20% 100%);
+  --surface-hover: hsl(214 20% 95%);
+  --surface-active: hsl(214 20% 91%);
+  --surface-inset: hsl(214 24% 96%);
+
+  --border-subtle: hsl(214 18% 91%);
+  --border-default: hsl(214 16% 85%);
+  --border-strong: hsl(214 14% 72%);
+
+  --text-primary: hsl(222 24% 14%);
+  --text-secondary: hsl(220 12% 40%);
+  --text-tertiary: hsl(220 10% 55%);
+  --text-inverted: hsl(210 20% 99%);
+
+  --accent: hsl(212 92% 45%);
+  --accent-hover: hsl(212 92% 38%);
+  --accent-subtle: hsl(212 92% 45% / 0.1);
+  --accent-border: hsl(212 92% 45% / 0.35);
+
+  /* Darkened rather than reused: the dark-mode hues do not carry enough contrast
+     against a white surface to satisfy WCAG AA for small text. */
+  --status-ok: hsl(150 68% 32%);
+  --status-ok-subtle: hsl(150 68% 32% / 0.1);
+  --status-warn: hsl(32 88% 40%);
+  --status-warn-subtle: hsl(32 88% 40% / 0.1);
+  --status-danger: hsl(4 74% 47%);
+  --status-danger-subtle: hsl(4 74% 47% / 0.1);
+  --status-info: hsl(215 14% 42%);
+  --status-info-subtle: hsl(215 14% 42% / 0.1);
+
+  --focus-ring: hsl(212 92% 45%);
+  --shadow-overlay: 0 8px 28px -8px hsl(220 30% 30% / 0.2);
+
+  --code-key: hsl(212 85% 40%);
+  --code-string: hsl(120 45% 30%);
+  --code-number: hsl(25 85% 38%);
+  --code-boolean: hsl(280 60% 45%);
+  --code-comment: hsl(220 10% 52%);
+  --code-punctuation: hsl(220 12% 42%);
+}
+
+@layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    margin: 0;
+    background: var(--surface-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* This is a desktop app: text selection everywhere makes drag and click-through
+     feel wrong. Re-enable it explicitly on content that users copy. */
+  body {
+    user-select: none;
+    cursor: default;
+  }
+
+  .selectable,
+  input,
+  textarea,
+  pre,
+  code {
+    user-select: text;
+  }
+
+  :focus {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -1px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border: 2px solid transparent;
+    background-clip: content-box;
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--border-strong);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Tabular figures everywhere numbers line up in a column — ages, restart counts,
+     replica ratios. Without this, digit widths jitter as values tick. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* One shared animation for every skeleton, replacing framer-motion (~120 KB for a
+     single pulsing opacity keyframe). */
+  @keyframes kumate-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 0.18;
+    }
+  }
+
+  .animate-skeleton {
+    animation: kumate-pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes kumate-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .animate-in {
+    animation: kumate-fade-in 120ms ease-out;
+  }
+
+  /* Respect the OS setting. A monitoring tool that flashes is actively harmful. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-skeleton,
+    .animate-in {
+      animation: none;
+    }
+  }
+}

@@ -1,0 +1,123 @@
+[package]
+name = "kumate"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "kumate_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6", features = [] }
+
+[dependencies]
+tauri = { version = "2.11", features = [] }
+tauri-plugin-opener = "2.5"
+tauri-plugin-dialog = "2.7"
+tauri-plugin-fs = "2.5"
+tauri-plugin-single-instance = "2.4"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+thiserror = "2"
+
+rand = "0.10"
+dirs = "6"
+
+tokio = { version = "1.53", features = [
+  "rt-multi-thread",
+  "macros",
+  "fs",
+  "process",
+  # Previously relied on transitive activation, which breaks the moment a
+  # dependency drops the feature. These are used directly by the watcher,
+  # client registry, exec and port-forward paths.
+  "sync",
+  "time",
+  "io-util",
+  "net",
+] }
+tokio-util = { version = "0.7", features = ["rt"] }
+
+# `default-features = false` disables the `simd-unsafe` feature that 0.23 turns on
+# by default. This crate handles decrypted kubeconfigs; the throughput is irrelevant
+# at our volumes and pulling in hand-written SIMD `unsafe` for it is a bad trade.
+base64 = { version = "0.23", default-features = false, features = ["std"] }
+
+# serde_yaml is dead — its last release is literally versioned `0.9.34+deprecated`
+# and the repository is archived. serde-saphyr is the replacement kube itself moved to
+# (kube-rs #1975), which keeps our kubeconfig parsing aligned with the parser kube uses
+# internally.
+#
+# NOTE: kube 4.2 pins `serde-saphyr ^0.0.29` while the current release is 1.x, so both
+# will be present in the tree until kube catches up. That is a duplicated build unit,
+# not a correctness problem — the two never exchange types.
+serde-saphyr = "1"
+
+# `runtime` brings in kube-runtime, which gives us `watcher()`: resourceVersion
+# bookmarking, relist on 410 Gone, and automatic reconnect. Do not remove it —
+# the hand-rolled `Api::watch` loop it replaced silently went stale on any
+# network blip. See .claude/kubernetes.md.
+#
+# `aws-lc-rs` is NOT optional here. With `default-features = false` kube enables no
+# crypto provider at all, while our direct `rustls` dependency selects aws-lc-rs; the
+# mismatch surfaces at runtime as a missing default provider rather than at compile
+# time. Verify with `cargo tree -e features -i rustls` after any change to this block.
+kube = { version = "4", default-features = false, features = [
+  "client",
+  "config",
+  "rustls-tls",
+  "aws-lc-rs",
+  "ws",
+  "runtime",
+] }
+
+# Hard-locked to kube: kube 2.x needs 0.26, 3.x needs 0.27, 4.x needs ^0.28.
+# Exactly one `v1_*` feature may be enabled across the entire dependency graph.
+k8s-openapi = { version = "0.28", features = ["v1_36"] }
+
+# k8s-openapi 0.27 replaced chrono with jiff in `meta::v1::{Time, MicroTime}` and no
+# longer re-exports chrono, so `k8s_openapi::chrono` is gone. We need a clock of our own
+# for event payload timestamps and the rollout-restart annotation; matching the version
+# k8s-openapi already depends on keeps this free.
+jiff = "0.2"
+
+rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs"] }
+futures-util = "0.3"
+ring = "0.17"
+tokio-stream = "0.1"
+
+# PINNED DELIBERATELY — do not "update" these two:
+#
+# sled: 0.34.7 is still the newest stable. 1.0 has been in alpha since 2024-10 and is
+# effectively dormant. Long-term this is a migration risk for `databases/`, but there is
+# nothing newer to move to.
+#
+# bincode: 3.0.0 is a *tombstone* release containing only a README and a `compile_error!`
+# — upstream development stopped. 2.0.1 is the last functional version. The community
+# continuation is the separately-published `bincode-next` if fixes are ever needed.
+sled = "0.34"
+bincode = { version = "2", features = ["serde"] }
+
+uuid = { version = "1", features = ["v4"] }
+once_cell = "1"
+
+# 0.25 removed `ImageOutputFormat` (use `ImageFormat` + `write_to`). Pinned at >= 0.25.8
+# because 0.25.7 was yanked for a `load_from_memory` signature change that 0.25.8 reverted.
+image = { version = "0.25.8", default-features = false, features = [
+  "png",
+  "jpeg",
+  "webp",
+  "gif",
+] }
+
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

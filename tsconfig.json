@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+
+    // verbatimModuleSyntax forces `import type` for type-only imports. Without it,
+    // esbuild keeps the import and bundles the whole of @kubernetes/client-node — a
+    // runtime dependency the app never actually calls, imported purely for its V1*
+    // types.
+    //
+    // Written as a JSONC comment, not a `"//"` property: TS reports an unknown
+    // compiler option for the latter, which is a hard parse failure in
+    // typescript-eslint and disables linting for the entire project.
+    "verbatimModuleSyntax": true,
+
+    "types": ["@types/node", "vite/client"]
+  },
+  "include": ["src/**/*", "vite.config.js"],
+
+  // src/_legacy holds the un-ported React screens. They are kept only as reference
+  // while the remaining resource kinds are turned into descriptors, and nothing in
+  // the live tree imports them. They MUST be deleted once the registry is complete —
+  // see .claude/frontend.md.
+  "exclude": ["src/_legacy/**"]
+}

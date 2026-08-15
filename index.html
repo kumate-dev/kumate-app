@@ -1,0 +1,50 @@
+<!doctype html>
+<!--
+  `data-theme` is set here as a static default so the document is never unstyled: the
+  dark palette is `:root` in `index.css`, and light is `:root[data-theme='light']`.
+  The script below overwrites it with the user's real choice.
+-->
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kumate</title>
+
+    <!--
+      Theme, resolved before the bundle is fetched or parsed.
+
+      `stores/theme.ts` owns the theme at runtime, but it cannot run early enough: the
+      module graph is loaded after first paint, so a light-mode user would see a full
+      frame of the dark palette on every launch. This inline script is the only code
+      that runs before the first paint, so the resolution has to be duplicated here.
+      Keep the storage key and the `dark | light | system` vocabulary in sync with
+      `stores/theme.ts` — they are the same contract written twice on purpose.
+
+      Inline is safe under the app's `script-src 'self'` CSP because Tauri rewrites
+      inline `<script>` tags in the embedded assets with a per-launch nonce and adds
+      that nonce to the policy. Do not add `src` to this tag: an external file would be
+      a second network round-trip before paint, which is the flash we are avoiding.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('kumate.theme');
+          document.documentElement.dataset.theme =
+            stored === 'dark' || stored === 'light'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+        } catch {
+          /* localStorage throws when storage is disabled. The static default stands. */
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+/*
+ * Prism token classes mapped onto the app's `--code-*` design tokens.
+ *
+ * Replaces `src/styles/yaml-dark.css` (a 317-line vendored Coldark theme carrying
+ * hardcoded hex for ~100 token classes, of which the YAML grammar emits nine, and
+ * dark only). Because the colours are variables, light mode needs no second theme.
+ *
+ * The alias classes matter as much as the primary ones: prism-yaml marks keys as
+ * `key atrule`, booleans/nulls/anchors as `important`, timestamps as `datetime
+ * number` and block scalars as `scalar string`, so the aliases are matched too.
+ */
+
+.kumate-yaml {
+  color: var(--text-primary);
+  tab-size: 2;
+}
+
+.kumate-yaml .token.comment {
+  color: var(--code-comment);
+  font-style: italic;
+}
+
+.kumate-yaml .token.key,
+.kumate-yaml .token.atrule {
+  color: var(--code-key);
+}
+
+.kumate-yaml .token.string,
+.kumate-yaml .token.scalar {
+  color: var(--code-string);
+}
+
+.kumate-yaml .token.number,
+.kumate-yaml .token.datetime {
+  color: var(--code-number);
+}
+
+.kumate-yaml .token.boolean,
+.kumate-yaml .token.null,
+.kumate-yaml .token.important,
+.kumate-yaml .token.tag {
+  color: var(--code-boolean);
+}
+
+.kumate-yaml .token.punctuation {
+  color: var(--code-punctuation);
+}
