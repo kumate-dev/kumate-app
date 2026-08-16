@@ -29,7 +29,7 @@ import { RefreshCw } from 'lucide-solid';
 
 import { listEvents } from '@/api/k8s/events';
 import { YamlEditor, YamlView } from '@/features/inspect';
-import { cn, resourceKey, type K8sObject } from '@/lib/k8s';
+import { cn, createDelayedLoading, resourceKey, type K8sObject } from '@/lib/k8s';
 import { selectedName } from '@/stores/clusters';
 import { Badge } from '@/ui/Badge';
 import { Button } from '@/ui/Button';
@@ -346,6 +346,8 @@ function EventsPanel(props: EventsPanelProps) {
     }
   );
 
+  const showLoading = createDelayedLoading(() => events.state === 'pending');
+
   // `resource.latest` rethrows while the resource is errored, so every read goes
   // through here — the error branch below is rendered *from* the same signal.
   const items = () => (events.error ? [] : (events.latest ?? []));
@@ -368,7 +370,7 @@ function EventsPanel(props: EventsPanelProps) {
         fallback={<ErrorState error={events.error} onRetry={() => void refetch()} />}
       >
         <Show
-          when={events.state !== 'pending'}
+          when={!showLoading()}
           fallback={
             <div class="text-2xs flex items-center gap-2 py-6 text-[var(--text-tertiary)]">
               <Spinner size={13} />

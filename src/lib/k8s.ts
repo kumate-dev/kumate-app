@@ -1,7 +1,37 @@
+import { createEffect, createSignal, onCleanup, type Accessor } from 'solid-js';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+
+export function createDelayedLoading(
+  source: Accessor<boolean>,
+  delay = 300
+): Accessor<boolean> {
+  const [delayed, setDelayed] = createSignal(false);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  createEffect(() => {
+    const isLoading = source();
+
+    if (isLoading) {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setDelayed(true), delay);
+    } else {
+      if (timer) {
+        clearTimeout(timer);
+        timer = undefined;
+      }
+      setDelayed(false);
+    }
+  });
+
+  onCleanup(() => {
+    if (timer) clearTimeout(timer);
+  });
+
+  return delayed;
+}
 
 /** The minimum shape every Kubernetes object we handle satisfies. */
 export interface K8sObject {

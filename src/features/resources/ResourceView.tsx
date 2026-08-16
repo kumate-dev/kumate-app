@@ -1,7 +1,7 @@
 import { batch, createMemo, createSignal, For, Show } from 'solid-js';
 import { FileCode2, RefreshCw, Trash2 } from 'lucide-solid';
 import { createResourceList } from '@/lib/createResourceList';
-import { compareValues, resourceKey, type K8sObject } from '@/lib/k8s';
+import { compareValues, createDelayedLoading, resourceKey, type K8sObject } from '@/lib/k8s';
 import { selectedName } from '@/stores/clusters';
 import { namespaceFilter } from '@/stores/namespaces';
 import { Button } from '@/ui/Button';
@@ -56,6 +56,7 @@ export function ResourceView<T extends K8sObject>(props: ResourceViewProps<T>) {
   /* eslint-enable solid/reactivity */
 
   const columns = createMemo(() => props.descriptor.columns.filter((c) => !c.optional));
+  const showLoading = createDelayedLoading(() => list.status() === 'loading');
 
   /**
    * Filter, then sort.
@@ -234,7 +235,7 @@ export function ResourceView<T extends K8sObject>(props: ResourceViewProps<T>) {
           descriptor={props.descriptor}
           columns={columns()}
           items={visibleItems()}
-          loading={list.status() === 'loading'}
+          loading={showLoading()}
           selection={selection()}
           onToggle={toggle}
           onToggleAll={toggleAll}
