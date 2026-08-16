@@ -280,20 +280,22 @@ jobs:
           # Windows x64
           # ======================================================
 
-          - os: windows-2022
-            platform: windows-x64
-            target: x86_64-pc-windows-msvc
-            artifact_pattern: 'Kumate_*_windows-x64-setup.exe'
+          # - os: windows-2025
+          #   platform: windows-x64
+          #   target: x86_64-pc-windows-msvc
+          #   artifact_pattern: 'Kumate_*_windows-x64-setup.exe'
+          #   artifact_pattern_msi: 'Kumate_*_windows-x64.msi'
 
 
           # ======================================================
           # Windows ARM64
           # ======================================================
 
-          - os: windows-11-arm
-            platform: windows-arm64
-            target: aarch64-pc-windows-msvc
-            artifact_pattern: 'Kumate_*_windows-arm64-setup.exe'
+          # - os: windows-11-arm
+          #   platform: windows-arm64
+          #   target: aarch64-pc-windows-msvc
+          #   artifact_pattern: 'Kumate_*_windows-arm64-setup.exe'
+          #   artifact_pattern_msi: 'Kumate_*_windows-arm64.msi'
 
 
     runs-on: ${{ matrix.os }}
@@ -323,6 +325,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.pre-release.outputs.tag }}
           PATTERN: ${{ matrix.artifact_pattern }}
+          PATTERN_MSI: ${{ matrix.artifact_pattern_msi }}
 
         shell: bash
 
@@ -338,6 +341,7 @@ jobs:
           echo "Platform : ${{ matrix.platform }}"
           echo "Target   : ${{ matrix.target }}"
           echo "Pattern  : $PATTERN"
+          echo "Pattern MSI: $PATTERN_MSI"
 
 
           # ------------------------------------------------------
@@ -384,50 +388,54 @@ jobs:
 
 
           # ------------------------------------------------------
-          # Search matching asset
+          # Search matching assets
           # ------------------------------------------------------
 
-          MATCH=""
+          EXE_MATCH=""
+          MSI_MATCH=""
 
           while IFS= read -r ASSET; do
 
             if [[ "$ASSET" == $PATTERN ]]; then
-              MATCH="$ASSET"
-              break
+              EXE_MATCH="$ASSET"
+            fi
+
+            if [[ -n "$PATTERN_MSI" && "$ASSET" == $PATTERN_MSI ]]; then
+              MSI_MATCH="$ASSET"
             fi
 
           done <<< "$ASSETS"
 
 
           # ------------------------------------------------------
-          # Asset exists
+          # Both assets exist - SKIP
           # ------------------------------------------------------
 
-          if [ -n "$MATCH" ]; then
+          if [ -n "$EXE_MATCH" ] && [ -n "$MSI_MATCH" ]; then
 
             echo
             echo "========================================"
-            echo "Asset already exists"
+            echo "All assets already exist"
             echo "========================================"
 
-            echo "Platform : ${{ matrix.platform }}"
-            echo "Asset    : $MATCH"
+            echo "EXE: $EXE_MATCH"
+            echo "MSI: $MSI_MATCH"
             echo
 
             echo "BUILD SKIPPED"
 
             echo "build=false" >> "$GITHUB_OUTPUT"
-            echo "existing_asset=$MATCH" >> "$GITHUB_OUTPUT"
+            echo "existing_asset=$EXE_MATCH" >> "$GITHUB_OUTPUT"
 
           else
 
             echo
             echo "========================================"
-            echo "Asset is missing"
+            echo "Some assets are missing"
             echo "========================================"
 
-            echo "Platform : ${{ matrix.platform }}"
-            echo "Pattern  : $PATTERN"
+            echo "EXE exists: $([ -n "$EXE_MATCH" ] && echo 'YES' || echo 'NO')"
+            echo "MSI exists: $([ -n "$MSI_MATCH" ] && echo 'YES' || echo 'NO')"
             echo
 
             echo "BUILD REQUIRED"
@@ -499,135 +507,6 @@ jobs:
           runner.os == 'Windows'
 
         uses: ilammy/msvc-dev-cmd@v1
-
-
-      # ==========================================================
-      # FIX WINDOWS LINKER
-      #
-      # Git for Windows contains:
-      #
-      #   C:\Program Files\Git\usr\bin\link.exe
-      #
-      # That is NOT Microsoft's linker.
-      #
-      # We remove Git/usr/bin from PATH instead of using RUSTFLAGS.
-      #
-      # This allows Cargo/Rust to resolve the correct MSVC linker.
-      #
-      # Works for:
-      #
-      #   x86_64-pc-windows-msvc
-      #   aarch64-pc-windows-msvc
-      #
-      # ==========================================================
-
-      - name: Configure Windows MSVC linker
-        if: |
-          steps.existing_asset.outputs.build == 'true' &&
-          runner.os == 'Windows'
-
-        shell: pwsh
-
-        run: |
-          $ErrorActionPreference = "Stop"
-
-          Write-Host ""
-          Write-Host "========================================"
-          Write-Host "Configure Rust MSVC linker"
-          Write-Host "========================================"
-
-          Write-Host "Target: $env:CARGO_BUILD_TARGET"
-
-          # --------------------------------------------------------
-          # Remove Git/usr/bin from PATH.
-          #
-          # Git's link.exe is a Unix utility and MUST NOT be used
-          # by Rust MSVC.
-          # --------------------------------------------------------
-
-          $gitUsrBin = "C:\Program Files\Git\usr\bin"
-
-          $pathEntries = $env:PATH -split ';'
-
-          $filteredPath = $pathEntries |
-            Where-Object {
-              $_.TrimEnd('\') -ne $gitUsrBin.TrimEnd('\')
-            }
-
-          $newPath = $filteredPath -join ';'
-
-          $env:PATH = $newPath
-
-          # Persist PATH for all subsequent steps.
-          "PATH=$newPath" | Out-File `
-            -FilePath $env:GITHUB_ENV `
-            -Encoding utf8 `
-            -Append
-
-
-          Write-Host ""
-          Write-Host "========================================"
-          Write-Host "PATH"
-          Write-Host "========================================"
-
-          $env:PATH -split ';' |
-            Where-Object {
-              $_ -match 'Git\\usr\\bin|Visual Studio|Windows Kits'
-            } |
-            ForEach-Object {
-              Write-Host $_
-            }
-
-
-          Write-Host ""
-          Write-Host "========================================"
-          Write-Host "where.exe link.exe"
-          Write-Host "========================================"
-
-          where.exe link.exe
-
-
-          Write-Host ""
-          Write-Host "========================================"
-          Write-Host "link.exe"
-          Write-Host "========================================"
-
-          $link = Get-Command link.exe -ErrorAction Stop
-
-          Write-Host "Path:"
-          Write-Host $link.Source
-
-          Write-Host ""
-
-          & link.exe 2>&1 | Select-Object -First 3
-
-
-          Write-Host ""
-          Write-Host "========================================"
-          Write-Host "MSVC environment"
-          Write-Host "========================================"
-
-          Write-Host "VCINSTALLDIR = $env:VCINSTALLDIR"
-          Write-Host "VCToolsInstallDir = $env:VCToolsInstallDir"
-          Write-Host "WindowsSdkDir = $env:WindowsSdkDir"
-
-
-          # --------------------------------------------------------
-          # Safety check:
-          #
-          # Rust MUST NOT resolve Git's linker.
-          # --------------------------------------------------------
-
-          if ($link.Source -like "*\Git\usr\bin\link.exe") {
-
-            Write-Error `
-              "ERROR: Git link.exe is still being selected."
-
-          }
-
-          Write-Host ""
-          Write-Host "MSVC linker configuration OK."
-
 
       # ==========================================================
       # Rust cache
@@ -743,6 +622,12 @@ jobs:
 
         shell: bash
 
+        env:
+          CARGO_BUILD_TARGET: ${{ matrix.target }}
+          RUSTFLAGS: "-C linker=link.exe"
+          CC: cl.exe
+          CXX: cl.exe
+
         run: |
           set -e
 
@@ -754,10 +639,21 @@ jobs:
           echo "Platform : ${{ matrix.platform }}"
           echo "Target   : ${{ matrix.target }}"
           echo "Version  : $APP_VERSION"
+          echo "RUSTFLAGS: $RUSTFLAGS"
 
           echo
           echo "========================================"
 
+          # Verify link.exe is from MSVC
+          echo "Checking link.exe location:"
+          if command -v link.exe &> /dev/null; then
+            which link.exe || echo "link.exe found in PATH"
+          else
+            echo "link.exe not found in PATH - Rust will use default"
+          fi
+
+          echo
+          echo "========================================"
 
           bun run tauri build \
             --target "${{ matrix.target }}"

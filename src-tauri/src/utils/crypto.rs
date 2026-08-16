@@ -143,13 +143,13 @@ impl Crypto {
         Ok(fs::read_to_string(p)?.trim().to_string())
     }
 
-    pub fn secrets_delete(&self, name: &str) -> Result<()> {
-        let p = self.secret_path(name)?;
-        if p.exists() {
-            fs::remove_file(p)?;
-        }
-        Ok(())
-    }
+    // pub fn secrets_delete(&self, name: &str) -> Result<()> {
+    //     let p = self.secret_path(name)?;
+    //     if p.exists() {
+    //         fs::remove_file(p)?;
+    //     }
+    //     Ok(())
+    // }
 
     fn ensure_dir(p: &Path) -> Result<()> {
         fs::create_dir_all(p)?;

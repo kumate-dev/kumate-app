@@ -24,9 +24,9 @@ use std::path::PathBuf;
 use anyhow::Result;
 
 use crate::databases::{k8s_contexts::K8sContextsRepo, Database};
-use crate::manager::k8s::client::ClientRegistry;
-use crate::manager::k8s::store::ResourceStore;
-use crate::utils::connections::ConnectionsManager;
+// use crate::manager::k8s::client::ClientRegistry;
+// use crate::manager::k8s::store::ResourceStore;
+// use crate::utils::connections::ConnectionsManager;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -40,18 +40,18 @@ impl AppState {
         Ok(Self { k8s_contexts })
     }
 
-    /// Connect/disconnect gating, consulted before every apiserver request.
-    pub fn connections(&self) -> &'static ConnectionsManager {
-        ConnectionsManager::global()
-    }
+    // /// Connect/disconnect gating, consulted before every apiserver request.
+    // pub fn connections(&self) -> &'static ConnectionsManager {
+    //     ConnectionsManager::global()
+    // }
 
-    /// Cache of built `kube::Client`s, one per context.
-    pub fn clients(&self) -> &'static ClientRegistry {
-        ClientRegistry::global()
-    }
+    // /// Cache of built `kube::Client`s, one per context.
+    // pub fn clients(&self) -> &'static ClientRegistry {
+    //     ClientRegistry::global()
+    // }
 
-    /// In-memory cache of watched Kubernetes objects.
-    pub fn resources(&self) -> &'static ResourceStore {
-        ResourceStore::global()
-    }
+    // /// In-memory cache of watched Kubernetes objects.
+    // pub fn resources(&self) -> &'static ResourceStore {
+    //     ResourceStore::global()
+    // }
 }

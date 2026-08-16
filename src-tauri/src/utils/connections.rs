@@ -58,7 +58,7 @@ impl ConnectionsManager {
             .collect()
     }
 
-    pub async fn forget(&self, name: &str) {
-        self.statuses.write().await.remove(name);
-    }
+    // pub async fn forget(&self, name: &str) {
+    //     self.statuses.write().await.remove(name);
+    // }
 }

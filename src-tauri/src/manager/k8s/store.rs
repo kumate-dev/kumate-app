@@ -185,16 +185,16 @@ impl ResourceStore {
             .collect()
     }
 
-    /// Number of objects cached for an event name. Cheap; use for diagnostics.
-    pub async fn len(&self, event_name: &str) -> usize {
-        let prefix = format!("{event_name}{SEP}");
-        let shards = self.shards.read().await;
-        shards
-            .iter()
-            .filter(|(k, _)| k.starts_with(&prefix))
-            .map(|(_, shard)| shard.objects.len())
-            .sum()
-    }
+    // /// Number of objects cached for an event name. Cheap; use for diagnostics.
+    // pub async fn len(&self, event_name: &str) -> usize {
+    //     let prefix = format!("{event_name}{SEP}");
+    //     let shards = self.shards.read().await;
+    //     shards
+    //         .iter()
+    //         .filter(|(k, _)| k.starts_with(&prefix))
+    //         .map(|(_, shard)| shard.objects.len())
+    //         .sum()
+    // }
 
     /// Drop exactly one shard. Must be an exact key match: namespace names are
     /// prefixes of one another (`default` / `default2`), so prefix-based removal

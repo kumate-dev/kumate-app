@@ -192,9 +192,9 @@ impl WatchManager {
         self.entries.read().await.len()
     }
 
-    pub async fn is_watching(&self, event_name: &str) -> bool {
-        self.entries.read().await.contains_key(event_name)
-    }
+    // pub async fn is_watching(&self, event_name: &str) -> bool {
+    //     self.entries.read().await.contains_key(event_name)
+    // }
 
     /// Active event names, for diagnostics.
     pub async fn active(&self) -> Vec<String> {

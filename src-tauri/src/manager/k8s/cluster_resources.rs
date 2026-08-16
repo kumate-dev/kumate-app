@@ -13,7 +13,7 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::ObjectMeta, Metadata, Resource as K8sResource,
 };
 use kube::{
-    api::{Api, DeleteParams, ListParams, ObjectList, Patch, PatchParams, PostParams},
+    api::{Api, DeleteParams, ListParams, ObjectList, PostParams},
     Resource,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -49,37 +49,37 @@ where
         Ok(Api::all(client))
     }
 
-    /// Patch a cluster-scoped object.
-    ///
-    /// `namespace` is accepted and ignored so this mirrors
-    /// [`super::resources::K8sResources::patch`] parameter-for-parameter; callers
-    /// (and the command macros) can therefore treat the two managers
-    /// interchangeably. Cluster-scoped objects have no namespace to honour.
-    pub async fn patch(
-        context_name: String,
-        _namespace: Option<String>,
-        resource_name: String,
-        patch: Value,
-        patch_type: String,
-    ) -> AppResult<Value> {
-        let api = Self::api(&context_name).await?;
-        let params = PatchParams::default();
+    // /// Patch a cluster-scoped object.
+    // ///
+    // /// `namespace` is accepted and ignored so this mirrors
+    // /// [`super::resources::K8sResources::patch`] parameter-for-parameter; callers
+    // /// (and the command macros) can therefore treat the two managers
+    // /// interchangeably. Cluster-scoped objects have no namespace to honour.
+    // pub async fn patch(
+    //     context_name: String,
+    //     _namespace: Option<String>,
+    //     resource_name: String,
+    //     patch: Value,
+    //     patch_type: String,
+    // ) -> AppResult<Value> {
+    //     let api = Self::api(&context_name).await?;
+    //     let params = PatchParams::default();
 
-        let result: T = match patch_type.as_str() {
-            "strategic" => {
-                api.patch(&resource_name, &params, &Patch::Strategic(patch))
-                    .await
-            }
-            // Merge is the safe default for anything we do not explicitly recognise.
-            _ => {
-                api.patch(&resource_name, &params, &Patch::Merge(patch))
-                    .await
-            }
-        }
-        .map_err(|e| AppError::from_kube(&e, &resource_name))?;
+    //     let result: T = match patch_type.as_str() {
+    //         "strategic" => {
+    //             api.patch(&resource_name, &params, &Patch::Strategic(patch))
+    //                 .await
+    //         }
+    //         // Merge is the safe default for anything we do not explicitly recognise.
+    //         _ => {
+    //             api.patch(&resource_name, &params, &Patch::Merge(patch))
+    //                 .await
+    //         }
+    //     }
+    //     .map_err(|e| AppError::from_kube(&e, &resource_name))?;
 
-        Ok(serde_json::to_value(&result)?)
-    }
+    //     Ok(serde_json::to_value(&result)?)
+    // }
 
     /// Create, or replace an existing object.
     ///
